@@ -1,0 +1,29 @@
+How to format the data for the jumpbridges:
+
+Put all the jumpbridges in one single textfile, wher a line in the file
+represents a jumpbridge.
+
+The line contains the first system, the connection between the systems and
+the second system. Between the three parts hast to be a space.
+
+The connection is a line (minus) in the middle and possible arrows (sign for
+greater or lower) at the ends. If there is such a sign, an arrow will be
+drawn on the map.
+
+Examples:
+
+System1 <-> System2
+System3 <- System4
+System5 - System6
+
+The first line will draw a jumpbridge between System1 and System2 with an 
+arrow on both sides.
+The second line will draw a jumpbridge between System3 and System4, but only
+the side to Syste3 will have an arrow pointing on the system (could be helpfull
+for "oneway"-jumpbridges).
+The last line draws a line between System5 and System 6 and no arrows at the 
+endpoints.
+
+Write the systemnames as they are written in the maps.
+Don't forget the space between the Systemnames and the jumpbridge!
+
