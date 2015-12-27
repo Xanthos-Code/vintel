@@ -69,7 +69,7 @@ class AvatarFindThread(QThread):
                 if avatar:
                     self.emit(SIGNAL("avatar_update"), chatEntry, avatar)
             except Exception as e:
-                print "An error in the avatar-find-thread: ", str(e)
+                print "An error in the AvatarFindThread: ", str(e)
 
 
 class PlayerFindThread(QThread):
@@ -102,11 +102,11 @@ class KOSCheckerThread(QThread):
         QThread.__init__(self)
         self.q = Queue()
         
-    def addRequest(self, names, requestType, onlyKos = False):
+    def addRequest(self, names, requestType, onlyKos=False):
         try:
             self.q.put((names, requestType, onlyKos))
         except Exception as e:
-            print "An error in the PlayerFindThread: ", str(e)
+            print "An error in the KOSCheckerThread: ", str(e)
         
     def run(self):
         while True:
@@ -123,6 +123,7 @@ class KOSCheckerThread(QThread):
             except Exception as e:
                 state = "error"
                 text = unicode(e)
+                print "An error in the KOSCheckerThread: ", str(e)
             self.emit(SIGNAL("kos_result"), state, text, requestType, hasKos)
 
 
