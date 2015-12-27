@@ -771,7 +771,7 @@ Public License instead of this License.  But first, please read
     <set>Qt::AlignCenter</set>
    </property>
   </widget>
-  <widget class="QPushButton" name="close_button">
+  <widget class="QPushButton" name="closeButton">
    <property name="geometry">
     <rect>
      <x>20</x>
