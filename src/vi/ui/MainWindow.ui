@@ -351,6 +351,7 @@
     </property>
     <addaction name="activateSoundAction"/>
     <addaction name="soundSetupAction"/>
+    <addaction name="useSpokenNotificationsAction"/>
    </widget>
    <widget class="QMenu" name="menuRegion">
     <property name="title">
@@ -489,6 +490,14 @@
   <action name="jumpbridgeDataAction">
    <property name="text">
     <string>Jumpbridge Data</string>
+   </property>
+  </action>
+  <action name="useSpokenNotificationsAction">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Spoken Notifications</string>
    </property>
   </action>
  </widget>

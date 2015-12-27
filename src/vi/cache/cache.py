@@ -66,7 +66,7 @@ class Cache(object):
 
 
     def putIntoCache(self, key, value, maxAge=60*60*24*3):
-        """ Putting something in the cache maxAge is maximum age in soconds
+        """ Putting something in the cache maxAge is maximum age in seconds
         """
         with Cache.SQLITE_WRITE_LOCK:
             query = "DELETE FROM cache WHERE key = ?"

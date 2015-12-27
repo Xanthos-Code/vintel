@@ -60,7 +60,7 @@ class MainWindow(QtGui.QMainWindow):
         regionName = cache.getFromCache("region_name")
         if not regionName:
             regionName = "Providence"
-        # is it a local map?
+        # Is it a local map?
         svg = None
         try:
             with open(resourcePath("vi/ui/res/mapdata/{0}.svg".format(regionName))) as svgFile:
@@ -81,8 +81,9 @@ class MainWindow(QtGui.QMainWindow):
                 "and Xintel must be modified. Check for a newer version "\
                 "and inform the maintainer.\n\nWhat went wrong: {0} {1}"\
                 .format(type(e), unicode(e))
+            print str(e)
             QtGui.QMessageBox.warning(None, "Using map from my cache", diagText, "OK")
-            
+          
         jumpbridgeUrl = cache.getFromCache("jumpbridge_url")
         self.setJumpbridges(jumpbridgeUrl)
         
@@ -113,7 +114,8 @@ class MainWindow(QtGui.QMainWindow):
         self.connect(self.chooseRegionAction, Qt.SIGNAL("triggered()"), self.showRegionChooser)
         self.connect(self.showChatAction, Qt.SIGNAL("triggered()"), self.changeChatVisibility)
         self.connect(self.soundSetupAction, Qt.SIGNAL("triggered()"), self.showSoundSetup)
-        self.connect(self.activateSoundAction, Qt.SIGNAL("triggered()"), self.showSoundSetup)
+        self.connect(self.activateSoundAction, Qt.SIGNAL("triggered()"), self.changeSound)
+        self.connect(self.useSpokenNotificationsAction, Qt.SIGNAL("triggered()"), self.changeUseSpokenNotifications)
         self.opacityGroup = QtGui.QActionGroup(self.menu)
         
         for i in (100, 80, 60, 40, 20):
@@ -125,7 +127,7 @@ class MainWindow(QtGui.QMainWindow):
             self.opacityGroup.addAction(action)
             self.menuTransparency.addAction(action)
             
-        # map with menu =======================================================
+        # Map with menu =======================================================
         self.map.contextmenu = TrayContextMenu(self.trayicon)
         def mapContextMenuEvent(event):
             self.map.contextmenu.exec_(self.mapToGlobal(QPoint(event.x(),event.y())))
@@ -154,7 +156,7 @@ class MainWindow(QtGui.QMainWindow):
             self.changeSound()
         self.connect(self.jumpbridgeDataAction, Qt.SIGNAL("triggered()"), self.showJumbridgeChooser)
 
-        # load from cache =====================================
+        # Load from cache =====================================
         self.knownPlayerNames = cache.getFromCache("known_player_names")
         if self.knownPlayerNames:
             self.knownPlayerNames = set(self.knownPlayerNames.split(","))
@@ -166,7 +168,11 @@ class MainWindow(QtGui.QMainWindow):
         else:
             roomNames = (u"TheCitadel", u"North Provi Intel", u"North Catch Intel")
             cache.putIntoCache("room_names", u",".join(roomNames), 60*60*24*365*5)
+        # Load cache ends ===============================================
+            
+        # Recall settings ===============================================
         self.setSoundVolume(25)  # default - maybe overwritten by the settings
+        
         try:
             settings = cache.getFromCache("settings")
             if settings:
@@ -175,8 +181,9 @@ class MainWindow(QtGui.QMainWindow):
                     obj = self if not setting[0] else getattr(self, setting[0])
                     getattr(obj, setting[1])(setting[2])
         except Exception as e:
-            pass #self.trayicon.showMessage("Can't remember", "Something went wrong when I load my last state:\n {0}".format(str(e)), 1)
-        # load cache ends ===============================================
+            print str(e)
+            self.trayicon.showMessage("Settings error", "Something went wrong loading saved state:\n {0}".format(str(e)), 1)
+        # Recall settings ends ===============================================
 
         self.connect(self.quitAction, Qt.SIGNAL("triggered()"), self.close)
         self.connect(self.trayicon, Qt.SIGNAL("quit"), self.close)
@@ -185,6 +192,37 @@ class MainWindow(QtGui.QMainWindow):
         versionCheckThread.connect(versionCheckThread, Qt.SIGNAL("newer_version"), self.notifyNewerVersion)
         versionCheckThread.run()
         
+    def closeEvent(self, event):
+        """ writing the cache before closing the window 
+        """
+        cache = Cache()
+        # known playernames
+        if self.knownPlayerNames:
+            value = ",".join(self.knownPlayerNames)
+            cache.putIntoCache("known_player_names", value, 60*60*24*365)
+        # program state to cache (to read it on next startup)
+        settings = (
+            (None, "restoreGeometry", str(self.saveGeometry())),
+            (None, "restoreState", str(self.saveState())),
+            ("splitter", "restoreGeometry", str(self.splitter.saveGeometry())),
+            ("splitter", "restoreState", str(self.splitter.saveState())),
+            (None, "changeOpacity", self.opacityGroup.checkedAction().opacity),
+            (None, "changeAlwaysOnTop", self.alwaysOnTopAction.isChecked()),
+            (None, "changeShowAvatars", self.showChatAvatarsAction.isChecked()),
+            (None, "changeAlarmDistance", self.alarmDistance),
+            (None, "changeSound", self.activateSoundAction.isChecked()),
+            (None, "changeChatVisibility", self.showChatAction.isChecked()),
+            (None, "setInitMapPosition", (self.map.page().mainFrame().scrollPosition().x(), self.map.page().mainFrame().scrollPosition().y())),
+            (None, "setSoundVolume", self.soundVolume),
+            (None, "changeFrameless", self.framelessWindowAction.isChecked()),
+            ("map", "setZoomFactor", self.map.zoomFactor()),
+            ("kosClipboardActiveAction", "setChecked", self.kosClipboardActiveAction.isChecked()),
+            ("useSpokenNotificationsAction", "setChecked", self.useSpokenNotificationsAction.isChecked()),
+        )
+        cache.putIntoCache("settings", str(settings), 60*60*24*365)
+        event.accept()
+
+
     def notifyNewerVersion(self, newestVersion):
         self.trayicon.showMessage("Newer Version", ("A newer Version of VINTEL is available.\nFind the URL in the info!"), 1)
         
@@ -192,6 +230,11 @@ class MainWindow(QtGui.QMainWindow):
         if newValue is not None:
             self.showChatAction.setChecked(newValue)
         self.chatbox.setVisible(self.showChatAction.isChecked())
+        
+    def changeUseSpokenNotifications(self, newValue=None):
+        if newValue is not None:
+            self.useSpokenNotificationsAction.setChecked(newValue)
+        sound.useSpokenNotifications(self.useSpokenNotificationsAction.isChecked())
         
     def changeOpacity(self, value=None):
         if value:
@@ -257,7 +300,7 @@ class MainWindow(QtGui.QMainWindow):
         self.changeAlwaysOnTop(newValue)
         self.isFrameless = newValue
         self.framelessWindowAction.setChecked(newValue)
-        for cm in TrayContextMenu.INSTANCES:
+        for cm in TrayContextMenu.instances:
             cm.framelessCheck.setChecked(newValue)
         self.show()
             
@@ -284,7 +327,7 @@ class MainWindow(QtGui.QMainWindow):
     def changeAlarmDistance(self, distance):
         self.alarmDistance = distance
         for cm in TrayContextMenu.instances:
-            for action in cm.distance_group.actions():
+            for action in cm.distanceGroup.actions():
                 if action.alarmDistance == distance:
                     action.setChecked(True)
         self.trayicon.alarmDistance = distance
@@ -296,48 +339,16 @@ class MainWindow(QtGui.QMainWindow):
     def clipboardChanged(self, mode):
         if mode == 0 and self.kosClipboardActiveAction.isChecked():
             content = unicode(self.clipboard.text())
-            lastModified, oldContent = self.oldClipboardContent
-            if content == oldContent and time.time() - lastModified < 3:
+            # Limit redundant kos checks
+            if content != self.oldClipboardContent:
                 parts = content.split("\n")
                 for part in parts:
                     if part in self.knownPlayerNames:
                         self.trayicon.setIcon(QtGui.QIcon(resourcePath("vi/ui/res/logo_small_green.png")))
                         self.kosRequestThread.addRequest(parts, "clipboard", True)
-                        self.oldClipboardContent = (0, "")
                         break
-            else:
-                self.oldClipboardContent = (time.time(), content)
+                self.oldClipboardContent = content
                 
-    def closeEvent(self, event):
-        """ writing the cache before closing the window 
-        """
-        cache = Cache()
-        # known playernames
-        if self.knownPlayerNames:
-            value = ",".join(self.knownPlayerNames)
-            cache.putIntoCache("known_player_names", value, 60*60*24*365)
-        # program state to cache (to read it on next startup)
-        settings = (
-            (None, "restore_geometry", str(self.saveGeometry())),
-            (None, "restore_state", str(self.saveState())),
-            (None, "change_opacity", self.opacityGroup.checkedAction().opacity),
-            (None, "change_always_on_top", self.alwaysOnTopAction.isChecked()),
-            ("splitter", "restore_geometry", str(self.splitter.saveGeometry())),
-            ("splitter", "restore_state", str(self.splitter.saveState())),
-            (None, "change_show_avatars", self.showChatAvatarsAction.isChecked()),
-            (None, "change_alarm_distance", self.alarmDistance),
-            ("kos_clipboard_active", "setChecked", self.kosClipboardActiveAction.isChecked()),
-            (None, "change_sound", self.activateSoundAction.isChecked()),
-            (None, "change_chat_visibility", self.showChatAction.isChecked()),
-            ("map", "set_zoom_factor", self.map.zoomFactor()),
-            (None, "set_init_map_scroll_position", 
-             (self.map.page().mainFrame().scrollPosition().x(),
-              self.map.page().mainFrame().scrollPosition().y())),
-            (None, "set_sound_volume", self.soundVolume),
-            (None, "change_frameless", self.framelessWindowAction.isChecked()),
-        )
-        cache.putIntoCache("settings", str(settings), 60*60*24*365)
-        event.accept()
           
     def mapLinkClicked(self, url):
         systemName = unicode(url.path().split("/")[-1]).upper()
@@ -420,7 +431,7 @@ class MainWindow(QtGui.QMainWindow):
                 self.trayicon.showMessage("Player KOS-Check", text, 1)
             elif requestType == "clipboard":  # request from clipboard-change
                 if len(text) <= 0:
-                    text = "Noone KOS"
+                    text = "None KOS"
                 self.trayicon.showMessage("Your KOS-Check", text, 1)
             text = text.replace("\n\n", "<br>")
             message = chatparser.chatparser.Message("Vintel KOS-Check", text, evegate.currentEveTime(), "VINTEL", [], states.NOT_CHANGE, text.upper(), text)
@@ -586,6 +597,7 @@ class RegionChooser(QtGui.QDialog):
                 correct = True
         except Exception as e:
             QMessageBox.critical(self, u"Something went wrong!", u"Error while testing existing '{0}'".format(str(e)))
+            print str(e)
             correct = False
         if correct:
             cache = Cache()

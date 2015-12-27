@@ -79,11 +79,9 @@ if __name__ == "__main__":
 	splash.show()
 	app.processEvents()
 	
-	# Path supplied as an argument
+	pathToLogs = ""
 	if len(sys.argv) > 1:
 		pathToLogs = sys.argv[1]
-	else:
-		pathToLogs = ""
 	
 	if not os.path.exists(pathToLogs):
 		if sys.platform.startswith("darwin"):
@@ -96,9 +94,8 @@ if __name__ == "__main__":
 			ctypes.windll.shell32.SHGetFolderPathW(0, 5, 0, 0, buf)
 			documentsPath = buf.value
 			pathToLogs = os.path.join(documentsPath, "EVE", "logs", "Chatlogs")
-		
-	# None of the paths for logs exist, bailing out
 	if not os.path.exists(pathToLogs):
+		# None of the paths for logs exist, bailing out
 		QtGui.QMessageBox.critical(None, "No path to Logs", "No logs found at: " + pathToLogs, "Quit")
 		sys.exit(1)
 	

@@ -25,7 +25,7 @@ soundCache = {}
 soundVolume = 25   # Must be an integer beween 0 and 100!
 soundAvailable = False
 soundActive = True
-useSpokenWarnings = True
+useSpokenNotifications = True
 useDarwinSound = False
 
 SOUNDS = {"alarm": "178032__zimbot__redalert-klaxon-sttos-recreated.wav",
@@ -41,9 +41,12 @@ except ImportError:
         useDarwinSound = True;
         soundAvailable = True
     else:
-        useSpokenWarnings = False
+        useSpokenNotifications = False
         soundVolume = 0.0
     
+
+def useSpokenNotifications(value):
+    _useSpokenNotifications = value
 
 def setSoundVolume(value):
     """ Accepts and stores a number between 0 and 100.
@@ -66,7 +69,7 @@ def playSound(name="alarm", message=None):
     # Workaround for OSX, since pygame wants *exactly* 2.7; and py is at 2.71
     if useDarwinSound:
         path = resourcePath("vi/ui/res/{0}".format(SOUNDS[name]))
-        if message:
+        if useSpokenNotifications and message:
             os.system("say [[volm {0}]] {1}".format(float(soundVolume) / 100.0, message))
         else:
             subprocess.call(["afplay -v {0} {1}".format(float(soundVolume) / 100.0, path)], shell=True)
