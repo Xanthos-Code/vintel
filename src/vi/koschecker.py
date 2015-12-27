@@ -70,8 +70,8 @@ def check(parts):
 	
 	corpIds = set()
 	for name in namesAsIds.keys():
-		for corpIds in deeperData[name]["corpids"]:
-			corpIds.add(corpid)
+		for number in deeperData[name]["corpids"]:
+			corpIds.add(number)
 	
 	corpIdName = evegate.idsToNames(corpIds)
 	for name, nameData in deeperData.items():
