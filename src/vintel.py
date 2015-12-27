@@ -94,8 +94,8 @@ if __name__ == "__main__":
 			import ctypes.wintypes
 			buf = ctypes.create_unicode_buffer(ctypes.wintypes.MAX_PATH)
 			ctypes.windll.shell32.SHGetFolderPathW(0, 5, 0, 0, buf)
-			documents_path = buf.value
-			pathToLogs = os.path.join(documents_path, "EVE", "logs", "Chatlogs")
+			documentsPath = buf.value
+			pathToLogs = os.path.join(documentsPath, "EVE", "logs", "Chatlogs")
 		
 	# None of the paths for logs exist, bailing out
 	if not os.path.exists(pathToLogs):

@@ -35,17 +35,11 @@ def updateDatabase(oldVersion, con):
         queries += ["CREATE TABLE version (version INT)",
                     "INSERT INTO version (version) VALUES (1)"]
     if oldVersion < 2:
-        queries += ["""CREATE TABLE playernames
-                       (charname VARCHAR PRIMARY KEY, status INT, modified INT)
-                    """,
-                    """CREATE TABLE avatars
-                       (charname VARCHAR PRIMARY KEY, data  BLOB, modified INT)
-                    """,
+        queries += ["CREATE TABLE playernames (charname VARCHAR PRIMARY KEY, status INT, modified INT)",
+                    "CREATE TABLE avatars (charname VARCHAR PRIMARY KEY, data  BLOB, modified INT)",
                     "UPDATE version SET version = 2"]
     if oldVersion < 3:
-        queries += ["""CREATE TABLE cache
-                       (key VARCHAR PRIMARY KEY, data BLOB, modified INT,
-                        maxage INT)""",
+        queries += ["CREATE TABLE cache (key VARCHAR PRIMARY KEY, data BLOB, modified INT, maxage INT)", 
                     "UPDATE version SET version = 3"]
     for query in queries:
         con.execute(query)

@@ -38,12 +38,12 @@ class Cache(object):
     # Cache-Instances in various threads: must handle concurrent writings
     SQLITE_WRITE_LOCK = threading.Lock()
 
-    def __init__(self, db="cache.sqlite3"):
-        """ db=path to sqlite-file to save the cache.
-               will be ignored if you set Cache.PATH_TO_CACHE before init"""
+    def __init__(self, pathToSQLiteFile="cache.sqlite3"):
+        """ pathToSQLiteFile=path to sqlite-file to save the cache. will be ignored if you set Cache.PATH_TO_CACHE before init
+        """
         if Cache.PATH_TO_CACHE:
-            db = Cache.PATH_TO_CACHE
-        self.con = sqlite3.connect(db)
+            pathToSQLiteFile = Cache.PATH_TO_CACHE
+        self.con = sqlite3.connect(pathToSQLiteFile)
         if not Cache.VERSION_CHECKED:
             with Cache.SQLITE_WRITE_LOCK:
                 self.checkVersion()
@@ -65,22 +65,23 @@ class Cache(object):
         updateDatabase(version, self.con)
 
 
-    def putIntoCache(self, key, value, max_age=60*60*24*3):
-        """ Putting something in the cache
-            max_age is maximum age in soconds"""
+    def putIntoCache(self, key, value, maxAge=60*60*24*3):
+        """ Putting something in the cache maxAge is maximum age in soconds
+        """
         with Cache.SQLITE_WRITE_LOCK:
             query = "DELETE FROM cache WHERE key = ?"
             self.con.execute(query, (key,))
-            query = """INSERT INTO cache (key, data, modified, maxage)
+            query = """INSERT INTO cache (key, data, modified, maxAge)
                        VALUES (?, ?, ?, ?)"""
-            self.con.execute(query, (key, value, time.time(), max_age))
+            self.con.execute(query, (key, value, time.time(), maxAge))
             self.con.commit()
 
 
     def getFromCache(self, key, outdated=False):
         """ Getting a value from cache 
             key = the key for the value
-            outdated = returns the value also if it is outdated"""
+            outdated = returns the value also if it is outdated
+        """
         query = "SELECT key, data, modified, maxage FROM cache WHERE key = ?"
         founds = self.con.execute(query, (key,)).fetchall()
         if len(founds) == 0:
@@ -92,7 +93,8 @@ class Cache(object):
         
 
     def putPlayerName(self, name, status):
-        """ Putting a playername into the cache """
+        """ Putting a playername into the cache
+        """
         with Cache.SQLITE_WRITE_LOCK:
             query = "DELETE FROM playernames WHERE charname = ?"
             self.con.execute(query, (name,))
@@ -103,9 +105,7 @@ class Cache(object):
 
 
     def getPlayerName(self, name):
-        """ Getting back infos about playername from Cache.
-            Returns None if the name was not found, else it
-            returns the status"""
+        """ Getting back infos about playername from Cache. Returns None if the name was not found, else it returns the status"""
         selectquery = """SELECT charname, status FROM playernames
                          WHERE charname = ?"""
         founds = self.con.execute(selectquery, (name,)).fetchall()
@@ -116,7 +116,8 @@ class Cache(object):
 
 
     def putAvatar(self, name, data):
-        """ Put the picture of an player into the cache"""
+        """ Put the picture of an player into the cache
+        """
         with Cache.SQLITE_WRITE_LOCK:
             # data is a blob, so we have to change it to buffer
             data = buffer(str(data))
@@ -129,8 +130,7 @@ class Cache(object):
         
 
     def getAvatar(self, name):
-        """ Getting the avatars_pictures data from the Cache.
-            Returns None if there is no entry in the cache"""
+        """ Getting the avatars_pictures data from the Cache. Returns None if there is no entry in the cache"""
         selectQuery = """SELECT data FROM avatars
                          WHERE charname = ?"""
         founds = self.con.execute(selectQuery, (name,)).fetchall()

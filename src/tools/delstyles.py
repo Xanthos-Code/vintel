@@ -52,7 +52,7 @@ def main():
         errout("The modiefied data is written to stdout")
         sys.exit(1)
     path = sys.argv[1]
-    source = read_svg(path)
+    source = readSvg(path)
     withoutStyle = deleteStylesFromSvg(source)
     result = withoutStyle.body.next.prettify().encode("utf-8")
     print(result)

@@ -17,38 +17,61 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.  #
 ###########################################################################
 
+import subprocess, sys, os
+
+from vi.resources import resourcePath
+
+soundCache = {}
+soundVolume = 25   # Must be an integer beween 0 and 100!
 soundAvailable = False
+soundActive = True
+useSpokenWarnings = True
+useDarwinSound = False
+
+SOUNDS = {"alarm": "178032__zimbot__redalert-klaxon-sttos-recreated.wav",
+          "kos": "178031__zimbot__transporterstartbeep0-sttos-recreated.wav",
+          "request": "178028__zimbot__bosun-whistle-sttos-recreated.wav"}
 
 try:
     import pygame
     soundAvailable = True
     pygame.mixer.init()
 except ImportError:
-    pass
+    if sys.platform.startswith("darwin"):
+        useDarwinSound = True;
+        soundAvailable = True
+    else:
+        useSpokenWarnings = False
+        soundVolume = 0.0
     
-from vi.resources import resourcePath
-
-SOUNDS = {"alarm": "178032__zimbot__redalert-klaxon-sttos-recreated.wav",
-          "beep": "178031__zimbot__transporterstartbeep0-sttos-recreated.wav",
-          "request": "178028__zimbot__bosun-whistle-sttos-recreated.wav"
-         }
-
-soundCache = {}
-soundActive = True
-soundVolume = 0   # hast o be a float beween 0 and 1!
 
 def setSoundVolume(value):
+    """ Accepts and stores a number between 0 and 100.
+    """
+    if value < 0:
+        value = 0
+    elif value > 100:
+        value = 100
     _soundVolume = value
     for sound in soundCache.values():
-        sound.setVolume(value)
+        # Convert to a value between 0 and 1
+        sound.setVolume(float(value)  / 100.0)
     
 
-def playSound(name="alarm"):
+def playSound(name="alarm", message=None):
     if soundAvailable and soundActive:
         if name not in SOUNDS:
             raise ValueError("Sound '{0}' is not available".format(name))
-        if name not in soundCache:
+
+    # Workaround for OSX, since pygame wants *exactly* 2.7; and py is at 2.71
+    if useDarwinSound:
+        path = resourcePath("vi/ui/res/{0}".format(SOUNDS[name]))
+        if message:
+            os.system("say [[volm {0}]] {1}".format(float(soundVolume) / 100.0, message))
+        else:
+            subprocess.call(["afplay -v {0} {1}".format(float(soundVolume) / 100.0, path)], shell=True)
+    else:
+        if name not in soundCache and not useDarwinSound:
             path = resourcePath("vi/ui/res/{0}".format(SOUNDS[name]))
             soundCache[name] = pygame.mixer.Sound(path)
-        # soundcache[name].set_volume(sound_volume)
         soundCache[name].play()

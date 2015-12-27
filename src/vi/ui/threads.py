@@ -39,7 +39,7 @@ class AvatarFindThread(QThread):
         try:
             if clearCache:
                 cache = Cache()
-                cache.remove_avatar(chatEntry.message.user)
+                cache.removeAvatar(chatEntry.message.user)
             self.q.put(chatEntry)
         except Exception as e:
             print "An error in the AvatarFindThread: ", str(e)
@@ -124,6 +124,7 @@ class KOSCheckerThread(QThread):
                 state = "error"
                 text = unicode(e)
             self.emit(SIGNAL("kos_result"), state, text, requestType, hasKos)
+
 
 class MapStatisticsThread(QThread):
     

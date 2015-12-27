@@ -45,7 +45,8 @@ class DotlanException(Exception):
 
 
 class Map(object):
-    """ The map incl. all informations from dotlan"""
+    """ The map incl. all informations from dotlan
+    """
 
     DOTLAN_BASIC_URL = u"http://evemaps.dotlan.net/svg/{0}.svg"
 
@@ -144,9 +145,10 @@ class Map(object):
         
 
     def _connectNeighbours(self):
-        """This will find all neigbours of the systems and connect them.
-           It takes a look to all the jumps on the map and get the system under
-           which the line ends"""
+        """ This will find all neigbours of the systems and connect them.
+            It takes a look to all the jumps on the map and get the system under
+            which the line ends
+        """
         for jump in self.soup.select("#jumps")[0].select(".j"):
             if "jumpbridge" in jump["class"]: continue
             parts = jump["id"].split("-")
@@ -172,7 +174,8 @@ class Map(object):
                 
     def setJumpbridges(self, jumpbridgeData):
         """ adding the jumpbridges to the map 
-            format of data: tuples with 3 values (sys1, connection, sys2)"""
+            format of data: tuples with 3 values (sys1, connection, sys2)
+        """
         soup = self.soup
         for bridge in soup.select(".jumpbridge"):
             bridge.decompose()
@@ -252,7 +255,8 @@ class Map(object):
 
 
 class System(object):
-    """ A System in the Map """
+    """ A System in the Map
+    """
 
     ALARM_COLORS = [(60*4, "#FF0000", "FFFFFF"), (60*10, "#FF9B0F", "#FFFFFF"), 
                     (60*15, "#FFFA0F", "#000000"), (60*25, "#FFFDA2", "#000000"), 
@@ -335,8 +339,9 @@ class System(object):
                     element.decompose()
 
     def addNeighbour(self, neighbourSystem):
-        """Add a neigbour system to this system
-           neighbour_system: a system (not a system's name!)"""
+        """ Add a neigbour system to this system
+            neighbour_system: a system (not a system's name!)
+        """
         self._neighbours.add(neighbourSystem)
         neighbourSystem._neighbours.add(self)
 
@@ -348,7 +353,8 @@ class System(object):
             returns a dictionary with the system (not the system's name!)
                     as key and a dict as value. key "distance" contains the
                     distance. for first example:
-                              {sys3: {"distance"}: 0, sys2: {"distance"}: 1}"""
+                              {sys3: {"distance"}: 0, sys2: {"distance"}: 1}
+        """
         neighbours = []
         systems = {self: {"distance": 0}}
         currentDistance = 0
@@ -359,12 +365,13 @@ class System(object):
                 for neighbour in system._neighbours:
                     if neighbour not in systems:
                         newSystems.append(neighbour)
-            for newSystem in new_systems:
+            for newSystem in newSystems:
                 systems[newSystem] = {"distance": currentDistance}
         return systems
 
     def removeNeighbour(self, system):
-        """ removes the link between to neighboured systems """
+        """ Removes the link between to neighboured systems
+        """
         if system in self._neighbours:
             self._neighbours.remove(system)
         if self in system._neighbours:
@@ -437,7 +444,8 @@ class System(object):
             
 
 def convertRegionName(name):
-    """ Converts a (system)name to the format that dotland uses """
+    """ Converts a (system)name to the format that dotland uses
+    """
     converted = []
     nextUpper = False
     

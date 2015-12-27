@@ -87,7 +87,7 @@ class FileWatcher(QtCore.QThread):
         filesToRemove = set()
         for knownFile in self.files:
             if knownFile not in filesInDir:
-                filesToRemove.add(known_file)
+                filesToRemove.add(knownFile)
         for fileToRemove in filesToRemove:
             del self.files[fileToRemove]
         

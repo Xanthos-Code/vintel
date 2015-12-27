@@ -38,8 +38,8 @@ def concat(firstFile, secondFile):
     symbols = []
     jumps = []
     sysuses = []
-    for def_element in secondSvg.select("defs"):
-        for symbol in def_element.select("symbol"):
+    for defElement in secondSvg.select("defs"):
+        for symbol in defElement.select("symbol"):
             symbols.append(symbol)
     for jumpgroup in secondSvg.select("#jumps"):
         for jump in jumpgroup.select("line"):

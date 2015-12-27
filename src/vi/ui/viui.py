@@ -166,7 +166,7 @@ class MainWindow(QtGui.QMainWindow):
         else:
             roomNames = (u"TheCitadel", u"North Provi Intel", u"North Catch Intel")
             cache.putIntoCache("room_names", u",".join(roomNames), 60*60*24*365*5)
-        self.setSoundVolume(75)  # default - maybe overwritten by the settings
+        self.setSoundVolume(25)  # default - maybe overwritten by the settings
         try:
             settings = cache.getFromCache("settings")
             if settings:
@@ -211,7 +211,7 @@ class MainWindow(QtGui.QMainWindow):
         else:
             if newValue is not None:
                 self.activateSoundAction.setChecked(newValue)
-            sound.sound_active = self.activateSoundAction.isChecked()
+            sound.soundActive = self.activateSoundAction.isChecked()
         
     def addMessageToIntelChat(self, message):
         scrollToBottom = False
@@ -270,20 +270,20 @@ class MainWindow(QtGui.QMainWindow):
             entry.avatarLabel.setVisible(show)
 
     def chatSmaller(self):
-        new_size = ChatEntry.TEXT_SIZE - 1
-        ChatEntry.TEXT_SIZE = new_size
+        newSize = ChatEntry.TEXT_SIZE - 1
+        ChatEntry.TEXT_SIZE = newSize
         for entry in self.chatEntries:
-            entry.changeFontSize(new_size)
+            entry.changeFontSize(newSize)
 
     def chatLarger(self):
-        new_size = ChatEntry.TEXT_SIZE + 1
-        ChatEntry.TEXT_SIZE = new_size
+        newSize = ChatEntry.TEXT_SIZE + 1
+        ChatEntry.TEXT_SIZE = newSize
         for entry in self.chatEntries:
-            entry.changeFontSize(new_size)
+            entry.changeFontSize(newSize)
             
     def changeAlarmDistance(self, distance):
         self.alarmDistance = distance
-        for cm in TrayContextMenu.INSTANCES:
+        for cm in TrayContextMenu.instances:
             for action in cm.distance_group.actions():
                 if action.alarmDistance == distance:
                     action.setChecked(True)
@@ -296,13 +296,12 @@ class MainWindow(QtGui.QMainWindow):
     def clipboardChanged(self, mode):
         if mode == 0 and self.kosClipboardActiveAction.isChecked():
             content = unicode(self.clipboard.text())
-            last_modified, old_content = self.oldClipboardContent
-            if content == old_content and time.time() - last_modified < 3:
+            lastModified, oldContent = self.oldClipboardContent
+            if content == oldContent and time.time() - lastModified < 3:
                 parts = content.split("\n")
                 for part in parts:
                     if part in self.knownPlayerNames:
-                        self.trayicon.setIcon(QtGui.QIcon(
-                            resourcePath("vi/ui/res/logo_small_green.png")))
+                        self.trayicon.setIcon(QtGui.QIcon(resourcePath("vi/ui/res/logo_small_green.png")))
                         self.kosRequestThread.addRequest(parts, "clipboard", True)
                         self.oldClipboardContent = (0, "")
                         break
@@ -310,7 +309,8 @@ class MainWindow(QtGui.QMainWindow):
                 self.oldClipboardContent = (time.time(), content)
                 
     def closeEvent(self, event):
-        """ writing the cache before closing the window """
+        """ writing the cache before closing the window 
+        """
         cache = Cache()
         # known playernames
         if self.knownPlayerNames:
@@ -350,7 +350,7 @@ class MainWindow(QtGui.QMainWindow):
         
     def markSystemOnMap(self, systemname):
         self.systems[unicode(systemname)].mark()
-        self.update_map()
+        self.updateMap()
 
     def setLocation(self, char, newSystem):
         for system in self.systems.values():
@@ -385,12 +385,8 @@ class MainWindow(QtGui.QMainWindow):
         chooser.show()
         
     def setSoundVolume(self, value):
-        if value < 0:
-            value = 0
-        elif value > 100:
-            value = 100
         self.soundVolume = value
-        sound.setSoundVolume(float(value) / 100.0)
+        sound.setSoundVolume(value)
         
     def setJumpbridges(self, url):
         if url is None:
@@ -417,11 +413,11 @@ class MainWindow(QtGui.QMainWindow):
 
     def showKosResult(self, state, text, requestType, hasKos):
         if hasKos:
-            sound.playSound("beep")
+            sound.playSound("kos", text)
         self.trayicon.setIcon(QtGui.QIcon(resourcePath("vi/ui/res/logo_small.png")))
         if state == "ok":
             if requestType == "xxx":  # a xxx request out of the chat
-                self.trayicon.showMessage("An xxx KOS-Check", text, 1)
+                self.trayicon.showMessage("Player KOS-Check", text, 1)
             elif requestType == "clipboard":  # request from clipboard-change
                 if len(text) <= 0:
                     text = "Noone KOS"
@@ -440,8 +436,8 @@ class MainWindow(QtGui.QMainWindow):
     def showInfo(self):
         infoDialog = QtGui.QDialog(self)
         uic.loadUi(resourcePath("vi/ui/Info.ui"), infoDialog)
-        infoDialog.version_label.setText(u"Version: {0}".format(VERSION))
-        infoDialog.logo_label.setPixmap(QtGui.QPixmap(resourcePath("vi/ui/res/logo.png")))
+        infoDialog.versionLabel.setText(u"Version: {0}".format(VERSION))
+        infoDialog.logoLabel.setPixmap(QtGui.QPixmap(resourcePath("vi/ui/res/logo.png")))
         infoDialog.connect(infoDialog.closeButton, Qt.SIGNAL("clicked()"), infoDialog.accept)
         infoDialog.show()
         
@@ -450,7 +446,7 @@ class MainWindow(QtGui.QMainWindow):
         uic.loadUi(resourcePath("vi/ui/SoundSetup.ui"), dialog)
         dialog.volumeSlider.setValue(self.soundVolume)
         dialog.connect(dialog.volumeSlider, Qt.SIGNAL("valueChanged(int)"), self.setSoundVolume)
-        dialog.connect(dialog.testSoundButton, Qt.SIGNAL("clicked()"), sound.play_sound)
+        dialog.connect(dialog.testSoundButton, Qt.SIGNAL("clicked()"), sound.playSound)
         dialog.connect(dialog.closeButton, Qt.SIGNAL("clicked()"), dialog.accept)
         dialog.show()
 
@@ -502,7 +498,7 @@ class MainWindow(QtGui.QMainWindow):
             elif message.status == states.SOUND_TEST and message.user in self.knownPlayerNames:
                 words = message.message.split()
                 if len(words) > 1:
-                    sound.play_sound(words[1])
+                    sound.playSound(words[1])
             # KOS request
             elif message.status == states.KOS_STATUS_REQUEST:
                 text = message.message[4:]
@@ -671,7 +667,7 @@ class SystemChat(QtGui.QDialog):
 
 class ChatEntry(QtGui.QWidget):
 
-    TEXT_SIZE = 9
+    TEXT_SIZE = 11
     SHOW_AVATAR = True
 
     def __init__(self, message):

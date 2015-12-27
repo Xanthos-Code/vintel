@@ -29,7 +29,8 @@ class TrayContextMenu(QtGui.QMenu):
     instances = set()
     
     def __init__(self, trayicon):
-        """ trayicon = the object with the methods to call"""
+        """ trayicon = the object with the methods to call
+        """
         QtGui.QMenu.__init__(self)
         TrayContextMenu.instances.add(self)
         self.trayicon = trayicon
@@ -103,13 +104,13 @@ class TrayIcon(QtGui.QSystemTrayIcon):
     def switchAlarm(self):
         newValue = not self.showAlarm
         for cm in TrayContextMenu.instances:
-            cm.alarm_check.setChecked(newValue)
+            cm.alarmCheck.setChecked(newValue)
         self.showAlarm = newValue
 
     def switchRequest(self):
         newValue = not self.showRequest
         for cm in TrayContextMenu.instances:
-            cm.request_check.setChecked(newValue)
+            cm.requestCheck.setChecked(newValue)
         self.showRequest = newValue
 
     def showNotification(self, message, system, char, distance):
@@ -118,22 +119,19 @@ class TrayIcon(QtGui.QSystemTrayIcon):
         text = None
         icon = None
         text = ""
-        if (message.status == states.ALARM and self.show_alarm and self.lastNotifications.get(states.ALARM, 0) < time.time() - self.MIN_WAIT_NOTIFICATION):
+        if (message.status == states.ALARM and self.showAlarm and self.lastNotifications.get(states.ALARM, 0) < time.time() - self.MIN_WAIT_NOTIFICATION):
             title = "ALARM!"
-            text = (u"{system} was alarmed in {room}. "
-                    u"Chars {distance} jumps out: {char}\n"
-                    u"Text: {message_text}")
+            text = (u"{system} alarmed in {room}. Pilot {distance} jumps out: {char}\nText: {message_text}")
             icon = 2
             messageText = message.plain_text
             self.lastNotifications[states.ALARM] = time.time()
-            sound.play_sound("alarm")
+            sound.playSound("alarm", text)
         elif (message.status == states.REQUEST and self.showRequest and self.lastNotifications.get(states.REQUEST, 0) < time.time() - self.MIN_WAIT_NOTIFICATION):
             title = "Status request"
             icon = 1
-            text = (u"Someone is requesting status of {system} in {room}. " 
-                    u"(Your chars there: {char})")
+            text = (u"Someone is requesting status of {system} in {room}.")
             self.lastNotifications[states.REQUEST] = time.time()
-            sound.play_sound("request")
+            sound.playSound("request", text)
         if title and text and icon:
             text = text.format(**locals())
             self.showMessage(title, text, icon)

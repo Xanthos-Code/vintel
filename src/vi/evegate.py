@@ -51,9 +51,9 @@ def charNameToId(name):
     except Exception as e:
         print("Exception turning charname to id via API: {0}".format(str(e)))
         # fallback! if there is a problem with the API, we use evegate
-        base_url = "https://gate.eveonline.com/Profile/"
+        baseUrl = "https://gate.eveonline.com/Profile/"
         qcharname = urllib2.quote(name)
-        url = base_url + qcharname
+        url = baseUrl + qcharname
         content = urllib2.urlopen(url).read()
         soup = BeautifulSoup(content)
         img = soup.select("#imgActiveCharacter")
@@ -101,7 +101,8 @@ def namesToIds(names):
 def idsToNames(ids):
     """ Returns the names for ids 
         ids = iterable list of ids
-        returns a dict key = id, value = name"""
+        returns a dict key = id, value = name
+    """
     data = {}
     if len(ids) == 0:
         return data
@@ -155,9 +156,9 @@ def checkPlayername(charname):
     """ Checking on evegate for an exiting playername 
         returns 1 if exists, 0 if not and -1 if an error occured
     """
-    base_url = "https://gate.eveonline.com/Profile/"
+    baseUrl = "https://gate.eveonline.com/Profile/"
     qcharname = urllib2.quote(charname)
-    url = base_url + qcharname
+    url = baseUrl + qcharname
     retvalue = -1
     try:
         urllib2.urlopen(url)
@@ -171,12 +172,14 @@ def checkPlayername(charname):
 
 
 def currentEveTime():
-    """ returns the current eve-time as a datetime.datetime"""
+    """ returns the current eve-time as a datetime.datetime
+    """
     return datetime.datetime.utcnow()
 
 
 def eveEpoch():
-    """ returns the seconds since epoch in eve timezone"""
+    """ returns the seconds since epoch in eve timezone
+    """
     return time.mktime(datetime.datetime.utcnow().timetuple())
 
 
@@ -200,7 +203,8 @@ def getCharinfoForCharId(charId):
 
 
 def getCorpidsForCharId(charId):
-    """ returns a list with the ids if the corporation history of a charId"""
+    """ returns a list with the ids if the corporation history of a charId
+    """
     data = []
     soup = getCharinfoForCharId(charId)
     for rowSet in soup.select("rowset"):
