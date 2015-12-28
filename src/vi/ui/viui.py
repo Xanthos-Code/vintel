@@ -122,6 +122,7 @@ class MainWindow(QtGui.QMainWindow):
 		self.initMapPosition = None  # we read this after first rendering
 		self.systems = self.dotlan.systems
 		self.chatEntries = []
+		self.alreadyShowedSoundWarning = False
 
 		self.setMapContent(self.dotlan.svg)
 		self.avatarFindThread = AvatarFindThread()
@@ -220,7 +221,7 @@ class MainWindow(QtGui.QMainWindow):
 					(None, "changeUseSpokenNotifications", self.useSpokenNotificationsAction.isChecked()),
 					(None, "changeClipboard", self.kosClipboardActiveAction.isChecked()),
 					(None, "changeFloatingOverview", self.floatingOverviewAction.isChecked()),
-					(None, "alreadyShowedSoundWarning", self.alreadyShowedSoundWarning))
+					(None, "changeAlreadyShowedSoundWarning", self.alreadyShowedSoundWarning))
 		self.cache.putIntoCache("settings", str(settings), 60 * 60 * 24 * 365)
 		event.accept()
 
@@ -231,6 +232,10 @@ class MainWindow(QtGui.QMainWindow):
 
 	def changeFloatingOverview(self, newValue=None):
 		pass
+
+	def changeAlreadyShowedSoundWarning(self, newValue):
+		self.alreadyShowedSoundWarning = self.alreadyShowedSoundWarning
+
 
 	def changeChatVisibility(self, newValue=None):
 		if newValue is None:
