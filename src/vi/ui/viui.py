@@ -109,12 +109,12 @@ class MainWindow(QtGui.QMainWindow):
 			self.knownPlayerNames = set(self.knownPlayerNames.split(","))
 		else:
 			self.knownPlayerNames = set()
-		roomNames = self.cache.getFromCache("room_names")
-		if roomNames:
-			roomNames = roomNames.split(",")
+		roomnames = self.cache.getFromCache("room_names")
+		if roomnames:
+			roomnames = roomnames.split(",")
 		else:
-			roomNames = (u"TheCitadel", u"North Provi Intel", u"North Catch Intel")
-			self.cache.putIntoCache("room_names", u",".join(roomNames), 60 * 60 * 24 * 365 * 5)
+			roomnames = (u"TheCitadel", u"North Provi Intel", u"North Catch Intel")
+			self.cache.putIntoCache("room_names", u",".join(roomnames), 60 * 60 * 24 * 365 * 5)
 
 		# Wire up state and UI connections
 		self.isFrameless = None  # we need this because 2 places to change
@@ -149,13 +149,12 @@ class MainWindow(QtGui.QMainWindow):
 		self.connect(self.showChatAction, Qt.SIGNAL("triggered()"), self.changeChatVisibility)
 		self.connect(self.soundSetupAction, Qt.SIGNAL("triggered()"), self.showSoundSetup)
 		self.connect(self.activateSoundAction, Qt.SIGNAL("triggered()"), self.changeSound)
-		self.connect(self.useSpokenNotificationsAction, Qt.SIGNAL("triggered()"), self.sound.setUseSpokenNotifications)
+		self.connect(self.useSpokenNotificationsAction, Qt.SIGNAL("triggered()"), self.changeUseSpokenNotifications)
 		self.connect(self.floatingOverviewAction, Qt.SIGNAL("triggered()"), self.showFloatingOverview)
 		self.connect(self.trayIcon, Qt.SIGNAL("alarm_distance"), self.changeAlarmDistance)
 		self.connect(self.framelessWindowAction, Qt.SIGNAL("triggered()"), self.changeFrameless)
 		self.connect(self.trayIcon, Qt.SIGNAL("change_frameless"), self.changeFrameless)
 		self.connect(self.frameButton, Qt.SIGNAL("clicked()"), self.changeFrameless)
-		self.connect(self.activateSoundAction, Qt.SIGNAL("triggered()"), self.changeSound)
 		self.connect(self.quitAction, Qt.SIGNAL("triggered()"), self.close)
 		self.connect(self.trayIcon, Qt.SIGNAL("quit"), self.close)
 		self.connect(self.jumpbridgeDataAction, Qt.SIGNAL("triggered()"), self.showJumbridgeChooser)
@@ -193,7 +192,7 @@ class MainWindow(QtGui.QMainWindow):
 		self.mapTimer = QtCore.QTimer(self)
 		self.connect(self.mapTimer, QtCore.SIGNAL("timeout()"), self.updateMap)
 		self.mapTimer.start(1000)
-		self.chatparser = chatparser.ChatParser(self.pathToLogs, roomNames, self.systems)
+		self.chatparser = chatparser.ChatParser(self.pathToLogs, roomnames, self.systems)
 		versionCheckThread = drachenjaeger.NotifyNewVersionThread()
 		versionCheckThread.connect(versionCheckThread, Qt.SIGNAL("newer_version"), self.notifyNewerVersion)
 		versionCheckThread.run()
@@ -206,40 +205,62 @@ class MainWindow(QtGui.QMainWindow):
 			value = ",".join(self.knownPlayerNames)
 			self.cache.putIntoCache("known_player_names", value, 60 * 60 * 24 * 365)
 		# program state to cache (to read it on next startup)
-		settings = ((None, "restoreGeometry", str(self.saveGeometry())), (None, "restoreState", str(self.saveState())),
+		settings = ((None, "restoreGeometry", str(self.saveGeometry())),
+					(None, "restoreState", str(self.saveState())),
 					("splitter", "restoreGeometry", str(self.splitter.saveGeometry())),
 					("splitter", "restoreState", str(self.splitter.saveState())),
+					("map", "setZoomFactor", self.map.zoomFactor()),
 					(None, "changeOpacity", self.opacityGroup.checkedAction().opacity),
 					(None, "changeAlwaysOnTop", self.alwaysOnTopAction.isChecked()),
 					(None, "changeShowAvatars", self.showChatAvatarsAction.isChecked()),
 					(None, "changeAlarmDistance", self.alarmDistance),
 					(None, "changeSound", self.activateSoundAction.isChecked()),
-					(None, "changeChatVisibility", self.showChatAction.isChecked()), (None, "setInitMapPosition", (self.map.page().mainFrame().scrollPosition().x(), self.map.page().mainFrame().scrollPosition().y())),
+					(None, "changeChatVisibility", self.showChatAction.isChecked()),
+					(None, "setInitMapPosition", (self.map.page().mainFrame().scrollPosition().x(), self.map.page().mainFrame().scrollPosition().y())),
 					(None, "setSoundVolume", self.sound.soundVolume),
 					(None, "changeFrameless", self.framelessWindowAction.isChecked()),
-					("map", "setZoomFactor", self.map.zoomFactor()),
-					("kosClipboardActiveAction", "setChecked", self.kosClipboardActiveAction.isChecked()),
-					("useSpokenNotificationsAction", "setChecked", self.useSpokenNotificationsAction.isChecked()),
-					("floatingOverviewAction", "setChecked", self.floatingOverviewAction.isChecked()),)
+					(None, "changeUseSpokenNotifications", self.useSpokenNotificationsAction.isChecked()),
+					(None, "changeClipboard", self.kosClipboardActiveAction.isChecked()),
+					(None, "changeFloatingOverview", self.floatingOverviewAction.isChecked()),)
 		self.cache.putIntoCache("settings", str(settings), 60 * 60 * 24 * 365)
 		event.accept()
 
+
 	def notifyNewerVersion(self, newestVersion):
-		self.trayIcon.showMessage("Newer Version",
-								  ("A newer Version of VINTEL is available.\nFind the URL in the info!"), 1)
+		self.trayIcon.showMessage("Newer Version", ("A newer Version of VINTEL is available.\nFind the URL in the info!"), 1)
+
+
+	def changeFloatingOverview(self, newValue=None):
+		pass
 
 	def changeChatVisibility(self, newValue=None):
-		if newValue is not None:
-			self.showChatAction.setChecked(newValue)
-		self.chatbox.setVisible(self.showChatAction.isChecked())
+		if newValue is None:
+			newValue = self.showChatAction.isChecked()
+		self.chatbox.setVisible(newValue)
 
-	def changeOpacity(self, value=None):
-		if value:
+
+	def changeClipboard(self, newValue=None):
+		if newValue is None:
+			newValue = not self.kosClipboardActiveAction.isChecked()
+		self.kosClipboardActiveAction.setChecked(newValue)
+		self.sound.setUseSpokenNotifications(newValue)
+
+
+	def changeUseSpokenNotifications(self, newValue=None):
+		if newValue is None:
+			newValue = self.useSpokenNotificationsAction.isChecked()
+		self.useSpokenNotificationsAction.setChecked(newValue)
+		self.sound.setUseSpokenNotifications(newValue)
+
+
+	def changeOpacity(self, newValue=None):
+		if newValue is not None:
 			for action in self.opacityGroup.actions():
-				if action.opacity == value:
+				if action.opacity == newValue:
 					action.setChecked(True)
 		action = self.opacityGroup.checkedAction()
 		self.setWindowOpacity(action.opacity)
+
 
 	def changeSound(self, newValue=None, disable=False):
 		if disable:
@@ -249,65 +270,49 @@ class MainWindow(QtGui.QMainWindow):
 			self.soundButton.setEnabled(False)
 		# QtGui.QMessageBox.warning(None, "Sound disabled", "I can't find the lib 'pygame' which I use to play sounds, ""so I have to disable the soundsystem.\nIf you want sound, please install the 'pygame' library.", "OK")
 		else:
-			if newValue is not None:
-				self.activateSoundAction.setChecked(newValue)
-			self.sound.soundActive = self.activateSoundAction.isChecked()
+			if newValue is None:
+				newValue = self.activateSoundAction.isChecked()
+			self.sound.soundActive = newValue
 
-	def addMessageToIntelChat(self, message):
-		scrollToBottom = False
-		if (self.chatListWidget.verticalScrollBar().value() == self.chatListWidget.verticalScrollBar().maximum()):
-			scrollToBottom = True
-		entry = ChatEntry(message)
-		listWidgetItem = QtGui.QListWidgetItem(self.chatListWidget)
-		listWidgetItem.setSizeHint(entry.sizeHint())
-		self.chatListWidget.addItem(listWidgetItem)
-		self.chatListWidget.setItemWidget(listWidgetItem, entry)
-		self.avatarFindThread.addChatEntry(entry)
-		self.chatEntries.append(entry)
-		self.connect(entry, Qt.SIGNAL("mark_system"), self.markSystemOnMap)
-		self.emit(Qt.SIGNAL("chat_message_added"), entry)
-		if scrollToBottom:
-			self.chatListWidget.scrollToBottom()
 
 	def changeAlwaysOnTop(self, newValue=None):
+		if newValue is None:
+			newValue = self.alwaysOnTopAction.isChecked()
 		self.hide()
-		if newValue is not None:
-			self.alwaysOnTopAction.setChecked(newValue)
-		alwaysOnTop = self.alwaysOnTopAction.isChecked()
-		if alwaysOnTop:
+		self.alwaysOnTopAction.setChecked(newValue)
+		if newValue:
 			self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
 		else:
 			self.setWindowFlags(self.windowFlags() & (~QtCore.Qt.WindowStaysOnTopHint))
 		self.show()
 
+
 	def changeFrameless(self, newValue=None):
 		self.hide()
 		if newValue is None:
-			if self.isFrameless is None:
-				self.isFrameless = False
-			newValue = not self.isFrameless
+			newValue = self.framelessWindowAction.isChecked()
+
 		if newValue:
 			self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
-			self.menubar.setVisible(False)
-			self.frameButton.setVisible(True)
+			self.changeAlwaysOnTop(True)
 		else:
 			self.setWindowFlags(self.windowFlags() & (~QtCore.Qt.FramelessWindowHint))
-			self.menubar.setVisible(True)
-			self.frameButton.setVisible(False)
-		self.changeAlwaysOnTop(newValue)
-		self.isFrameless = newValue
-		self.framelessWindowAction.setChecked(newValue)
+		self.menubar.setVisible(not newValue)
+		self.frameButton.setVisible(newValue)
+
 		for cm in TrayContextMenu.instances:
 			cm.framelessCheck.setChecked(newValue)
 		self.show()
 
+
 	def changeShowAvatars(self, newValue=None):
-		if newValue is not None:
-			self.showChatAvatarsAction.setChecked(newValue)
-		show = self.showChatAvatarsAction.isChecked()
-		ChatEntry.SHOW_AVATAR = show
+		if newValue is None:
+			newValue = self.showChatAvatarsAction.isChecked()
+		self.showChatAvatarsAction.setChecked(newValue)
+		ChatEntry.SHOW_AVATAR = newValue
 		for entry in self.chatEntries:
-			entry.avatarLabel.setVisible(show)
+			entry.avatarLabel.setVisible(newValue)
+
 
 	def chatSmaller(self):
 		newSize = ChatEntry.TEXT_SIZE - 1
@@ -315,11 +320,13 @@ class MainWindow(QtGui.QMainWindow):
 		for entry in self.chatEntries:
 			entry.changeFontSize(newSize)
 
+
 	def chatLarger(self):
 		newSize = ChatEntry.TEXT_SIZE + 1
 		ChatEntry.TEXT_SIZE = newSize
 		for entry in self.chatEntries:
 			entry.changeFontSize(newSize)
+
 
 	def changeAlarmDistance(self, distance):
 		self.alarmDistance = distance
@@ -329,9 +336,11 @@ class MainWindow(QtGui.QMainWindow):
 					action.setChecked(True)
 		self.trayIcon.alarmDistance = distance
 
+
 	def changeJumpbridgeView(self):
 		self.dotlan.changeJumpbrigdeVisibility()
 		self.updateMap()
+
 
 	def clipboardChanged(self, mode):
 		if mode == 0 and self.kosClipboardActiveAction.isChecked():
@@ -346,6 +355,7 @@ class MainWindow(QtGui.QMainWindow):
 						break
 				self.oldClipboardContent = content
 
+
 	def mapLinkClicked(self, url):
 		systemName = unicode(url.path().split("/")[-1]).upper()
 		system = self.systems[str(systemName)]
@@ -355,9 +365,11 @@ class MainWindow(QtGui.QMainWindow):
 		sc.connect(sc, Qt.SIGNAL("location_set"), self.setLocation)
 		sc.show()
 
+
 	def markSystemOnMap(self, systemname):
 		self.systems[unicode(systemname)].mark()
 		self.updateMap()
+
 
 	def setLocation(self, char, newSystem):
 		for system in self.systems.values():
@@ -376,13 +388,16 @@ class MainWindow(QtGui.QMainWindow):
 		self.map.page().mainFrame().setScrollPosition(scrollposition)
 		self.map.page().setLinkDelegationPolicy(QWebPage.DelegateAllLinks)
 
+
 	def setInitMapPosition(self, xy):
 		self.initMapPosition = QPoint(xy[0], xy[1])
+
 
 	def showChatroomChooser(self):
 		chooser = ChatroomsChooser(self)
 		chooser.connect(chooser, Qt.SIGNAL("rooms_changed"), self.changedRoomnames)
 		chooser.show()
+
 
 	def showJumbridgeChooser(self):
 		url = self.cache.getFromCache("jumpbridge_url")
@@ -390,8 +405,10 @@ class MainWindow(QtGui.QMainWindow):
 		chooser.connect(chooser, Qt.SIGNAL("set_jumpbridge_url"), self.setJumpbridges)
 		chooser.show()
 
+
 	def setSoundVolume(self, value):
 		self.sound.setSoundVolume(value)
+
 
 	def setJumpbridges(self, url):
 		if url is None:
@@ -411,9 +428,28 @@ class MainWindow(QtGui.QMainWindow):
 		except Exception as e:
 			QtGui.QMessageBox.warning(None, "Loading jumpbridges failed!", "Error: {0}".format(unicode(e)), "OK")
 
+
 	def showRegionChooser(self):
 		chooser = RegionChooser(self)
 		chooser.show()
+
+
+	def addMessageToIntelChat(self, message):
+		scrollToBottom = False
+		if (self.chatListWidget.verticalScrollBar().value() == self.chatListWidget.verticalScrollBar().maximum()):
+			scrollToBottom = True
+		entry = ChatEntry(message)
+		listWidgetItem = QtGui.QListWidgetItem(self.chatListWidget)
+		listWidgetItem.setSizeHint(entry.sizeHint())
+		self.chatListWidget.addItem(listWidgetItem)
+		self.chatListWidget.setItemWidget(listWidgetItem, entry)
+		self.avatarFindThread.addChatEntry(entry)
+		self.chatEntries.append(entry)
+		self.connect(entry, Qt.SIGNAL("mark_system"), self.markSystemOnMap)
+		self.emit(Qt.SIGNAL("chat_message_added"), entry)
+		if scrollToBottom:
+			self.chatListWidget.scrollToBottom()
+
 
 	def showKosResult(self, state, text, requestType, hasKos):
 		if hasKos:
@@ -433,9 +469,11 @@ class MainWindow(QtGui.QMainWindow):
 		elif state == "error":
 			self.trayIcon.showMessage("KOS Failure", text, 3)
 
-	def changedRoomnames(self, newRoomNames):
-		self.cache.putIntoCache("room_names", u",".join(newRoomNames), 60 * 60 * 24 * 365 * 5)
-		self.chatparser.rooms = newRoomNames
+
+	def changedRoomnames(self, newRoomnames):
+		self.cache.putIntoCache("room_names", u",".join(newRoomnames), 60 * 60 * 24 * 365 * 5)
+		self.chatparser.rooms = newRoomnames
+
 
 	def showInfo(self):
 		infoDialog = QtGui.QDialog(self)
@@ -445,8 +483,10 @@ class MainWindow(QtGui.QMainWindow):
 		infoDialog.connect(infoDialog.closeButton, Qt.SIGNAL("clicked()"), infoDialog.accept)
 		infoDialog.show()
 
+
 	def showFloatingOverview(self):
 		pass
+
 
 	def showSoundSetup(self):
 		dialog = QtGui.QDialog(self)
@@ -456,6 +496,7 @@ class MainWindow(QtGui.QMainWindow):
 		dialog.connect(dialog.testSoundButton, Qt.SIGNAL("clicked()"), self.sound.playSound)
 		dialog.connect(dialog.closeButton, Qt.SIGNAL("clicked()"), dialog.accept)
 		dialog.show()
+
 
 	def systemTrayActivated(self, reason):
 		if reason == QtGui.QSystemTrayIcon.Trigger:
@@ -467,12 +508,14 @@ class MainWindow(QtGui.QMainWindow):
 			else:
 				self.showMinimized()
 
+
 	def updateAvatarOnChatEntry(self, chatEntry, avatarData):
 		updated = chatEntry.updateAvatar(avatarData)
 		if not updated:
 			self.avatarFindThread.addChatEntry(chatEntry, clearCache=True)
 		else:
 			self.emit(Qt.SIGNAL("avatar_loaded"), chatEntry.message.user, avatarData)
+
 
 	def updateMap(self):
 		def updateStatisticsOnMap(data):
@@ -489,11 +532,14 @@ class MainWindow(QtGui.QMainWindow):
 			statisticsThread.start()
 		self.setMapContent(self.dotlan.svg)
 
+
 	def zoomMapIn(self):
 		self.map.setZoomFactor(self.map.zoomFactor() + 0.1)
 
+
 	def zoomMapOut(self):
 		self.map.setZoomFactor(self.map.zoomFactor() - 0.1)
+
 
 	def logFileChanged(self, path):
 		messages = self.chatparser.fileModified(path)
@@ -546,19 +592,21 @@ class ChatroomsChooser(QtGui.QDialog):
 		self.connect(self.cancelButton, Qt.SIGNAL("clicked()"), self.accept)
 		self.connect(self.saveButton, Qt.SIGNAL("clicked()"), self.saveClicked)
 		cache = Cache()
-		roomNames = cache.getFromCache("room_names")
-		if not roomNames:
-			roomNames = u"TheCitadel, North Provi Intel, North Catch Intel"
-		self.roomNamesField.setPlainText(roomNames)
+		roomnames = cache.getFromCache("room_names")
+		if not roomnames:
+			roomnames = u"TheCitadel, North Provi Intel, North Catch Intel"
+		self.roomnamesField.setPlainText(roomnames)
+
 
 	def saveClicked(self):
-		text = unicode(self.roomNamesField.toPlainText())
+		text = unicode(self.roomnamesField.toPlainText())
 		rooms = [unicode(name.strip()) for name in text.split(",")]
 		self.emit(Qt.SIGNAL("rooms_changed"), rooms)
 		self.accept()
 
+
 	def setDefaults(self):
-		self.roomNamesField.setPlainText(u"TheCitadel,North Provi Intel,North Catch Intel")
+		self.roomnamesField.setPlainText(u"TheCitadel,North Provi Intel,North Catch Intel")
 
 
 class RegionChooser(QtGui.QDialog):
@@ -573,6 +621,7 @@ class RegionChooser(QtGui.QDialog):
 		if not regionName:
 			regionName = u"Providence"
 		self.regionNameField.setPlainText(regionName)
+
 
 	def saveClicked(self):
 		text = unicode(self.regionNameField.toPlainText())
@@ -606,6 +655,7 @@ class RegionChooser(QtGui.QDialog):
 			QMessageBox.information(self, u"VINTEL needs restart", u"Region was changed, you need to restart VINTEL!")
 			self.accept()
 
+
 	def setDefaults(self):
 		self.regionNameField.setPlainText(u"Providence")
 
@@ -634,6 +684,7 @@ class SystemChat(QtGui.QDialog):
 		self.connect(self.clearButton, Qt.SIGNAL("clicked()"), self.setSystemClear)
 		self.connect(self.locationButton, Qt.SIGNAL("clicked()"), self.locationSet)
 
+
 	def _addMessageToChat(self, message, avatarPixmap):
 		scrollToBottom = False
 		if (self.chat.verticalScrollBar().value() == self.chat.verticalScrollBar().maximum()):
@@ -649,6 +700,7 @@ class SystemChat(QtGui.QDialog):
 		if scrollToBottom:
 			self.chat.scrollToBottom()
 
+
 	def addChatEntry(self, entry):
 		if self.chatType == SystemChat.SYSTEM:
 			message = entry.message
@@ -656,9 +708,11 @@ class SystemChat(QtGui.QDialog):
 			if self.selector in message.systems:
 				self._addMessageToChat(message, avatarPixmap)
 
+
 	def locationSet(self):
 		char = unicode(self.playerNamesBox.currentText())
 		self.emit(Qt.SIGNAL("location_set"), char, self.system.name)
+
 
 	def newAvatarAvailable(self, charname, avatarData):
 		for entry in self.chatEntries:
@@ -669,9 +723,11 @@ class SystemChat(QtGui.QDialog):
 		self.system.setStatus(states.ALARM)
 		self.parent.updateMap()
 
+
 	def setSystemClear(self):
 		self.system.setStatus(states.CLEAR)
 		self.parent.updateMap()
+
 
 	def closeDialog(self):
 		self.accept()
@@ -692,6 +748,7 @@ class ChatEntry(QtGui.QWidget):
 		if not ChatEntry.SHOW_AVATAR:
 			self.avatarLabel.setVisible(False)
 
+
 	def linkClicked(self, link):
 		link = unicode(link)
 		function, parameter = link.split("/", 1)
@@ -700,11 +757,13 @@ class ChatEntry(QtGui.QWidget):
 		if function == "link":
 			webbrowser.open(parameter)
 
+
 	def updateText(self):
 		time = datetime.datetime.strftime(self.message.timestamp, "%H:%M:%S")
 		text = u"<small>{time} - <b>{user}</b> - <i>{room}</i></small><br>{text}".format(user=self.message.user,
 				room=self.message.room, time=time, text=self.message.message)
 		self.textLabel.setText(text)
+
 
 	def updateAvatar(self, avatarData):
 		image = QImage.fromData(avatarData)
@@ -714,6 +773,7 @@ class ChatEntry(QtGui.QWidget):
 		scaledAvatar = pixmap.scaled(32, 32)
 		self.avatarLabel.setPixmap(scaledAvatar)
 		return True
+
 
 	def changeFontSize(self, newSize):
 		font = self.textLabel.font()

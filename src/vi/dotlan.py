@@ -329,11 +329,11 @@ class System(object):
 			characters.append(char)
 		return characters
 
-	def removeLocatedCharacter(self, charName):
+	def removeLocatedCharacter(self, charname):
 		idName = self.name + u"_loc"
 
-		if charName in self.__locatedCharacters:
-			self.__locatedCharacters.remove(charName)
+		if charname in self.__locatedCharacters:
+			self.__locatedCharacters.remove(charname)
 			if not self.__locatedCharacters:
 				for element in self.mapSoup.select("#" + idName):
 					element.decompose()

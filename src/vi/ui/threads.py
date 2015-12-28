@@ -51,21 +51,21 @@ class AvatarFindThread(QThread):
 		while True:
 			try:
 				chatEntry = self.q.get()
-				charName = chatEntry.message.user
+				charname = chatEntry.message.user
 				avatar = None
-				if charName == "VINTEL":
+				if charname == "VINTEL":
 					with open(resourcePath("vi/ui/res/logo_small.png"), "rb") as f:
 						avatar = f.read()
 				if not avatar:
-					avatar = cache.getAvatar(charName)
+					avatar = cache.getAvatar(charname)
 				if not avatar:
 					diffLastCall = time.time() - lastCall
 					if diffLastCall < wait:
 						time.sleep((wait - diffLastCall) / 1000.0)
-					avatar = evegate.getAvatarForPlayer(charName)
+					avatar = evegate.getAvatarForPlayer(charname)
 					lastCall = time.time()
 					if avatar:
-						cache.putAvatar(charName, avatar)
+						cache.putAvatar(charname, avatar)
 				if avatar:
 					self.emit(SIGNAL("avatar_update"), chatEntry, avatar)
 			except Exception as e:

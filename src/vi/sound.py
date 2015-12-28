@@ -43,10 +43,10 @@ class Sound(Singleton):
 	soundAvailable = False
 	useDarwinSound = False
 	useSpokenNotifications = False
-	
+
 	def __init__(self):
 		Singleton.__init__(self)
-		
+
 		if gPygameAvailable:
 			pygame.mixer.init()
 			self.soundAvailable = True
@@ -55,7 +55,7 @@ class Sound(Singleton):
 			self.soundAvailable = True
 
 
-	def setUseSpokenNotifications(self, newValue=None):
+	def setUseSpokenNotifications(self, newValue):
 		if newValue is not None:
 			self.useSpokenNotifications = newValue
 		print newValue
@@ -68,7 +68,7 @@ class Sound(Singleton):
 		for sound in self.soundCache.values():
 			# Convert to a value between 0 and 1 when passing to the underlying subsystem
 			sound.setVolume(float(self.soundVolume)	 / 100.0)
-	
+
 
 	def playSound(self, name="alarm", message=None):
 		if self.soundAvailable and self.soundActive:
@@ -78,7 +78,7 @@ class Sound(Singleton):
 			return
 
 		path = resourcePath("vi/ui/res/{0}".format(self.SOUNDS[name]))
-	
+
 		if self.useDarwinSound:
 			if self.useSpokenNotifications and message:
 				os.system("say [[volm {0}]] {1}".format(float(self.soundVolume) / 100.0, message))

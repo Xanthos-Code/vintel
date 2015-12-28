@@ -24,10 +24,10 @@ import urllib2
 from vi import evegate
 from vi.cache.cache import Cache
 
-UNKNOWN = "?"
-NOT_KOS = 'NOT kos'
+UNKNOWN = "No Result"
+NOT_KOS = 'Not Kos'
 KOS = "KOS"
-RED_BY_LAST = "RED by last"
+RED_BY_LAST = "Red by last"
 
 
 def check(parts):
@@ -46,17 +46,17 @@ def check(parts):
 	kosData = json.loads(request.read())
 
 	for char in kosData["results"]:
-		charName = char["label"]
+		charname = char["label"]
 		corpname = char["corp"]["label"]
-		names.remove(charName)
+		names.remove(charname)
 
 		if char["kos"] or char["corp"]["kos"] or char["corp"]["alliance"]["kos"]:
-			data[charName] = {"kos": KOS}
+			data[charname] = {"kos": KOS}
 		elif corpname not in evegate.NPC_CORPS:
-			data[charName] = {"kos": NOT_KOS}
+			data[charname] = {"kos": NOT_KOS}
 		else:
 			if char not in checkBylastChars:
-				checkBylastChars.append(charName)
+				checkBylastChars.append(charname)
 
 	for name in names:  # Still names there (the kos checker not found) ?
 		checkBylastChars.append(name)
@@ -76,10 +76,10 @@ def check(parts):
 	corpIdName = evegate.idsToNames(corpIds)
 	for name, nameData in deeperData.items():
 		nameData["corpnames"] = [corpIdName[id] for id in nameData["corpids"]]
-		for corpName in nameData["corpnames"]:
-			if corpName not in evegate.NPC_CORPS:
+		for corpname in nameData["corpnames"]:
+			if corpname not in evegate.NPC_CORPS:
 				nameData["need_check"] = True
-				nameData["corp_to_check"] = corpName
+				nameData["corp_to_check"] = corpname
 				break
 
 	corpsToCheck = set([nameData["corp_to_check"] for nameData in deeperData.values() if nameData["need_check"] == True])
@@ -105,13 +105,13 @@ def check(parts):
 				kosResult = True
 		corpsResult[corp] = kosResult
 
-	for charName, nameData in deeperData.items():
+	for charname, nameData in deeperData.items():
 		if not nameData["need_check"]:
-			data[charName] = {"kos": UNKNOWN}
+			data[charname] = {"kos": UNKNOWN}
 		if nameData["need_check"] and corpsResult[nameData["corp_to_check"]] == True:
-			data[charName] = {"kos": RED_BY_LAST}
+			data[charname] = {"kos": RED_BY_LAST}
 		else:
-			data[charName] = {"kos": UNKNOWN}
+			data[charname] = {"kos": UNKNOWN}
 
 	return data
 
@@ -120,11 +120,11 @@ def resultToText(results, onlyKos=False):
 	groups = {}
 	paragraphs = []
 
-	for charName, resultData in results.items():
+	for charname, resultData in results.items():
 		state = resultData["kos"]
 		if state not in groups:
 			groups[state] = set()
-		groups[state].add(charName)
+		groups[state].add(charname)
 
 	if KOS in groups:
 		paragraphs.append(KOS + u": " + u", ".join(groups[KOS]))

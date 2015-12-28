@@ -34,7 +34,7 @@ EXISTS = 1
 USERAGENT = "VINTEL/{version} (+http://drachenjaeger.eu/vintel/vintel.html)".format(version=VERSION)
 
 
-def charNameToId(name):
+def charnameToId(name):
 	""" Uses the EVE API to convert a charname to his ID
 	"""
 	try:
@@ -135,14 +135,14 @@ def idsToNames(ids):
 	return data
 
 
-def getAvatarForPlayer(charName):
+def getAvatarForPlayer(charname):
 	""" Downlaoding th eavatar for a player/character
 		charname = name of the character
 		returns None if something gone wrong
 	"""
 	avatar = None
 	try:
-		charId = charNameToId(charName)
+		charId = charnameToId(charname)
 		if charId:
 			imageUrl = "http://image.eveonline.com/Character/{id}_{size}.jpg"
 			avatar = urllib2.urlopen(imageUrl.format(id=charId, size=32)).read()

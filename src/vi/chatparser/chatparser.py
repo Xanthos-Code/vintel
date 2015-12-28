@@ -55,8 +55,8 @@ class ChatParser(object):
 	def _collectInitFileData(self, path):
 		currentTime = time.time()
 		maxDiff = 60 * 60 * 24  # what is 1 day in seconds
-		for fileName in os.listdir(path):
-			fullPath = os.path.join(path, fileName)
+		for filename in os.listdir(path):
+			fullPath = os.path.join(path, filename)
 			fileTime = os.path.getmtime(fullPath)
 			if currentTime - fileTime < maxDiff:
 				self.addFile(fullPath)
@@ -65,7 +65,7 @@ class ChatParser(object):
 		lines = None
 		content = ""
 		filename = os.path.basename(path)
-		roomName = filename[:-20]
+		roomname = filename[:-20]
 		with open(path, "r") as f:
 			content = f.read()
 		try:
@@ -76,26 +76,26 @@ class ChatParser(object):
 			return None
 
 		lines = content.split("\n")
-		if (path not in self.fileData or (roomName in LOCAL_NAMES and "charname" not in self.fileData.get(path, []))):
+		if (path not in self.fileData or (roomname in LOCAL_NAMES and "charname" not in self.fileData.get(path, []))):
 			self.fileData[path] = {}
-			if roomName in LOCAL_NAMES:
-				charName = None
+			if roomname in LOCAL_NAMES:
+				charname = None
 				sessionStart = None
 				# for local-chats we need more infos
 				for line in lines:
 					if "Listener:" in line:
-						charName = line[line.find(":") + 1:].strip()
+						charname = line[line.find(":") + 1:].strip()
 					elif "Session started:" in line:
 						sessionstr = line[line.find(":") + 1:].strip()
 						sessionStart = datetime.datetime.strptime(sessionstr, "%Y.%m.%d %H:%M:%S")
-					if charName and sessionStart:
-						self.fileData[path]["charname"] = charName
+					if charname and sessionStart:
+						self.fileData[path]["charname"] = charname
 						self.fileData[path]["sessionstart"] = sessionStart
 						break
 		self.fileData[path]["lines"] = len(lines)
 		return lines
 
-	def _lineToMessage(self, line, roomName):
+	def _lineToMessage(self, line, roomname):
 		# finding the timestamp
 		timeStart = line.find("[") + 1
 		timeEnds = line.find("]")
@@ -105,10 +105,10 @@ class ChatParser(object):
 		except ValueError:
 			return None
 		# finding the username of the poster
-		userends = line.find(">")
-		username = line[timeEnds + 1:userends].strip()
+		userEnds = line.find(">")
+		username = line[timeEnds + 1:userEnds].strip()
 		# finding the pure message
-		text = line[userends + 1:].strip()  # text will the text to work an
+		text = line[userEnds + 1:].strip()  # text will the text to work an
 		originalText = text
 		formatedText = u"<rtext>{0}</rtext>".format(text)
 		soup = BeautifulSoup(formatedText, 'html.parser')
@@ -117,18 +117,18 @@ class ChatParser(object):
 		utext = text.upper()
 
 		# KOS request
-		if roomName.startswith("=VI="):
-			return Message(roomName, "xxx " + text, timestamp, username, systems, "XXX " + utext,
+		if roomname.startswith("=VI="):
+			return Message(roomname, "xxx " + text, timestamp, username, systems, "XXX " + utext,
 						   status=states.KOS_STATUS_REQUEST)
 		elif utext.startswith("XXX "):
-			return Message(roomName, text, timestamp, username, systems, utext, status=states.KOS_STATUS_REQUEST)
+			return Message(roomname, text, timestamp, username, systems, utext, status=states.KOS_STATUS_REQUEST)
 		elif utext.startswith("VINTELSOUND_TEST"):
-			return Message(roomName, text, timestamp, username, systems, utext, status=states.SOUND_TEST)
-		if roomName not in self.rooms:
+			return Message(roomname, text, timestamp, username, systems, utext, status=states.SOUND_TEST)
+		if roomname not in self.rooms:
 			return None
 
 		# and now creating message object
-		message = Message(roomName, "", timestamp, username, systems, text, originalText)
+		message = Message(roomname, "", timestamp, username, systems, text, originalText)
 		# is the message allready here? may happen if someone plays > 1 account
 		if message in self.knownMessages:
 			message.status = states.IGNORE
@@ -156,7 +156,7 @@ class ChatParser(object):
 		if status == states.CLEAR and not systems:
 			maxSearch = 2  # we search only max_search messages in the room
 			for count, oldMessage in enumerate(
-					oldMessage for oldMessage in self.knownMessages[-1::-1] if oldMessage.room == roomName):
+					oldMessage for oldMessage in self.knownMessages[-1::-1] if oldMessage.room == roomname):
 				if oldMessage.systems and oldMessage.status == states.REQUEST:
 					for system in oldMessage.systems:
 						systems.add(system)
@@ -175,28 +175,28 @@ class ChatParser(object):
 		message = []
 		""" Parsing a line from the local chat. Can contain the system of the char
 		"""
-		charName = self.fileData[path]["charname"]
-		if charName not in self.locations:
-			self.locations[charName] = {"system": "?", "timestamp": datetime.datetime(1970, 1, 1, 0, 0, 0, 0)}
+		charname = self.fileData[path]["charname"]
+		if charname not in self.locations:
+			self.locations[charname] = {"system": "?", "timestamp": datetime.datetime(1970, 1, 1, 0, 0, 0, 0)}
 		# finding the timestamp
 		timeStart = line.find("[") + 1
 		timeEnds = line.find("]")
 		timeStr = line[timeStart:timeEnds].strip()
 		timestamp = datetime.datetime.strptime(timeStr, "%Y.%m.%d %H:%M:%S")
 		# finding the username of the poster
-		userends = line.find(">")
-		username = line[timeEnds + 1:userends].strip()
+		userEnds = line.find(">")
+		username = line[timeEnds + 1:userEnds].strip()
 		# finding the pure message
-		text = line[userends + 1:].strip()  # text will the text to work an
+		text = line[userEnds + 1:].strip()  # text will the text to work an
 		if username in ("EVE-System", "EVE System"):
 			if ":" in text:
 				system = text.split(":")[1].strip().replace("*", "").upper()
 			else:
 				system = "?"
-			if timestamp > self.locations[charName]["timestamp"]:
-				self.locations[charName]["system"] = system
-				self.locations[charName]["timestamp"] = timestamp
-				message = Message("", "", timestamp, charName, [system, ], "", status=states.LOCATION)
+			if timestamp > self.locations[charname]["timestamp"]:
+				self.locations[charname]["system"] = system
+				self.locations[charname]["timestamp"] = timestamp
+				message = Message("", "", timestamp, charname, [system, ], "", status=states.LOCATION)
 		return message
 
 	def fileModified(self, path):
@@ -208,7 +208,7 @@ class ChatParser(object):
 		# EvE names the file like room_20140913_200737.txt, so we don't need
 		# the last 20 chars
 		filename = os.path.basename(path)
-		roomName = filename[:-20]
+		roomname = filename[:-20]
 		if path not in self.fileData:
 			# seems eve created a new file. New Files have 12 lines header
 			self.fileData[path] = {"lines": 13}
@@ -220,10 +220,10 @@ class ChatParser(object):
 			line = line.strip()
 			if len(line) > 2:
 				message = None
-				if roomName in LOCAL_NAMES:
+				if roomname in LOCAL_NAMES:
 					message = self._parseLocal(path, line)
 				else:
-					message = self._lineToMessage(line, roomName)
+					message = self._lineToMessage(line, roomname)
 				if message:
 					messages.append(message)
 		return messages
