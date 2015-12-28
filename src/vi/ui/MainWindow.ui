@@ -329,9 +329,9 @@
     <addaction name="alwaysOnTopAction"/>
     <addaction name="menuTransparency"/>
     <addaction name="framelessWindowAction"/>
+    <addaction name="floatingOverviewAction"/>
     <addaction name="separator"/>
     <addaction name="kosClipboardActiveAction"/>
-    <addaction name="separator"/>
     <addaction name="separator"/>
     <addaction name="infoAction"/>
     <addaction name="quitAction"/>
@@ -436,7 +436,7 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Activate Local KOS-Check</string>
+    <string>KOS-Check Clipboard on Foreground</string>
    </property>
    <property name="toolTip">
     <string>Activate Clipboard KOS-Check</string>
@@ -469,7 +469,10 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Frameless Window</string>
+    <string>Frameless Main Window</string>
+   </property>
+   <property name="toolTip">
+    <string>Frameless Main Window</string>
    </property>
   </action>
   <action name="quitAction">
@@ -484,7 +487,7 @@
   </action>
   <action name="soundSetupAction">
    <property name="text">
-    <string>Sound Setup</string>
+    <string>Sound Setup...</string>
    </property>
   </action>
   <action name="jumpbridgeDataAction">
@@ -498,6 +501,14 @@
    </property>
    <property name="text">
     <string>Spoken Notifications</string>
+   </property>
+   <property name="toolTip">
+    <string>Spoken KOS results</string>
+   </property>
+  </action>
+  <action name="floatingOverviewAction">
+   <property name="text">
+    <string>Show Mini Overview...</string>
    </property>
   </action>
  </widget>
