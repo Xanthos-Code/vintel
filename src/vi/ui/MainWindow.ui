@@ -414,7 +414,7 @@
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>Choose Chatrooms</string>
+    <string>Choose Chatrooms...</string>
    </property>
   </action>
   <action name="showChatAvatarsAction">
@@ -482,7 +482,7 @@
   </action>
   <action name="chooseRegionAction">
    <property name="text">
-    <string>Choose Region</string>
+    <string>Choose Region...</string>
    </property>
   </action>
   <action name="soundSetupAction">

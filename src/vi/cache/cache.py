@@ -97,7 +97,8 @@ class Cache(object):
 			self.con.commit()
 
 	def getPlayerName(self, name):
-		""" Getting back infos about playername from Cache. Returns None if the name was not found, else it returns the status"""
+		""" Getting back infos about playername from Cache. Returns None if the name was not found, else it returns the status
+		"""
 		selectquery = "SELECT charname, status FROM playernames WHERE charname = ?"
 		founds = self.con.execute(selectquery, (name,)).fetchall()
 		if len(founds) == 0:
@@ -118,7 +119,8 @@ class Cache(object):
 			self.con.commit()
 
 	def getAvatar(self, name):
-		""" Getting the avatars_pictures data from the Cache. Returns None if there is no entry in the cache"""
+		""" Getting the avatars_pictures data from the Cache. Returns None if there is no entry in the cache
+		"""
 		selectQuery = "SELECT data FROM avatars WHERE charname = ?"
 		founds = self.con.execute(selectQuery, (name,)).fetchall()
 		if len(founds) == 0:
@@ -129,7 +131,8 @@ class Cache(object):
 			return data
 
 	def removeAvatar(self, name):
-		""" Removing an avatar from the cache"""
+		""" Removing an avatar from the cache
+		"""
 		with Cache.SQLITE_WRITE_LOCK:
 			query = "DELETE FROM avatars WHERE charname = ?"
 			self.con.execute(query, (name,))
@@ -141,5 +144,5 @@ class Cache(object):
 			settings = eval(settings)
 			for setting in settings:
 				obj = responder if not setting[0] else getattr(responder, setting[0])
-				print "{0} | {1} | {2}".format(str(obj), setting[1], setting[2])
+				#print "{0} | {1} | {2}".format(str(obj), setting[1], setting[2])
 				getattr(obj, setting[1])(setting[2])

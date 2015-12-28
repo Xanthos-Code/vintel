@@ -81,8 +81,7 @@ class MainWindow(QtGui.QMainWindow):
 
 		if self.dotlan.outdatedCacheError:
 			e = self.dotlan.outdatedCacheError
-			diagText = "I tried to get and process the data for the map " \
-					   "but something went wrong. To proceed I use the data I " \
+			diagText = "Something went wrong getting map data. To proceed I use the data I " \
 					   "have in my cache. This could be outdated.\nIf this problem " \
 					   "is permanent, there might be a change in the dotlan data " \
 					   "and Xintel must be modified. Check for a newer version " \
@@ -221,7 +220,8 @@ class MainWindow(QtGui.QMainWindow):
 					(None, "changeFrameless", self.framelessWindowAction.isChecked()),
 					(None, "changeUseSpokenNotifications", self.useSpokenNotificationsAction.isChecked()),
 					(None, "changeClipboard", self.kosClipboardActiveAction.isChecked()),
-					(None, "changeFloatingOverview", self.floatingOverviewAction.isChecked()),)
+					(None, "changeFloatingOverview", self.floatingOverviewAction.isChecked()),
+					(None, "alreadyShowedSoundWarning", self.alreadyShowedSoundWarning))
 		self.cache.putIntoCache("settings", str(settings), 60 * 60 * 24 * 365)
 		event.accept()
 
@@ -268,7 +268,9 @@ class MainWindow(QtGui.QMainWindow):
 			self.activateSoundAction.setEnabled(False)
 			self.soundSetupAction.setEnabled(False)
 			self.soundButton.setEnabled(False)
-		# QtGui.QMessageBox.warning(None, "Sound disabled", "I can't find the lib 'pygame' which I use to play sounds, ""so I have to disable the soundsystem.\nIf you want sound, please install the 'pygame' library.", "OK")
+			if not self.alreadyShowedSoundWarning:
+				self.alreadyShowedSoundWarning = True
+				QtGui.QMessageBox.warning(None, "Sound disabled", "I can't find the lib 'pygame' which I use to play sounds, ""so I have to disable the soundsystem.\nIf you want sound, please install the 'pygame' library.", "OK")
 		else:
 			if newValue is None:
 				newValue = self.activateSoundAction.isChecked()
