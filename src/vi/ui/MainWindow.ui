@@ -492,7 +492,7 @@
   </action>
   <action name="jumpbridgeDataAction">
    <property name="text">
-    <string>Jumpbridge Data</string>
+    <string>Jumpbridge Data...</string>
    </property>
   </action>
   <action name="useSpokenNotificationsAction">

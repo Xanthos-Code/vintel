@@ -116,15 +116,14 @@ class MainWindow(QtGui.QMainWindow):
 			self.cache.putIntoCache("room_names", u",".join(roomnames), 60 * 60 * 24 * 365 * 5)
 
 		# Wire up state and UI connections
-		self.isFrameless = None  # we need this because 2 places to change
 		self.oldClipboardContent = ""
 		self.alarmDistance = 0
 		self.lastStatisticsUdpdate = 0
-
 		self.initMapPosition = None  # we read this after first rendering
-		self.setMapContent(self.dotlan.svg)
 		self.systems = self.dotlan.systems
 		self.chatEntries = []
+
+		self.setMapContent(self.dotlan.svg)
 		self.avatarFindThread = AvatarFindThread()
 		self.connect(self.avatarFindThread, QtCore.SIGNAL("avatar_update"), self.updateAvatarOnChatEntry)
 		self.avatarFindThread.start()
