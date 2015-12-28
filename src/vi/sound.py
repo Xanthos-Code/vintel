@@ -58,7 +58,6 @@ class Sound(Singleton):
 	def setUseSpokenNotifications(self, newValue):
 		if newValue is not None:
 			self.useSpokenNotifications = newValue
-		print newValue
 
 
 	def setSoundVolume(self, newValue):
