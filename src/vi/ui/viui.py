@@ -260,7 +260,6 @@ class MainWindow(QtGui.QMainWindow):
 	def changeUseSpokenNotifications(self, newValue=None):
 		if newValue is None:
 			newValue = self.useSpokenNotificationsAction.isChecked()
-		self.useSpokenNotificationsAction.setChecked(newValue)
 		self.soundThread.setUseSpokenNotifications(newValue)
 
 
@@ -390,6 +389,7 @@ class MainWindow(QtGui.QMainWindow):
 		if not newSystem == "?" and newSystem in self.systems:
 			self.systems[newSystem].addLocatedCharacter(char)
 			self.setMapContent(self.dotlan.svg)
+
 
 	def setMapContent(self, content):
 		if self.initMapPosition is None:
