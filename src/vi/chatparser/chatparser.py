@@ -117,10 +117,10 @@ class ChatParser(object):
 		utext = text.upper()
 
 		# KOS request
-		if roomname.startswith("="):
-			return Message(roomname, "xxx " + text, timestamp, username, systems, "XXX " + utext, status=states.KOS_STATUS_REQUEST)
-		elif utext.startswith("XXX "):
+		if utext.startswith("XXX "):
 			return Message(roomname, text, timestamp, username, systems, utext, status=states.KOS_STATUS_REQUEST)
+		elif roomname.startswith("="):
+			return Message(roomname, "xxx " + text, timestamp, username, systems, "XXX " + utext, status=states.KOS_STATUS_REQUEST)
 		elif utext.startswith("VINTELSOUND_TEST"):
 			return Message(roomname, text, timestamp, username, systems, utext, status=states.SOUND_TEST)
 		if roomname not in self.rooms:
