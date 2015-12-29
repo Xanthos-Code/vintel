@@ -37,7 +37,7 @@ from vi import chatparser, dotlan, filewatcher, koschecker
 from vi import drachenjaeger, evegate
 from vi.cache.cache import Cache
 from vi import states
-from vi.sound import Sound
+from vi.sound import SoundThread
 
 from vi.resources import resourcePath
 
@@ -57,7 +57,10 @@ class MainWindow(QtGui.QMainWindow):
 		self.trayIcon = trayIcon
 		self.trayIcon.activated.connect(self.systemTrayActivated)
 		self.cache = Cache()
-		self.sound = Sound()
+
+		# Start Sound early
+		self.soundThread = SoundThread()
+		self.soundThread.start()
 
 		# Set up cached items
 		#
@@ -176,7 +179,7 @@ class MainWindow(QtGui.QMainWindow):
 			self.trayIcon.showMessage("Settings error", "Something went wrong loading saved state:\n {0}".format(str(e)), 1)
 
 		# Disable the sound UI if sound is not available
-		if not self.sound.soundAvailable:
+		if not self.soundThread.soundAvailable:
 			self.changeSound(disable=True)
 		else:
 			self.changeSound()
@@ -185,16 +188,21 @@ class MainWindow(QtGui.QMainWindow):
 		self.kosRequestThread = KOSCheckerThread()
 		self.connect(self.kosRequestThread, Qt.SIGNAL("kos_result"), self.showKosResult)
 		self.kosRequestThread.start()
+
 		self.filewatcherThread = filewatcher.FileWatcher(self.pathToLogs, 60 * 60 * 24)
 		self.connect(self.filewatcherThread, QtCore.SIGNAL("file_change"), self.logFileChanged)
 		self.filewatcherThread.start()
+
 		self.mapTimer = QtCore.QTimer(self)
 		self.connect(self.mapTimer, QtCore.SIGNAL("timeout()"), self.updateMap)
 		self.mapTimer.start(1000)
+
 		self.chatparser = chatparser.ChatParser(self.pathToLogs, roomnames, self.systems)
+
 		versionCheckThread = drachenjaeger.NotifyNewVersionThread()
 		versionCheckThread.connect(versionCheckThread, Qt.SIGNAL("newer_version"), self.notifyNewerVersion)
 		versionCheckThread.run()
+
 
 	def closeEvent(self, event):
 		""" writing the cache before closing the window
@@ -216,7 +224,7 @@ class MainWindow(QtGui.QMainWindow):
 					(None, "changeSound", self.activateSoundAction.isChecked()),
 					(None, "changeChatVisibility", self.showChatAction.isChecked()),
 					(None, "setInitMapPosition", (self.map.page().mainFrame().scrollPosition().x(), self.map.page().mainFrame().scrollPosition().y())),
-					(None, "setSoundVolume", self.sound.soundVolume),
+					(None, "setSoundVolume", self.soundThread.soundVolume),
 					(None, "changeFrameless", self.framelessWindowAction.isChecked()),
 					(None, "changeUseSpokenNotifications", self.useSpokenNotificationsAction.isChecked()),
 					(None, "changeClipboard", self.kosClipboardActiveAction.isChecked()),
@@ -253,7 +261,7 @@ class MainWindow(QtGui.QMainWindow):
 		if newValue is None:
 			newValue = self.useSpokenNotificationsAction.isChecked()
 		self.useSpokenNotificationsAction.setChecked(newValue)
-		self.sound.setUseSpokenNotifications(newValue)
+		self.soundThread.setUseSpokenNotifications(newValue)
 
 
 	def changeOpacity(self, newValue=None):
@@ -277,7 +285,7 @@ class MainWindow(QtGui.QMainWindow):
 		else:
 			if newValue is None:
 				newValue = self.activateSoundAction.isChecked()
-			self.sound.soundActive = newValue
+			self.soundThread.soundActive = newValue
 
 
 	def changeAlwaysOnTop(self, newValue=None):
@@ -412,7 +420,7 @@ class MainWindow(QtGui.QMainWindow):
 
 
 	def setSoundVolume(self, value):
-		self.sound.setSoundVolume(value)
+		self.soundThread.setSoundVolume(value)
 
 
 	def setJumpbridges(self, url):
@@ -458,7 +466,7 @@ class MainWindow(QtGui.QMainWindow):
 
 	def showKosResult(self, state, text, requestType, hasKos):
 		if hasKos:
-			self.sound.playSound("kos", text)
+			self.soundThread.playSound("kos", text)
 		self.trayIcon.setIcon(QtGui.QIcon(resourcePath("vi/ui/res/logo_small.png")))
 		if state == "ok":
 			if requestType == "xxx":  # a xxx request out of the chat
@@ -496,9 +504,9 @@ class MainWindow(QtGui.QMainWindow):
 	def showSoundSetup(self):
 		dialog = QtGui.QDialog(self)
 		uic.loadUi(resourcePath("vi/ui/SoundSetup.ui"), dialog)
-		dialog.volumeSlider.setValue(self.sound.soundVolume)
-		dialog.connect(dialog.volumeSlider, Qt.SIGNAL("valueChanged(int)"), self.sound.setSoundVolume)
-		dialog.connect(dialog.testSoundButton, Qt.SIGNAL("clicked()"), self.sound.playSound)
+		dialog.volumeSlider.setValue(self.soundThread.soundVolume)
+		dialog.connect(dialog.volumeSlider, Qt.SIGNAL("valueChanged(int)"), self.soundThread.setSoundVolume)
+		dialog.connect(dialog.testSoundButton, Qt.SIGNAL("clicked()"), self.soundThread.playSound)
 		dialog.connect(dialog.closeButton, Qt.SIGNAL("clicked()"), dialog.accept)
 		dialog.show()
 
@@ -557,7 +565,7 @@ class MainWindow(QtGui.QMainWindow):
 			elif message.status == states.SOUND_TEST and message.user in self.knownPlayerNames:
 				words = message.message.split()
 				if len(words) > 1:
-					self.sound.playSound(words[1])
+					self.soundThread.playSound(words[1])
 			# KOS request
 			elif message.status == states.KOS_STATUS_REQUEST:
 				text = message.message[4:]

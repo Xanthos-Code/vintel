@@ -22,7 +22,7 @@ import time, itertools
 from PyQt4.QtCore import QThread
 from PyQt4.QtCore import SIGNAL
 from Queue import Queue
-from threading import Timer
+
 from vi import evegate
 from vi import koschecker
 from vi.cache.cache import Cache

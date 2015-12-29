@@ -17,10 +17,12 @@
 #  along with this program.	 If not, see <http://www.gnu.org/licenses/>.  #
 ###########################################################################
 
-import subprocess, sys, os, singleton
+import subprocess, sys, os
+
+from PyQt4.QtCore import QThread
+from Queue import Queue
 
 from vi.resources import resourcePath
-from vi.singleton import Singleton
 
 global gPygameAvailable
 
@@ -31,7 +33,7 @@ except ImportError:
 	gPygameAvailable = False
 
 
-class Sound(Singleton):
+class SoundThread(QThread):
 
 	SOUNDS = {"alarm": "178032__zimbot__redalert-klaxon-sttos-recreated.wav",
 			  "kos": "178031__zimbot__transporterstartbeep0-sttos-recreated.wav",
@@ -45,7 +47,8 @@ class Sound(Singleton):
 	useSpokenNotifications = False
 
 	def __init__(self):
-		Singleton.__init__(self)
+		QThread.__init__(self)
+		self.q = Queue()
 
 		if gPygameAvailable:
 			pygame.mixer.init()
@@ -76,14 +79,26 @@ class Sound(Singleton):
 		else:
 			return
 
-		path = resourcePath("vi/ui/res/{0}".format(self.SOUNDS[name]))
-
-		if self.useDarwinSound:
-			if self.useSpokenNotifications and message:
-				os.system("say [[volm {0}]] {1}".format(float(self.soundVolume) / 100.0, message))
-			else:
-				subprocess.call(["afplay -v {0} {1}".format(float(self.soundVolume) / 100.0, path)], shell=True)
+		if self.useDarwinSound and self.useSpokenNotifications and message:
+			data = message
 		else:
-			if name not in self.soundCache:
-				self.soundCache[name] = pygame.mixer.Sound(path)
-			self.soundCache[name].play()
+			data = resourcePath("vi/ui/res/{0}".format(self.SOUNDS[name]))
+
+		# Drop the path or message into the queue to be picked up by run
+		self.q.put((data))
+
+
+	def run(self):
+		while True:
+			data = self.q.get()
+			volume = float(self.soundVolume) / 100.0
+
+			if self.useDarwinSound:
+				if self.useSpokenNotifications and data:
+					os.system("say [[volm {0}]] {1}".format(volume, data))
+				elif data:
+					subprocess.call(["afplay -v {0} {1}".format(volume, data)], shell=True)
+			else:
+				self.soundCache[data].play()
+
+
