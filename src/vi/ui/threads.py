@@ -71,28 +71,6 @@ class AvatarFindThread(QThread):
 				print "An error in the AvatarFindThread: ", str(e)
 
 
-class PlayerFindThread(QThread):
-	def __init__(self):
-		QThread.__init__(self)
-		self.q = Queue()
-
-	def addChatEntry(self, chatEntry):
-		try:
-			self.q.put(chatEntry)
-		except Exception as e:
-			print "An error in the PlayerFindThread: ", str(e)
-
-	def run(self):
-		try:
-			cache = Cache()
-			while True:
-				chatEntry = self.q.get()
-				text = chatEntry.message.utext
-				parts = text.split("  ")  # split@double-space (not in name, right?)
-		except Exception as e:
-			print "An error in the PlayerFindThread: ", str(e)
-
-
 class KOSCheckerThread(QThread):
 	def __init__(self):
 		QThread.__init__(self)
@@ -133,7 +111,7 @@ class KOSCheckerThread(QThread):
 				state = "error"
 				text = unicode(e)
 				print "An error in the KOSCheckerThread: ", str(e)
-			print "KOSCheckerThread emitting kos_result for: state = {0}, text = {1}, requestType = {2}, hasKos = {3}".format(state, text, requestType, hasKos)
+			#print "KOSCheckerThread emitting kos_result for: state = {0}, text = {1}, requestType = {2}, hasKos = {3}".format(state, text, requestType, hasKos)
 			self.recentRequestNames[namesString] = time.time()
 			self.emit(SIGNAL("kos_result"), state, text, requestType, hasKos)
 
@@ -151,3 +129,4 @@ class MapStatisticsThread(QThread):
 			print "An error in the MapStatisticsThread: ", str(e)
 			result = {"result": "error", "text": unicode(e)}
 		self.emit(SIGNAL("statistic_data_update"), result)
+		time.sleep(2)

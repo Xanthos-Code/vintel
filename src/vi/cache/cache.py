@@ -144,5 +144,5 @@ class Cache(object):
 			settings = eval(settings)
 			for setting in settings:
 				obj = responder if not setting[0] else getattr(responder, setting[0])
-				print "{0} | {1} | {2}".format(str(obj), setting[1], setting[2])
+				#print "{0} | {1} | {2}".format(str(obj), setting[1], setting[2])
 				getattr(obj, setting[1])(setting[2])

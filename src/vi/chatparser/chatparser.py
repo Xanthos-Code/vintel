@@ -86,8 +86,8 @@ class ChatParser(object):
 					if "Listener:" in line:
 						charname = line[line.find(":") + 1:].strip()
 					elif "Session started:" in line:
-						sessionstr = line[line.find(":") + 1:].strip()
-						sessionStart = datetime.datetime.strptime(sessionstr, "%Y.%m.%d %H:%M:%S")
+						sessionStr = line[line.find(":") + 1:].strip()
+						sessionStart = datetime.datetime.strptime(sessionStr, "%Y.%m.%d %H:%M:%S")
 					if charname and sessionStart:
 						self.fileData[path]["charname"] = charname
 						self.fileData[path]["sessionstart"] = sessionStart

@@ -118,20 +118,24 @@ def idsToNames(ids):
 		else:
 			apiCheckIds.add(id)
 
-	# call the EVE-Api for those entries we didn't have in the cache
-	url = "https://api.eveonline.com/eve/CharacterName.xml.aspx"
-	if len(apiCheckIds) > 0:
-		requestData = urllib.urlencode({"ids": ",".join(apiCheckIds)})
-		request = urllib2.urlopen(url=url, data=requestData)
-		content = request.read()
-		soup = BeautifulSoup(content, 'html.parser')
-		rowSet = soup.select("rowset")[0]
-		for row in rowSet.select("row"):
-			data[row["characterid"]] = row["name"]
-		# and writing into cache
-		for id in apiCheckIds:
-			cacheKey = u"_".join(("name", "id", unicode(id)))
-			cache.putIntoCache(cacheKey, data[id], 60 * 60 * 24 * 365)
+	try:
+		# call the EVE-Api for those entries we didn't have in the cache
+		url = "https://api.eveonline.com/eve/CharacterName.xml.aspx"
+		if len(apiCheckIds) > 0:
+			requestData = urllib.urlencode({"ids": ",".join(apiCheckIds)})
+			request = urllib2.urlopen(url=url, data=requestData)
+			content = request.read()
+			soup = BeautifulSoup(content, 'html.parser')
+			rowSet = soup.select("rowset")[0]
+			for row in rowSet.select("row"):
+				data[row["characterid"]] = row["name"]
+			# and writing into cache
+			for id in apiCheckIds:
+				cacheKey = u"_".join(("name", "id", unicode(id)))
+				cache.putIntoCache(cacheKey, data[id], 60 * 60 * 24 * 365)
+	except Exception as e:
+		print "Exception during idsToNames: ", str(e)
+
 	return data
 
 
@@ -193,8 +197,7 @@ def getCharinfoForCharId(charId):
 		charId = int(charId)
 		url = "https://api.eveonline.com/eve/CharacterInfo.xml.aspx"
 		data = urllib.urlencode({"characterID": charId})
-		request = urllib2.urlopen(url=url, data=data)
-		content = request.read()
+		content = urllib2.urlopen(url=url, data=data).read()
 		soup = BeautifulSoup(content, 'html.parser')
 		cacheUntil = datetime.datetime.strptime(soup.select("cacheduntil")[0].text, "%Y-%m-%d %H:%M:%S")
 		diff = cacheUntil - currentEveTime()
@@ -228,12 +231,13 @@ def getSystemStatistics():
 	if jumpdata is None:
 		jumpdata = {}
 		url = "https://api.eveonline.com/map/Jumps.xml.aspx"
-		request = urllib2.urlopen(url=url)
-		content = request.read()
+		content = urllib2.urlopen(url=url).read()
 		soup = BeautifulSoup(content, 'html.parser')
+
 		for result in soup.select("result"):
 			for row in result.select("row"):
 				jumpdata[int(row["solarsystemid"])] = int(row["shipjumps"])
+
 		cacheUntil = datetime.datetime.strptime(soup.select("cacheduntil")[0].text, "%Y-%m-%d %H:%M:%S")
 		diff = cacheUntil - currentEveTime()
 		cache.putIntoCache(cacheKey, json.dumps(jumpdata), diff.seconds)
@@ -247,20 +251,20 @@ def getSystemStatistics():
 	if systemdata is None:
 		systemdata = {}
 		url = "https://api.eveonline.com/map/Kills.xml.aspx"
-		request = urllib2.urlopen(url=url)
-		content = request.read()
+		content = urllib2.urlopen(url=url).read()
 		soup = BeautifulSoup(content, 'html.parser')
+
 		for result in soup.select("result"):
 			for row in result.select("row"):
-				systemdata[int(row["solarsystemid"])] = {"ship": int(row["shipkills"]),
-					"faction": int(row["factionkills"]), "pod": int(row["podkills"])}
+				systemdata[int(row["solarsystemid"])] = {"ship": int(row["shipkills"]), "faction": int(row["factionkills"]), "pod": int(row["podkills"])}
+
 		cacheUntil = datetime.datetime.strptime(soup.select("cacheduntil")[0].text, "%Y-%m-%d %H:%M:%S")
 		diff = cacheUntil - currentEveTime()
 		cache.putIntoCache(cacheKey, json.dumps(systemdata), diff.seconds)
 	else:
 		systemdata = json.loads(systemdata)
 
-	# we collected all data (or loaeded them from cache) - know zip it together
+	# we collected all data (or loaded them from cache) - now zip it together
 	for i, v in jumpdata.items():
 		i = int(i)
 		if i not in data:
@@ -287,34 +291,43 @@ def secondsTillDowntime():
 	return delta.seconds
 
 
-SHIPNAMES = (
-u'ABADDON', u'ABSOLUTION', u'AEON', u'ALGOS', u'ANATHEMA', u'ANSHAR', u'APOCALYPSE', u'APOCALYPSE IMPERIAL ISSUE',
-u'APOTHEOSIS', u'ARAZU', u'ARBITRATOR', u'ARCHON', u'ARES', u'ARK', u'ARMAGEDDON', u'ASHIMMU', u'ASTARTE', u'ASTERO',
-u'ATRON', u'AUGOROR', u'AUGOROR NAVY ISSUE', u'AVATAR', u'BADGER', u'BANTAM', u'BASILISK', u'BELLICOSE', u'BESTOWER',
-u'BHAALGORN', u'BLACKBIRD', u'BREACHER', u'BROADSWORD', u'BRUTIX', u'BURST', u'BUSTARD', u'BUZZARD',
-u'CALDARI NAVY HOOKBILL', u'CARACAL', u'CATALYST', u'CELESTIS', u'CERBERUS', u'CHEETAH', u'CHIMERA', u'CLAW',
-u'CLAYMORE', u'COERCER', u'CONDOR', u'CONFESSOR', u'CORAX', u'CORMORANT', u'COVETOR', u'CRANE', u'CROW', u'CRUCIFIER',
-u'CRUOR', u'CRUSADER', u'CURSE', u'CYCLONE', u'CYNABAL', u'DAMNATION', u'DAREDEVIL', u'DEIMOS', u'DEVOTER', u'DOMINIX',
-u'DRAGOON', u'DRAKE', u'DRAMIEL', u'EAGLE', u'ENYO', u'EOS', u'EREBUS', u'ERIS', u'EXECUTIONER', u'EXEQUROR',
-u'EXEQUROR NAVY ISSUE', u'FALCON', u'FEROX', u'FLYCATCHER', u'FEDERATION NAVY COMET', u'GILA', u'GNOSIS',
-u'GOLD MAGNATE', u'GOLEM', u"GORU'S SHUTTLE", u'GRIFFIN', u'GUARDIAN', u'GUARDIAN-VEXOR', u'GURISTAS SHUTTLE',
-u'HARBINGER', u'HARPY', u'HAWK', u'HEL', u'HELIOS', u'HERETIC', u'HERON', u'HOARDER', u'HOUND', u'HUGINN', u'HULK',
-u'HURRICANE', u'HYENA', u'HYPERION', u'IBIS', u'IMICUS', u'IMPAIROR', u'IMPEL', u'IMPERIAL NAVY SLICER', u'INCURSUS',
-u'INQUISITOR', u'ISHKUR', u'ISHTAR', u'ITERON', u'JAGUAR', u'KERES', u'KESTREL', u'KITSUNE', u'KRONOS', u'LACHESIS',
-u'LEGION', u'LEVIATHAN', u'LOKI', u'MACHARIEL', u'MACKINAW', u'MAELSTROM', u'MAGNATE', u'MALEDICTION', u'MALLER',
-u'MAMMOTH', u'MANTICORE', u'MASTODON', u'MAULUS', u'MEGATHRON', u'MEGATHRON FEDERATE ISSUE', u'MEGATHRON NAVY ISSUE',
-u'MERLIN', u'MOA', u'MOROS', u'MUNINN', u'MYRMIDON', u'NAGA', u'NAGLFAR', u'NAVITAS', u'NEMESIS', u'NIDHOGGUR',
-u'NIGHTHAWK', u'NIGHTMARE', u'NOMAD', u'NYX', u'OCCATOR', u'OMEN', u'OMEN NAVY ISSUE', u'ONEIROS', u'ONYX', u'ORACLE',
-u'ORCA', u'OSPREY', u'OSPREY NAVY ISSUE', u'PALADIN', u'PANTHER', u'PHANTASM', u'PHOBOS', u'PHOENIX', u'PILGRIM',
-u'PRORATOR', u'PROBE', u'PROCURER', u'PROPHECY', u'PROTEUS', u'PROWLER', u'PUNISHER', u'PURIFIER', u'RAGNAROK',
-u'RAPIER', u'RAPTOR', u'RATTLESNAKE', u'RAVEN', u'RAVEN NAVY ISSUE', u'RAVEN STATE ISSUE', u'REAPER', u'REDEEMER',
-u'REPUBLIC FLEET FIRETAIL', u'RETRIBUTION', u'RETRIEVER', u'REVELATION', u'RHEA', u'RIFTER', u'ROKH', u'ROOK',
-u'RORQUAL', u'RUPTURE', u'SABRE', u'SACRILEGE', u'SCIMITAR', u'SCORPION', u'SCYTHE', u'SCYTHE FLEET ISSUE', u'SENTINEL',
-u'SIGIL', u'SILVER MAGNATE', u'SIN', u'SKIFF', u'SLASHER', u'SLEIPNIR', u'STABBER', u'STABBER FLEET ISSUE', u'STILETTO',
-u'STRATIOS', u'SUCCUBUS', u'TALOS', u'TALWAR', u'TARANIS', u'TEMPEST', u'TEMPEST FLEET ISSUE', u'TEMPEST TRIBAL ISSUE',
-u'TENGU', u'THANATOS', u'THORAX', u'THRASHER', u'TORMENTOR', u'TORNADO', u'TRISTAN', u'TYPHOON', u'VAGABOND', u'VARGUR',
-u'VELATOR', u'VENGEANCE', u'VEXOR', u'VEXOR NAVY ISSUE', u'VIATOR', u'VIGIL', u'VIGILANT', u'VINDICATOR', u'VULTURE',
-u'WIDOW', u'WOLF', u'WORM', u'WREATHE', u'WYVERN', u'ZEALOT', u'CAPSULE',)
+SHIPNAMES = (u'ABADDON', u'ABSOLUTION', u'AEON', u'AMARR SHUTTLE', u'ANATHEMA', u'ANSHAR', u'APOCALYPSE',
+			 u'APOCALYPSE IMPERIAL ISSUE', u'APOCALYPSE NAVY ISSUE', u'APOTHEOSIS', u'ARAZU', u'ARBITRATOR', u'ARCHON',
+			 u'ARES', u'ARK', u'ARMAGEDDON', u'ARMAGEDDON IMPERIAL ISSUE', u'ASHIMMU', u'ASTARTE', u'ATRON', u'AUGOROR',
+			 u'AUGOROR NAVY ISSUE', u'AVATAR', u'BADGER', u'BADGER MARK II', u'BANTAM', u'BASILISK', u'BELLICOSE',
+			 u'BESTOWER', u'BHAALGORN', u'BLACKBIRD', u'BREACHER', u'BROADSWORD', u'BRUTIX', u'BURST', u'BUSTARD',
+			 u'BUZZARD', u'CONCORD ARMY BATTLESHIP', u'CONCORD ARMY CRUISER', u'CONCORD ARMY FRIGATE',
+			 u'CONCORD POLICE BATTLESHIP', u'CONCORD POLICE CRUISER', u'CONCORD POLICE FRIGATE',
+			 u'CONCORD SWAT BATTLESHIP', u'CONCORD SWAT CRUISER', u'CONCORD SWAT FRIGATE',
+			 u'CONCORD SPECIAL OPS BATTLESHIP', u'CONCORD SPECIAL OPS CRUISER', u'CONCORD SPECIAL OPS FRIGATE',
+			 u'CALDARI NAVY HOOKBILL', u'CALDARI SHUTTLE', u'CARACAL', u'CARACAL NAVY ISSUE', u'CATALYST', u'CELESTIS',
+			 u'CERBERUS', u'CHARON', u'CHEETAH', u'CHIMERA', u'CLAW', u'CLAYMORE', u'COERCER', u'CONDOR', u'CORMORANT',
+			 u'COVETOR', u'CRANE', u'CROW', u'CRUCIFIER', u'CRUOR', u'CRUSADER', u'CURSE', u'CYCLONE', u'CYNABAL',
+			 u'DAMNATION', u'DAREDEVIL', u'DEIMOS', u'DEVOTER', u'DOMINIX', u'DRAKE', u'DRAMIEL', u'EAGLE', u'EIDOLON',
+			 u'ENIGMA', u'ENYO', u'EOS', u'EREBUS', u'ERIS', u'EXECUTIONER', u'EXEQUROR', u'EXEQUROR NAVY ISSUE',
+			 u'FALCON', u'FEDERATION NAVY COMET', u'FENRIR', u'FEROX', u'FLYCATCHER', u'GALLENTE SHUTTLE', u'GILA',
+			 u'GOLD MAGNATE', u'GOLEM', u'GRIFFIN', u'GUARDIAN', u'HARBINGER', u'HARPY', u'HAWK', u'HEL', u'HELIOS',
+			 u'HERETIC', u'HERON', u'HOARDER', u'HOUND', u'HUGINN', u'HULK', u'HURRICANE', u'HYENA', u'HYPERION',
+			 u'IBIS', u'IMICUS', u'IMPAIROR', u'IMPEL', u'IMPERIAL NAVY SLICER', u'INCURSUS', u'ISHKUR', u'ISHTAR',
+			 u'ITERON', u'ITERON MARK II', u'ITERON MARK III', u'ITERON MARK IV', u'ITERON MARK V', u'JAGUAR', u'KERES',
+			 u'KESTREL', u'KITSUNE', u'KRONOS', u'LACHESIS', u'LEVIATHAN', u'MACHARIEL', u'MACKINAW', u'MAELSTROM',
+			 u'MAGNATE', u'MALEDICTION', u'MALLER', u'MAMMOTH', u'MANTICORE', u'MASTODON', u'MAULUS', u'MEGATHRON',
+			 u'MEGATHRON FEDERATE ISSUE', u'MEGATHRON NAVY ISSUE', u'MERLIN', u'MINMATAR SHUTTLE', u'MOA', u'MOROS',
+			 u'MUNINN', u'MYRMIDON', u'NAGLFAR', u'NAVITAS', u'NEMESIS', u'NIDHOGGUR', u'NIGHTHAWK', u'NIGHTMARE',
+			 u'NOMAD', u'NYX', u'OBELISK', u'OCCATOR', u'OMEN', u'OMEN NAVY ISSUE', u'ONEIROS', u'ONYX',
+			 u'OPUX DRAGOON YACHT', u'OPUX LUXURY YACHT', u'ORACLE', u'ORCA', u'OSPREY', u'OSPREY NAVY ISSUE',
+			 u'PALADIN', u'PANTHER', u'PHANTASM', u'PHANTOM', u'PHOBOS', u'PHOENIX', u'PILGRIM', u'POLARIS CENTURION',
+			 u'POLARIS INSPECTOR', u'POLARIS LEGATUS', u'PROBE', u'PROCURER', u'PROPHECY', u'PRORATOR', u'PROVIDENCE',
+			 u'PROWLER', u'PUNISHER', u'PURIFIER', u'RAGNAROK', u'RAPIER', u'RAPTOR', u'RATTLESNAKE', u'RAVEN',
+			 u'RAVEN NAVY ISSUE', u'RAVEN STATE ISSUE', u'REAPER', u'REDEEMER', u'REPUBLIC FLEET FIRETAIL',
+			 u'RETRIBUTION', u'RETRIEVER', u'REVELATION', u'RHEA', u'RIFTER', u'ROKH', u'ROOK', u'RORQUAL', u'RUPTURE',
+			 u'SABRE', u'SACRILEGE', u'SCIMITAR', u'SCORPION', u'SCYTHE', u'SCYTHE FLEET ISSUE', u'SENTINEL', u'SIGIL',
+			 u'SILVER MAGNATE', u'SIN', u'SKIFF', u'SLASHER', u'SLEIPNIR', u'SPECTER', u'STABBER',
+			 u'STABBER FLEET ISSUE', u'STILETTO', u'SUCCUBUS', u'TARANIS', u'TEMPEST', u'TEMPEST FLEET ISSUE',
+			 u'TEMPEST TRIBAL ISSUE', u'THANATOS', u'THORAX', u'THRASHER', u'TORMENTOR', u'TRISTAN', u'TYPHOON',
+			 u'VAGABOND', u'VARGUR', u'VELATOR', u'VENGEANCE', u'VEXOR', u'VEXOR NAVY ISSUE', u'VIATOR', u'VIGIL',
+			 u'VIGILANT', u'VINDICATOR', u'VISITANT', u'VULTURE', u'WIDOW', u'WOLF', u'WORM', u'WRAITH', u'WREATHE',
+			 u'WYVERN', u'ZEALOT', u'CAPSULE',)
 SHIPNAMES = sorted(SHIPNAMES, key=lambda x: len(x), reverse=True)
 
 NPC_CORPS = (u'Republic Justice Department', u'House of Records', u'24th Imperial Crusade', u'Template:NPC corporation',
