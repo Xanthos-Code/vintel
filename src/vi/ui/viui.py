@@ -573,8 +573,7 @@ class MainWindow(QtGui.QMainWindow):
 					for system in message.systems:
 						systemname = system.name
 						self.dotlan.systems[systemname].setStatus(message.status)
-						if message.status in (
-						states.REQUEST, states.ALARM) and message.user not in self.knownPlayerNames:
+						if message.status in (states.REQUEST, states.ALARM) and message.user not in self.knownPlayerNames:
 							alarmDistance = self.alarmDistance if message.status == states.ALARM else 0
 							for nsystem, data in system.getNeighbours(alarmDistance).items():
 								distance = data["distance"]

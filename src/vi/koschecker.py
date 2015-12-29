@@ -58,23 +58,24 @@ def check(parts):
 			if char not in checkBylastChars:
 				checkBylastChars.append(charname)
 
-	for name in names:  # Still names there (the kos checker not found) ?
+	# Names still in the list are not showing as KOS, so consider their last player corporation
+	for name in names:
 		checkBylastChars.append(name)
 
-	# Deeper check
-	deeperData = {}
+	# Corporation check
+	corpCheckData = {}
 	namesAsIds = evegate.namesToIds(checkBylastChars)
 
 	for name, id in namesAsIds.items():
-		deeperData[name] = {"id": id, "need_check": False, "corpids": evegate.getCorpidsForCharId(id)}
+		corpCheckData[name] = {"id": id, "need_check": False, "corpids": evegate.getCorpidsForCharId(id)}
 
 	corpIds = set()
 	for name in namesAsIds.keys():
-		for number in deeperData[name]["corpids"]:
+		for number in corpCheckData[name]["corpids"]:
 			corpIds.add(number)
 
 	corpIdName = evegate.idsToNames(corpIds)
-	for name, nameData in deeperData.items():
+	for name, nameData in corpCheckData.items():
 		nameData["corpnames"] = [corpIdName[id] for id in nameData["corpids"]]
 		for corpname in nameData["corpnames"]:
 			if corpname not in evegate.NPC_CORPS:
@@ -82,7 +83,7 @@ def check(parts):
 				nameData["corp_to_check"] = corpname
 				break
 
-	corpsToCheck = set([nameData["corp_to_check"] for nameData in deeperData.values() if nameData["need_check"] == True])
+	corpsToCheck = set([nameData["corp_to_check"] for nameData in corpCheckData.values() if nameData["need_check"] == True])
 	corpsResult = {}
 	baseUrl = "http://kos.cva-eve.org/api/?c=json&type=unit&q="
 
@@ -105,7 +106,7 @@ def check(parts):
 				kosResult = True
 		corpsResult[corp] = kosResult
 
-	for charname, nameData in deeperData.items():
+	for charname, nameData in corpCheckData.items():
 		if not nameData["need_check"]:
 			data[charname] = {"kos": UNKNOWN}
 		if nameData["need_check"] and corpsResult[nameData["corp_to_check"]] == True:
