@@ -17,16 +17,15 @@
 #  along with this program.	 If not, see <http://www.gnu.org/licenses/>.  #
 ###########################################################################
 
+import time, itertools
+
 from PyQt4.QtCore import QThread
 from PyQt4.QtCore import SIGNAL
-
 from Queue import Queue
-import time
-
+from threading import Timer
 from vi import evegate
 from vi import koschecker
 from vi.cache.cache import Cache
-
 from vi.resources import resourcePath
 
 
@@ -98,6 +97,7 @@ class KOSCheckerThread(QThread):
 	def __init__(self):
 		QThread.__init__(self)
 		self.q = Queue()
+		self.recentRequestNames = {}
 
 	def addRequest(self, names, requestType, onlyKos=False):
 		try:
@@ -105,11 +105,23 @@ class KOSCheckerThread(QThread):
 		except Exception as e:
 			print "An error in the KOSCheckerThread: ", str(e)
 
+
 	def run(self):
 		while True:
 			names, requestType, onlyKos = self.q.get()
-			hasKos = False
+			namesCopy, names = itertools.tee(names, 2)
+
+			# Prevent the same request from multiple clients on the same machine
+			namesString = ', '.join(map(str, [name.strip() for name in namesCopy]))
+			if self.recentRequestNames.has_key(namesString):
+				requestTime = self.recentRequestNames[namesString]
+				timeTime = time.time()
+				print str(timeTime - requestTime)
+				if time.time() - requestTime < 10:
+					continue
+
 			try:
+				hasKos = False
 				state = "ok"
 				checkResult = koschecker.check(names)
 				text = koschecker.resultToText(checkResult, onlyKos)
@@ -121,6 +133,8 @@ class KOSCheckerThread(QThread):
 				state = "error"
 				text = unicode(e)
 				print "An error in the KOSCheckerThread: ", str(e)
+			print "KOSCheckerThread emitting kos_result for: state = {0}, text = {1}, requestType = {2}, hasKos = {3}".format(state, text, requestType, hasKos)
+			self.recentRequestNames[namesString] = time.time()
 			self.emit(SIGNAL("kos_result"), state, text, requestType, hasKos)
 
 
