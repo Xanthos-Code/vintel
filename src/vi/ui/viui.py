@@ -247,7 +247,6 @@ class MainWindow(QtGui.QMainWindow):
 		if newValue is None:
 			newValue = not self.kosClipboardActiveAction.isChecked()
 		self.kosClipboardActiveAction.setChecked(newValue)
-		self.sound.setUseSpokenNotifications(newValue)
 
 
 	def changeUseSpokenNotifications(self, newValue=None):
