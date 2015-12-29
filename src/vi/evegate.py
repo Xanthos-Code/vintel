@@ -22,7 +22,6 @@ import json
 import urllib
 import urllib2
 
-from PyQt4.QtGui import QImage, QPixmap
 from bs4 import BeautifulSoup
 
 from vi.version import VERSION
@@ -81,20 +80,23 @@ def namesToIds(names):
 		else:
 			apiCheckNames.add(name)
 
-	# not in cache? asking the EVE API
-	if len(apiCheckNames) > 0:
-		url = "https://api.eveonline.com/eve/CharacterID.xml.aspx"
-		requestData = urllib.urlencode({"names": u",".join(apiCheckNames)})
-		request = urllib2.urlopen(url=url, data=requestData)
-		content = request.read()
-		soup = BeautifulSoup(content, 'html.parser')
-		rowSet = soup.select("rowset")[0]
-		for row in rowSet.select("row"):
-			data[row["name"]] = row["characterid"]
-		# writing the cache
-		for name in apiCheckNames:
-			cacheKey = "_".join(("id", "name", name))
-			cache.putIntoCache(cacheKey, data[name], 60 * 60 * 24 * 365)
+	try:
+		# not in cache? asking the EVE API
+		if len(apiCheckNames) > 0:
+			url = "https://api.eveonline.com/eve/CharacterID.xml.aspx"
+			requestData = urllib.urlencode({"names": u",".join(apiCheckNames)})
+			request = urllib2.urlopen(url=url, data=requestData)
+			content = request.read()
+			soup = BeautifulSoup(content, 'html.parser')
+			rowSet = soup.select("rowset")[0]
+			for row in rowSet.select("row"):
+				data[row["name"]] = row["characterid"]
+			# writing the cache
+			for name in apiCheckNames:
+				cacheKey = "_".join(("id", "name", name))
+				cache.putIntoCache(cacheKey, data[name], 60 * 60 * 24 * 365)
+	except Exception as e:
+		print "Exception during namesToIds: {0}".format(str(e))
 	return data
 
 
@@ -134,7 +136,7 @@ def idsToNames(ids):
 				cacheKey = u"_".join(("name", "id", unicode(id)))
 				cache.putIntoCache(cacheKey, data[id], 60 * 60 * 24 * 365)
 	except Exception as e:
-		print "Exception during idsToNames: ", str(e)
+		print "Exception during idsToNames: {0}".format(str(e))
 
 	return data
 
@@ -151,7 +153,7 @@ def getAvatarForPlayer(charname):
 			imageUrl = "http://image.eveonline.com/Character/{id}_{size}.jpg"
 			avatar = urllib2.urlopen(imageUrl.format(id=charId, size=32)).read()
 	except Exception as e:
-		print "Exception during getAvatarForPlayer:", str(e)
+		print "Exception during getAvatarForPlayer: {0}".format(str(e))
 		avatar = None
 	return avatar
 
@@ -161,28 +163,29 @@ def checkPlayername(charname):
 		returns 1 if exists, 0 if not and -1 if an error occured
 	"""
 	baseUrl = "https://gate.eveonline.com/Profile/"
-	qcharname = urllib2.quote(charname)
-	url = baseUrl + qcharname
-	retvalue = -1
+	queryCharname = urllib2.quote(charname)
+	url = baseUrl + queryCharname
+	result = -1
+
 	try:
 		urllib2.urlopen(url)
-		retvalue = 1
+		result = 1
 	except urllib2.HTTPError as e:
 		if ("404") in str(e):
-			retvalue = 0
+			result = 0
 	except Exception as e:
-		print "Exception on checkPlayername: ", str(e)
-	return retvalue
+		print "Exception on checkPlayername: {0}".format(str(e))
+	return result
 
 
 def currentEveTime():
-	""" returns the current eve-time as a datetime.datetime
+	""" Returns the current eve-time as a datetime.datetime
 	"""
 	return datetime.datetime.utcnow()
 
 
 def eveEpoch():
-	""" returns the seconds since epoch in eve timezone
+	""" Returns the seconds since epoch in eve timezone
 	"""
 	return time.mktime(datetime.datetime.utcnow().timetuple())
 
@@ -194,19 +197,22 @@ def getCharinfoForCharId(charId):
 	if soup is not None:
 		soup = BeautifulSoup(soup, 'html.parser')
 	else:
-		charId = int(charId)
-		url = "https://api.eveonline.com/eve/CharacterInfo.xml.aspx"
-		data = urllib.urlencode({"characterID": charId})
-		content = urllib2.urlopen(url=url, data=data).read()
-		soup = BeautifulSoup(content, 'html.parser')
-		cacheUntil = datetime.datetime.strptime(soup.select("cacheduntil")[0].text, "%Y-%m-%d %H:%M:%S")
-		diff = cacheUntil - currentEveTime()
-		cache.putIntoCache(cacheKey, str(soup), diff.seconds)
+		try:
+			charId = int(charId)
+			url = "https://api.eveonline.com/eve/CharacterInfo.xml.aspx"
+			data = urllib.urlencode({"characterID": charId})
+			content = urllib2.urlopen(url=url, data=data).read()
+			soup = BeautifulSoup(content, 'html.parser')
+			cacheUntil = datetime.datetime.strptime(soup.select("cacheduntil")[0].text, "%Y-%m-%d %H:%M:%S")
+			diff = cacheUntil - currentEveTime()
+			cache.putIntoCache(cacheKey, str(soup), diff.seconds)
+		except Exception as e:
+			print "Exception during getCharinfoForCharId: {0}".format(str(e))
 	return soup
 
 
 def getCorpidsForCharId(charId):
-	""" returns a list with the ids if the corporation history of a charId
+	""" Returns a list with the ids if the corporation history of a charId
 	"""
 	data = []
 	soup = getCharinfoForCharId(charId)
@@ -226,51 +232,55 @@ def getSystemStatistics():
 	cache = Cache()
 	# first the data for the jumps
 	cacheKey = "jumpstatistic"
-	jumpdata = cache.getFromCache(cacheKey)
+	jumpData = cache.getFromCache(cacheKey)
 
-	if jumpdata is None:
-		jumpdata = {}
-		url = "https://api.eveonline.com/map/Jumps.xml.aspx"
-		content = urllib2.urlopen(url=url).read()
-		soup = BeautifulSoup(content, 'html.parser')
+	try:
+		if jumpData is None:
+			jumpData = {}
+			url = "https://api.eveonline.com/map/Jumps.xml.aspx"
+			content = urllib2.urlopen(url=url).read()
+			soup = BeautifulSoup(content, 'html.parser')
 
-		for result in soup.select("result"):
-			for row in result.select("row"):
-				jumpdata[int(row["solarsystemid"])] = int(row["shipjumps"])
+			for result in soup.select("result"):
+				for row in result.select("row"):
+					jumpData[int(row["solarsystemid"])] = int(row["shipjumps"])
 
-		cacheUntil = datetime.datetime.strptime(soup.select("cacheduntil")[0].text, "%Y-%m-%d %H:%M:%S")
-		diff = cacheUntil - currentEveTime()
-		cache.putIntoCache(cacheKey, json.dumps(jumpdata), diff.seconds)
-	else:
-		jumpdata = json.loads(jumpdata)
+			cacheUntil = datetime.datetime.strptime(soup.select("cacheduntil")[0].text, "%Y-%m-%d %H:%M:%S")
+			diff = cacheUntil - currentEveTime()
+			cache.putIntoCache(cacheKey, json.dumps(jumpData), diff.seconds)
+		else:
+			jumpData = json.loads(jumpData)
 
-	# now the further data
-	cacheKey = "systemstatistic"
-	systemdata = cache.getFromCache(cacheKey)
+		# now the further data
+		cacheKey = "systemstatistic"
+		systemData = cache.getFromCache(cacheKey)
 
-	if systemdata is None:
-		systemdata = {}
-		url = "https://api.eveonline.com/map/Kills.xml.aspx"
-		content = urllib2.urlopen(url=url).read()
-		soup = BeautifulSoup(content, 'html.parser')
+		if systemData is None:
+			systemData = {}
+			url = "https://api.eveonline.com/map/Kills.xml.aspx"
+			content = urllib2.urlopen(url=url).read()
+			soup = BeautifulSoup(content, 'html.parser')
 
-		for result in soup.select("result"):
-			for row in result.select("row"):
-				systemdata[int(row["solarsystemid"])] = {"ship": int(row["shipkills"]), "faction": int(row["factionkills"]), "pod": int(row["podkills"])}
+			for result in soup.select("result"):
+				for row in result.select("row"):
+					systemData[int(row["solarsystemid"])] = {"ship": int(row["shipkills"]),
+															 "faction": int(row["factionkills"]),
+															 "pod": int(row["podkills"])}
 
-		cacheUntil = datetime.datetime.strptime(soup.select("cacheduntil")[0].text, "%Y-%m-%d %H:%M:%S")
-		diff = cacheUntil - currentEveTime()
-		cache.putIntoCache(cacheKey, json.dumps(systemdata), diff.seconds)
-	else:
-		systemdata = json.loads(systemdata)
-
-	# we collected all data (or loaded them from cache) - now zip it together
-	for i, v in jumpdata.items():
+			cacheUntil = datetime.datetime.strptime(soup.select("cacheduntil")[0].text, "%Y-%m-%d %H:%M:%S")
+			diff = cacheUntil - currentEveTime()
+			cache.putIntoCache(cacheKey, json.dumps(systemData), diff.seconds)
+		else:
+			systemData = json.loads(systemData)
+	except Exception as e:
+		print "Exception during getSystemStatistics: : {0}".format(str(e))
+		# We collected all data (or loaded them from cache) - now zip it together
+	for i, v in jumpData.items():
 		i = int(i)
 		if i not in data:
 			data[i] = {"shipkills": 0, "factionkills": 0, "podkills": 0}
 		data[i]["jumps"] = v
-	for i, v in systemdata.items():
+	for i, v in systemData.items():
 		i = int(i)
 		if i not in data:
 			data[i] = {"jumps": 0}
@@ -281,7 +291,7 @@ def getSystemStatistics():
 
 
 def secondsTillDowntime():
-	""" return the seconds till the next downtime"""
+	""" Return the seconds till the next downtime"""
 	now = currentEveTime()
 	target = now
 	if now.hour > 11:
