@@ -129,4 +129,4 @@ class MapStatisticsThread(QThread):
 			print "An error in the MapStatisticsThread: ", str(e)
 			result = {"result": "error", "text": unicode(e)}
 		self.emit(SIGNAL("statistic_data_update"), result)
-		time.sleep(2)
+		time.sleep(20)

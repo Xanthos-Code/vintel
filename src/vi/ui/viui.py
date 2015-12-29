@@ -199,9 +199,9 @@ class MainWindow(QtGui.QMainWindow):
 
 		self.chatparser = chatparser.ChatParser(self.pathToLogs, roomnames, self.systems)
 
-		versionCheckThread = drachenjaeger.NotifyNewVersionThread()
-		versionCheckThread.connect(versionCheckThread, Qt.SIGNAL("newer_version"), self.notifyNewerVersion)
-		versionCheckThread.run()
+		self.versionCheckThread = drachenjaeger.NotifyNewVersionThread()
+		self.versionCheckThread.connect(self.versionCheckThread, Qt.SIGNAL("newer_version"), self.notifyNewerVersion)
+		self.versionCheckThread.run()
 
 
 	def closeEvent(self, event):
@@ -211,6 +211,7 @@ class MainWindow(QtGui.QMainWindow):
 		if self.knownPlayerNames:
 			value = ",".join(self.knownPlayerNames)
 			self.cache.putIntoCache("known_player_names", value, 60 * 60 * 24 * 365)
+
 		# program state to cache (to read it on next startup)
 		settings = ((None, "restoreGeometry", str(self.saveGeometry())),
 					(None, "restoreState", str(self.saveState())),
@@ -231,6 +232,12 @@ class MainWindow(QtGui.QMainWindow):
 					(None, "changeFloatingOverview", self.floatingOverviewAction.isChecked()),
 					(None, "changeAlreadyShowedSoundWarning", self.alreadyShowedSoundWarning))
 		self.cache.putIntoCache("settings", str(settings), 60 * 60 * 24 * 365)
+
+		# stop the threads
+		self.filewatcherThread.quit()
+		self.kosRequestThread.quit()
+		self.soundThread.quit()
+		self.versionCheckThread.quit()
 		event.accept()
 
 
