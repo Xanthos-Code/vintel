@@ -23,11 +23,12 @@ from PyQt4 import QtGui, QtCore, Qt
 
 from vi.resources import resourcePath
 from vi import sound, states
+from vi.sound import SoundThread
 
 class TrayContextMenu(QtGui.QMenu):
-	
+
 	instances = set()
-	
+
 	def __init__(self, trayicon):
 		""" trayicon = the object with the methods to call
 		"""
@@ -35,7 +36,7 @@ class TrayContextMenu(QtGui.QMenu):
 		TrayContextMenu.instances.add(self)
 		self.trayicon = trayicon
 		self._buildMenu()
-		
+
 	def _buildMenu(self):
 		self.framelessCheck = QtGui.QAction("Frameless Window", self, checkable=True)
 		self.connect(self.framelessCheck, QtCore.SIGNAL("triggered()"), self.trayicon.changeFrameless)
@@ -64,7 +65,7 @@ class TrayContextMenu(QtGui.QMenu):
 		self.quitAction = QtGui.QAction("Quit", self)
 		self.connect(self.quitAction, Qt.SIGNAL("triggered()"), self.trayicon.quit)
 		self.addAction(self.quitAction)
-		
+
 	def changeAlarmDistance(self):
 		for action in self.distanceGroup.actions():
 			if action.isChecked():
@@ -76,7 +77,7 @@ class TrayIcon(QtGui.QSystemTrayIcon):
 
 	# Min seconds between tow notifications
 	MIN_WAIT_NOTIFICATION = 15
-  
+
 	def __init__(self, app):
 		self.icon = QtGui.QIcon(resourcePath("vi/ui/res/logo_small.png"))
 		QtGui.QSystemTrayIcon.__init__(self, self.icon, app)
@@ -90,10 +91,10 @@ class TrayIcon(QtGui.QSystemTrayIcon):
 	def changeAlarmDistance(self):
 		distance = self.alarmDistance
 		self.emit(Qt.SIGNAL("alarm_distance"), distance)
-		
+
 	def changeFrameless(self):
 		self.emit(Qt.SIGNAL("change_frameless"))
-		
+
 	@property
 	def distanceGroup(self):
 		return self.contextMenu().distanceGroup
@@ -123,7 +124,7 @@ class TrayIcon(QtGui.QSystemTrayIcon):
 			title = "ALARM!"
 			text = (u"{system} alarmed in {room}. Pilot {distance} jumps out: {char}\nText: {message_text}")
 			icon = 2
-			messageText = message.plain_text
+			messageText = message.plainText
 			self.lastNotifications[states.ALARM] = time.time()
 			sound.playSound("alarm", text)
 		elif (message.status == states.REQUEST and self.showRequest and self.lastNotifications.get(states.REQUEST, 0) < time.time() - self.MIN_WAIT_NOTIFICATION):
@@ -131,8 +132,7 @@ class TrayIcon(QtGui.QSystemTrayIcon):
 			icon = 1
 			text = (u"Someone is requesting status of {system} in {room}.")
 			self.lastNotifications[states.REQUEST] = time.time()
-			sound.playSound("request", text)
+			SoundThread.sharedInstance.playSound("request", text)
 		if title and text and icon:
 			text = text.format(**locals())
 			self.showMessage(title, text, icon)
-			

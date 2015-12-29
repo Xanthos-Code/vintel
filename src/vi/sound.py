@@ -45,10 +45,12 @@ class SoundThread(QThread):
 	soundAvailable = False
 	useDarwinSound = False
 	useSpokenNotifications = False
+	sharedInstance = None
 
 	def __init__(self):
 		QThread.__init__(self)
 		self.q = Queue()
+		self.sharedInstance = self
 
 		if gPygameAvailable:
 			pygame.mixer.init()
