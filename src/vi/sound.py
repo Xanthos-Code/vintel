@@ -17,20 +17,21 @@
 #  along with this program.	 If not, see <http://www.gnu.org/licenses/>.  #
 ###########################################################################
 
-import subprocess, sys, os
+import sys, os, subprocess
 
 from PyQt4.QtCore import QThread
 from Queue import Queue
 
 from vi.resources import resourcePath
 
-global gPygameAvailable
+global gPygletAvailable
 
 try:
-	import pygame
-	gPygameAvailable = True
+	import pyglet
+	from pyglet import media
+	gPygletAvailable = True
 except ImportError:
-	gPygameAvailable = False
+	gPygletAvailable = False
 
 
 class SoundThread(QThread):
@@ -51,13 +52,8 @@ class SoundThread(QThread):
 		QThread.__init__(self)
 		self.q = Queue()
 		self.sharedInstance = self
-
-		if gPygameAvailable:
-			pygame.mixer.init()
-			self.soundAvailable = True
-		elif sys.platform.startswith("darwin"):
-			self.useDarwinSound = True;
-			self.soundAvailable = True
+		self.isDarwin = sys.platform.startswith("darwin")
+		self.soundAvailable = True
 
 
 	def setUseSpokenNotifications(self, newValue):
@@ -71,36 +67,33 @@ class SoundThread(QThread):
 		self.soundVolume = max(0, min(100, newValue))
 		for sound in self.soundCache.values():
 			# Convert to a value between 0 and 1 when passing to the underlying subsystem
-			sound.setVolume(float(self.soundVolume)	 / 100.0)
+			sound.setVolume(float(self.soundVolume) / 100.0)
 
 
-	def playSound(self, name="alarm", message=None):
-		if self.soundAvailable and self.soundActive:
-			if name not in self.SOUNDS:
-				raise ValueError("Sound '{0}' is not available".format(name))
+	def playSound(self, name="alarm", message=""):
+		if self.useSpokenNotifications:
+			audioFile = None
 		else:
-			return
-
-		if self.useDarwinSound and self.useSpokenNotifications and message:
-			data = message
-		else:
-			data = resourcePath("vi/ui/res/{0}".format(self.SOUNDS[name]))
-
-		# Drop the path or message into the queue to be picked up by run
-		self.q.put((data))
+			audioFile = resourcePath("vi/ui/res/{0}".format(self.SOUNDS[name]))
+		self.q.put((audioFile, message))
 
 
 	def run(self):
 		while True:
-			data = self.q.get()
+			audioFile, message = self.q.get()
 			volume = float(self.soundVolume) / 100.0
 
-			if self.useDarwinSound:
-				if self.useSpokenNotifications and data:
-					os.system("say [[volm {0}]] {1}".format(volume, data))
-				elif data:
-					subprocess.call(["afplay -v {0} {1}".format(volume, data)], shell=True)
-			else:
-				self.soundCache[data].play()
-
-
+			if self.useSpokenNotifications and message != "":
+				if self.isDarwin:
+					os.system("say [[volm {0}]] {1}".format(volume, message))
+				else:
+					print "SoundThread: sorry, speech not yet implemented on this platform"
+			elif audioFile is not None:
+				if gPygletAvailable:
+					src = media.load(audioFile, streaming=False)
+					player = media.Player()
+					player.queue(src)
+					player.volume = volume
+					player.play()
+				elif self.isDarwin:
+					subprocess.call(["afplay -v {0} {1}".format(volume, audioFile)], shell=True)
