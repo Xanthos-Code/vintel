@@ -44,7 +44,7 @@ class SoundThread(QThread):
 	soundActive = False
 	soundAvailable = False
 	useDarwinSound = False
-	useSpokenNotifications = False
+	useSpokenNotifications = True
 	sharedInstance = None
 
 	def __init__(self):

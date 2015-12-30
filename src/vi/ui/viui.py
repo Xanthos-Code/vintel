@@ -51,7 +51,7 @@ class MainWindow(QtGui.QMainWindow):
 		"""
 		QtGui.QMainWindow.__init__(self)
 		uic.loadUi(resourcePath('vi/ui/MainWindow.ui'), self)
-		self.setWindowTitle("Xintel " + VERSION)
+		self.setWindowTitle("Vintel " + VERSION)
 		self.setWindowIcon(QtGui.QIcon(resourcePath("vi/ui/res/logo_small.png")))
 		self.pathToLogs = pathToLogs
 		self.trayIcon = trayIcon
@@ -87,7 +87,7 @@ class MainWindow(QtGui.QMainWindow):
 			diagText = "Something went wrong getting map data. To proceed I use the data I " \
 					   "have in my cache. This could be outdated.\nIf this problem " \
 					   "is permanent, there might be a change in the dotlan data " \
-					   "and Xintel must be modified. Check for a newer version " \
+					   "and Vintel must be modified. Check for a newer version " \
 					   "and inform the maintainer.\n\nWhat went wrong: {0} {1}".format(type(e), unicode(e))
 			print str(e)
 			QtGui.QMessageBox.warning(None, "Using map from my cache", diagText, "OK")
@@ -248,25 +248,28 @@ class MainWindow(QtGui.QMainWindow):
 	def changeFloatingOverview(self, newValue=None):
 		pass
 
+
 	def changeAlreadyShowedSoundWarning(self, newValue):
-		self.alreadyShowedSoundWarning = self.alreadyShowedSoundWarning
+		self.alreadyShowedSoundWarning = newValue
 
 
 	def changeChatVisibility(self, newValue=None):
 		if newValue is None:
 			newValue = self.showChatAction.isChecked()
+		self.showChatAction.setVisible(newValue)
 		self.chatbox.setVisible(newValue)
 
 
 	def changeClipboard(self, newValue=None):
 		if newValue is None:
-			newValue = not self.kosClipboardActiveAction.isChecked()
+			newValue = self.kosClipboardActiveAction.isChecked()
 		self.kosClipboardActiveAction.setChecked(newValue)
 
 
 	def changeUseSpokenNotifications(self, newValue=None):
 		if newValue is None:
 			newValue = self.useSpokenNotificationsAction.isChecked()
+		self.useSpokenNotificationsAction.setChecked(newValue)
 		self.soundThread.setUseSpokenNotifications(newValue)
 
 
@@ -291,6 +294,7 @@ class MainWindow(QtGui.QMainWindow):
 		else:
 			if newValue is None:
 				newValue = self.activateSoundAction.isChecked()
+			self.activateSoundAction.setChecked(newValue)
 			self.soundThread.soundActive = newValue
 
 
@@ -314,6 +318,7 @@ class MainWindow(QtGui.QMainWindow):
 		if newValue:
 			self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
 			self.changeAlwaysOnTop(True)
+			self.alwaysOnTopAction.isChecked(True)
 		else:
 			self.setWindowFlags(self.windowFlags() & (~QtCore.Qt.FramelessWindowHint))
 		self.menubar.setVisible(not newValue)

@@ -75,14 +75,14 @@ if __name__ == "__main__":
 
 	app = QtGui.QApplication(sys.argv)
 	splash = QtGui.QSplashScreen(QtGui.QPixmap(resourcePath("vi/ui/res/logo.png")))
-	
+
 	splash.show()
 	app.processEvents()
-	
+
 	pathToLogs = ""
 	if len(sys.argv) > 1:
 		pathToLogs = sys.argv[1]
-	
+
 	if not os.path.exists(pathToLogs):
 		if sys.platform.startswith("darwin"):
 			pathToLogs = os.path.join(os.path.expanduser("~"), "Library", "Application Support", "Eve Online", "p_drive", "User", "My Documents", "EVE", "logs", "Chatlogs")
@@ -98,25 +98,25 @@ if __name__ == "__main__":
 		# None of the paths for logs exist, bailing out
 		QtGui.QMessageBox.critical(None, "No path to Logs", "No logs found at: " + pathToLogs, "Quit")
 		sys.exit(1)
-	
+
 	# Setting local working directory for cache, etc.
-	outputDir = os.path.join(os.path.dirname(os.path.dirname(pathToLogs)), "xintel")
-	
+	outputDir = os.path.join(os.path.dirname(os.path.dirname(pathToLogs)), "vintel")
+
 	if not os.path.exists(outputDir):
 		os.mkdir(outputDir)
-	
+
 	cache.Cache.PATH_TO_CACHE = os.path.join(outputDir, "cache.sqlite3")
 	gErrorFile = os.path.join(outputDir, "error.log")
-	
-	#print "Xintel expects to find logs at: ", pathToLogs
-	#print "Xintel writes data to: ", outputDir
-	
+
+	#print "Vintel expects to find logs at: ", pathToLogs
+	#print "Vintel writes data to: ", outputDir
+
 	trayicon = systemtray.TrayIcon(app)
 	trayicon.setContextMenu(systemtray.TrayContextMenu(trayicon))
 	trayicon.show()
-	
+
 	mw = viui.MainWindow(pathToLogs, trayicon)
 	mw.show()
 	splash.finish(mw)
-	
+
 	sys.exit(app.exec_())

@@ -68,7 +68,7 @@ class AvatarFindThread(QThread):
 				if avatar:
 					self.emit(SIGNAL("avatar_update"), chatEntry, avatar)
 			except Exception as e:
-				print "An error in the AvatarFindThread: ", str(e)
+				print "An error in the AvatarFindThread : {0}".format(str(e))
 
 
 class KOSCheckerThread(QThread):
@@ -81,7 +81,7 @@ class KOSCheckerThread(QThread):
 		try:
 			self.q.put((names, requestType, onlyKos))
 		except Exception as e:
-			print "An error in the KOSCheckerThread: ", str(e)
+			print "An error in the KOSCheckerThread: {0}".format(str(e))
 
 
 	def run(self):
@@ -110,8 +110,8 @@ class KOSCheckerThread(QThread):
 			except Exception as e:
 				state = "error"
 				text = unicode(e)
-				print "An error in the KOSCheckerThread: ", str(e)
-			#print "KOSCheckerThread emitting kos_result for: state = {0}, text = {1}, requestType = {2}, hasKos = {3}".format(state, text, requestType, hasKos)
+				print "An error in the KOSCheckerThread : {0}".format(str(e))
+			print "KOSCheckerThread emitting kos_result for: state = {0}, text = {1}, requestType = {2}, hasKos = {3}".format(state, text, requestType, hasKos)
 			self.recentRequestNames[namesString] = time.time()
 			self.emit(SIGNAL("kos_result"), state, text, requestType, hasKos)
 
@@ -126,7 +126,7 @@ class MapStatisticsThread(QThread):
 			time.sleep(20)  # sleeping to prevent a "need 2 arguments"-error
 			result = {"result": "ok", "statistics": statistics}
 		except Exception as e:
-			print "An error in the MapStatisticsThread: ", str(e)
+			print "An error in the MapStatisticsThread: {0}".format(str(e))
 			result = {"result": "error", "text": unicode(e)}
 		self.emit(SIGNAL("statistic_data_update"), result)
 		time.sleep(20)

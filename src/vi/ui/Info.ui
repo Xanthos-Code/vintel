@@ -741,12 +741,12 @@ Public License instead of this License.  But first, please read
     <rect>
      <x>290</x>
      <y>20</y>
-     <width>371</width>
-     <height>201</height>
+     <width>381</width>
+     <height>231</height>
     </rect>
    </property>
    <property name="text">
-    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Vintel&lt;/span&gt; - Visual Intel Chat Analyzer&lt;br/&gt;&lt;/p&gt;&lt;p&gt;© 2014-15 Sebastian Meyer &lt;br/&gt;&lt;a href=&quot;mailto:sparrow.242.de+eve@gmail.com&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0057ae;&quot;&gt;sparrow.242.de+eve@gmail.com&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;This software is open source, licensed under GPL v3&lt;/p&gt;&lt;p&gt;Find the sources at&lt;br/&gt;&lt;a href=&quot;http://drachenjaeger.eu/vintel/vintel.html&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0057ae;&quot;&gt;http://drachenjaeger.eu/vintel/vintel.html&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;If you want to donate,&lt;br/&gt;send EVE ISK to Nilrem Utrigas.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Vintel&lt;/span&gt; - Visual Intel Chat Analyzer&lt;br/&gt;&lt;/p&gt;&lt;p&gt;© 2014-15 Sebastian Meyer&lt;br/&gt;© 2015-16 Xanthos &lt;br/&gt;&lt;a href=&quot;mailto:xanthosx@gmail.com&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;xanthosx@gmail.com&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;This software is open source, licensed under GPL v3&lt;/p&gt;&lt;p&gt;Find the sources at&lt;br/&gt;&lt;a href=&quot;https://github.com/XanthosX/vintel&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;https://github.com/XanthosX/vintel&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;If you want to donate,&lt;br/&gt;send ISK to Nilrem Utrigas (author), Xanthos (maintainer)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
    <property name="alignment">
     <set>Qt::AlignHCenter|Qt::AlignTop</set>
