@@ -47,7 +47,6 @@ class SoundThread(QThread):
 			  "kos": "178031__zimbot__transporterstartbeep0-sttos-recreated.wav",
 			  "request": "178028__zimbot__bosun-whistle-sttos-recreated.wav"}
 
-	soundCache = {}
 	soundVolume = 25  # Must be an integer beween 0 and 100
 	soundActive = False
 	soundAvailable = False
@@ -62,6 +61,12 @@ class SoundThread(QThread):
 		self.isDarwin = sys.platform.startswith("darwin")
 		self.soundAvailable = True
 
+
+	def platformSupportsSpeech(self):
+		if sys.platform.startswith("darwin"):
+			return True
+		return False
+
 	def setUseSpokenNotifications(self, newValue):
 		if newValue is not None:
 			self.useSpokenNotifications = newValue
@@ -70,9 +75,6 @@ class SoundThread(QThread):
 		""" Accepts and stores a number between 0 and 100.
 		"""
 		self.soundVolume = max(0, min(100, newValue))
-		for sound in self.soundCache.values():
-			# Convert to a value between 0 and 1 when passing to the underlying subsystem
-			sound.setVolume(float(self.soundVolume) / 100.0)
 
 	def playSound(self, name="alarm", message=""):
 		if self.useSpokenNotifications:

@@ -264,10 +264,14 @@ class MainWindow(QtGui.QMainWindow):
 
 
 	def changeUseSpokenNotifications(self, newValue=None):
-		if newValue is None:
-			newValue = self.useSpokenNotificationsAction.isChecked()
-		self.useSpokenNotificationsAction.setChecked(newValue)
-		self.soundThread.setUseSpokenNotifications(newValue)
+		if self.soundThread.platformSupportsSpeech():
+			if newValue is None:
+				newValue = self.useSpokenNotificationsAction.isChecked()
+			self.useSpokenNotificationsAction.setChecked(newValue)
+			self.soundThread.setUseSpokenNotifications(newValue)
+		else:
+			self.useSpokenNotificationsAction.setChecked(False)
+			self.useSpokenNotificationsAction.setEnabled(False)
 
 
 	def changeOpacity(self, newValue=None):
