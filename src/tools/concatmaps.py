@@ -18,10 +18,12 @@
 ###########################################################################
 
 from __future__ import print_function
-import sys
+
 import os
+import sys
 
 from bs4 import BeautifulSoup
+
 
 def checkArguments(args):
 	error = False
@@ -30,8 +32,8 @@ def checkArguments(args):
 			errout("ERROR: {0} does not exist!".format(path))
 			error = True
 	if error:
-		sys.exit(2) 
-		
+		sys.exit(2)
+
 def concat(firstFile, secondFile):
 	firstSvg = loadSvg(firstFile)
 	secondSvg = loadSvg(secondFile)
@@ -60,8 +62,8 @@ def concat(firstFile, secondFile):
 	for systemUse in systemUses:
 		systemUseElement.append(systemUse)
 	return firstSvg
-	
-		
+
+
 def loadSvg(path):
 	content = None
 	with open(path) as f:
@@ -79,7 +81,7 @@ def main():
 	newSvg = concat(sys.argv[1], sys.argv[2])
 	result = newSvg.body.next.prettify().encode("utf-8")
 	print(result)
-	
+
 def errout(*objs):
 	print(*objs, file=sys.stderr)
 

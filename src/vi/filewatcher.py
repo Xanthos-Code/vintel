@@ -18,8 +18,8 @@
 ###########################################################################
 
 import os
-import sys
 import time
+
 from PyQt4 import QtCore
 from PyQt4.QtCore import SIGNAL
 

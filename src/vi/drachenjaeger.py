@@ -17,22 +17,22 @@
 #  along with this program.	 If not, see <http://www.gnu.org/licenses/>.  #
 ###########################################################################
 
-import urllib2
 import json
+import urllib2
 
 from PyQt4 import Qt
 from PyQt4.QtCore import QThread
 from bs4 import BeautifulSoup
-
-from vi.cache.cache import Cache
 from vi import version
- 
+from vi.cache.cache import Cache
+
+
 def getJumpbridgeData(region):
 	try:
 		cacheKey = "jb_" + region
 		cache = Cache()
 		data = cache.getFromCache(cacheKey)
-		
+
 		if data:
 			data = json.loads(data)
 		else:
@@ -49,8 +49,8 @@ def getJumpbridgeData(region):
 	except Exception as e:
 		print("Getting Jumpbridgedata failed with: {0}".format(str(e)))
 		return []
-		
-		
+
+
 def getNewestVersion():
 	try:
 		url = "http://drachenjaeger.eu/vintel/vintel.html"
@@ -65,7 +65,7 @@ def getNewestVersion():
 
 
 class NotifyNewVersionThread(QThread):
-	
+
 	def __init__(self):
 		QThread.__init__(self)
 

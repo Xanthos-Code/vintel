@@ -17,12 +17,12 @@
 #  along with this program.	 If not, see <http://www.gnu.org/licenses/>.  #
 ###########################################################################
 
-import time, itertools
+import itertools
+import time
+from Queue import Queue
 
 from PyQt4.QtCore import QThread
 from PyQt4.QtCore import SIGNAL
-from Queue import Queue
-
 from vi import evegate
 from vi import koschecker
 from vi.cache.cache import Cache

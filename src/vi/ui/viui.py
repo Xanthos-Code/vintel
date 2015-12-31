@@ -18,28 +18,25 @@
 ###########################################################################
 
 import datetime
-import os
 import sys
 import time
 import urllib2
 import webbrowser
 
+import vi.version
 from PyQt4 import Qt, QtGui, uic, QtCore
+from PyQt4.QtCore import QPoint
 from PyQt4.QtGui import QImage, QPixmap, QMessageBox
 from PyQt4.QtWebKit import QWebPage
-from PyQt4.QtCore import QPoint
-
+from vi import chatparser, dotlan, filewatcher
+from vi import drachenjaeger, evegate
+from vi import states
+from vi.cache.cache import Cache
+from vi.resources import resourcePath
+from vi.sound import SoundThread
 from vi.ui.systemtray import TrayContextMenu
 from vi.ui.threads import AvatarFindThread, KOSCheckerThread
 from vi.ui.threads import MapStatisticsThread
-import vi.version
-from vi import chatparser, dotlan, filewatcher, koschecker
-from vi import drachenjaeger, evegate
-from vi.cache.cache import Cache
-from vi import states
-from vi.sound import SoundThread
-
-from vi.resources import resourcePath
 
 VERSION = vi.version.VERSION
 DEBUG = False

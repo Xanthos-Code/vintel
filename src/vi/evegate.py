@@ -23,9 +23,8 @@ import urllib
 import urllib2
 
 from bs4 import BeautifulSoup
-
-from vi.version import VERSION
 from vi.cache.cache import Cache
+from vi.version import VERSION
 
 ERROR = -1
 NOT_EXISTS = 0

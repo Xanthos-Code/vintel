@@ -35,10 +35,9 @@
 		the tree and so the original generator is not longer stable.
 """
 
+import vi.evegate as evegate
 from bs4 import BeautifulSoup
 from bs4.element import NavigableString
-
-import vi.evegate as evegate
 from vi import states
 
 CHARS_TO_IGNORE = ("*", "?", ",", "!")

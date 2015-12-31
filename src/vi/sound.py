@@ -17,11 +17,18 @@
 #  along with this program.	 If not, see <http://www.gnu.org/licenses/>.  #
 ###########################################################################
 
-import sys, os, subprocess
+import argparse
+import os
+import re
+import subprocess
+import sys
+import time
+import urllib
+import urllib2
+from Queue import Queue
+from collections import namedtuple
 
 from PyQt4.QtCore import QThread
-from Queue import Queue
-
 from vi.resources import resourcePath
 
 global gPygletAvailable
@@ -29,19 +36,19 @@ global gPygletAvailable
 try:
 	import pyglet
 	from pyglet import media
+
 	gPygletAvailable = True
 except ImportError:
 	gPygletAvailable = False
 
 
 class SoundThread(QThread):
-
 	SOUNDS = {"alarm": "178032__zimbot__redalert-klaxon-sttos-recreated.wav",
 			  "kos": "178031__zimbot__transporterstartbeep0-sttos-recreated.wav",
 			  "request": "178028__zimbot__bosun-whistle-sttos-recreated.wav"}
 
 	soundCache = {}
-	soundVolume = 25   # Must be an integer beween 0 and 100
+	soundVolume = 25  # Must be an integer beween 0 and 100
 	soundActive = False
 	soundAvailable = False
 	useDarwinSound = False
@@ -55,11 +62,9 @@ class SoundThread(QThread):
 		self.isDarwin = sys.platform.startswith("darwin")
 		self.soundAvailable = True
 
-
 	def setUseSpokenNotifications(self, newValue):
 		if newValue is not None:
 			self.useSpokenNotifications = newValue
-
 
 	def setSoundVolume(self, newValue):
 		""" Accepts and stores a number between 0 and 100.
@@ -69,14 +74,12 @@ class SoundThread(QThread):
 			# Convert to a value between 0 and 1 when passing to the underlying subsystem
 			sound.setVolume(float(self.soundVolume) / 100.0)
 
-
 	def playSound(self, name="alarm", message=""):
 		if self.useSpokenNotifications:
 			audioFile = None
 		else:
 			audioFile = resourcePath("vi/ui/res/{0}".format(self.SOUNDS[name]))
 		self.q.put((audioFile, message))
-
 
 	def run(self):
 		while True:

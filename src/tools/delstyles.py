@@ -18,10 +18,12 @@
 ###########################################################################
 
 from __future__ import print_function
-import sys
+
 import os
+import sys
 
 from bs4 import BeautifulSoup
+
 
 def readSvg(path):
 	if not os.path.exists(path):

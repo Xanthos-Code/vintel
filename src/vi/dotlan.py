@@ -21,20 +21,15 @@
 # Little lib and tool to get the map and information from dotlan		  #
 ###########################################################################
 
-import inspect
 import math
-import os
-import sys
 import time
 import urllib2
 
 from bs4 import BeautifulSoup
-
-from vi.cache.cache import Cache
 from vi import states
-import drachenjaeger
-import evegate
+from vi.cache.cache import Cache
 
+import evegate
 
 JB_COLORS = ("800000", "808000", "008080", "ff00ff", "c83737", "ff6600", "917c6f", "ffcc00", "88aa00")
 

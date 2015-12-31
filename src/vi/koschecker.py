@@ -22,7 +22,6 @@ import urllib
 import urllib2
 
 from vi import evegate
-from vi.cache.cache import Cache
 
 UNKNOWN = "No Result"
 NOT_KOS = 'Not Kos'
