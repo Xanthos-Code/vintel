@@ -17,19 +17,13 @@
 #  along with this program.	 If not, see <http://www.gnu.org/licenses/>.  #
 ###########################################################################
 
-import argparse
 import os
-import re
 import subprocess
 import sys
-import time
-import urllib
-import urllib2
-from Queue import Queue
-from collections import namedtuple
 
 from PyQt4.QtCore import QThread
 from vi.resources import resourcePath
+from Queue import Queue
 
 global gPygletAvailable
 

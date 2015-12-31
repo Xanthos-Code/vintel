@@ -21,6 +21,8 @@ import json
 import urllib
 import urllib2
 
+from urllib2 import URLError
+
 from vi import evegate
 
 UNKNOWN = "No Result"
