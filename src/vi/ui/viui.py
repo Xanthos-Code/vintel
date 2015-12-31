@@ -291,7 +291,7 @@ class MainWindow(QtGui.QMainWindow):
 			self.soundButton.setEnabled(False)
 			if not self.alreadyShowedSoundWarning:
 				self.alreadyShowedSoundWarning = True
-				QtGui.QMessageBox.warning(None, "Sound disabled", "I can't find the lib 'pygame' which I use to play sounds, ""so I have to disable the soundsystem.\nIf you want sound, please install the 'pygame' library.", "OK")
+				QtGui.QMessageBox.warning(None, "Sound disabled", "I can't find the lib 'pyglet' which is used to play sounds, ""so I have to disable the soundsystem.\nIf you want sound, please install the 'pyglet' library. This warning will not be shown again.", "OK")
 		else:
 			if newValue is None:
 				newValue = self.activateSoundAction.isChecked()

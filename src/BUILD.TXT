@@ -21,6 +21,12 @@ To run the source, you need:
 * BeautifulSoup 4
   https://pypi.python.org/pypi/beautifulsoup4
 
+* Pyglet 1.2.4 (for python 2.7)
+  pygame is used to play the sound: If it is not available the
+  sound option will be disabled.
+
+--- Deprectated ---
+
 * pygame 1.9.1 (for python 2.7)
   http://pygame.org/download.shtml
   pygame is used to play the sound: If it is not available the
@@ -40,7 +46,7 @@ How to set up an development directory:
   Use it to install BeautifulSoup4:
   pip install BeautifulSoup4
 
-* If you want sound support, download and install pygame from
+* If you want sound support, download and install pyglet from
   the link above.
 
 Now you are able to start the vintel.py.
