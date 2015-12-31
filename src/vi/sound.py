@@ -53,8 +53,9 @@ class SoundThread(QThread):
 	soundAvailable = False
 	useDarwinSound = False
 	useSpokenNotifications = True
-	useGoogleTTS = False
+	useGoogleTTS = True
 	sharedInstance = None
+	ttsApiKey = '896a7f61ec5e478cba856a78babab79c'
 
 
 	def __init__(self):
@@ -96,28 +97,39 @@ class SoundThread(QThread):
 
 			if self.useSpokenNotifications and message != "":
 				if self.useGoogleTTS:
-					mp3Filename = self.audioExtractToMp3(inputText=message)
-					self.playAudioFile(mp3Filename)
+					#mp3Filename = self.audioExtractToMp3(inputText=message)
+					#mp3Filename = self.get_tts_mp3('en-us', message)
+
+					self.playTTS(message)
 				elif self.isDarwin:
 					volume = float(self.soundVolume) / 100.0
 					os.system("say [[volm {0}]] {1}".format(volume, message))
 				else:
-					self.playAudioFile(audioFile)
+					self.playAudioFile(audioFile, False)
 					print "SoundThread: sorry, speech not yet implemented on this platform"
 			elif audioFile is not None:
-				self.playAudioFile(audioFile)
+				self.playAudioFile(audioFile, False)
 
 
-	def playAudioFile(self, filename):
+	def playAudioFile(self, filename, stream=False):
 		volume = float(self.soundVolume) / 100.0
 		if gPygletAvailable:
-			src = media.load(filename, streaming=False)
+			src = media.load(filename, streaming=stream)
 			player = media.Player()
 			player.queue(src)
 			player.volume = volume
 			player.play()
 		elif self.isDarwin:
 			subprocess.call(["afplay -v {0} {1}".format(volume, filename)], shell=True)
+
+
+	def playTTS(self, inputText=''):
+		try:
+			mp3url = 'http://api.voicerss.org/?c=WAV&key={self.ttsApiKey}&src={inputText}&hl=en-us'.format(**vars())
+			self.playAudioFile(urllib2.urlopen(mp3url))
+			time.sleep(.5)
+		except urllib2.URLError as e:
+			print ('playTTS error: %s' % e)
 
 
 	def audioExtractToMp3(self, inputText='', args=None):
@@ -137,19 +149,19 @@ class SoundThread(QThread):
 
 		# Download chunks and write them to the output file
 		for idx, val in enumerate(combinedText):
-			mp3url = "http://translate.google.com/translate_tts?tl=%s&q=%s&total=%s&idx=%s&ie=UTF-8&client=t" % (args.language, urllib.quote(val), len(combinedText), idx)
-			headers = {"Host": "translate.google.com", "Referer": "http://www.gstatic.com/translate/sound_player2.swf",
-					   "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1)"}
-			req = urllib2.Request(mp3url, '', headers)
+			mp3url = "http://translate.google.com/translate_tts?tl=%s&q=%s&total=%s&idx=%s&ie=UTF-8&client=t&key=%s" % \
+					 (args.language, urllib.quote(val), len(combinedText), idx, self.ttsApiKey)
+			headers = {"Host": "translate.google.com", "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1)"}
+			request = urllib2.Request(mp3url, '', headers)
 			sys.stdout.write('.')
 			sys.stdout.flush()
 			if len(val) > 0:
 				try:
-					response = urllib2.urlopen(req)
+					response = urllib2.urlopen(request)
 					args.output.write(response.read())
 					time.sleep(.5)
 				except urllib2.URLError as e:
-					print ('audioExtract error: %s' % e)
+					print ('audioExtractToMp3 error: %s' % e)
 		args.output.close()
 		return args.output.name
 
