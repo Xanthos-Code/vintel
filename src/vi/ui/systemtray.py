@@ -75,7 +75,7 @@ class TrayContextMenu(QtGui.QMenu):
 
 class TrayIcon(QtGui.QSystemTrayIcon):
 
-	# Min seconds between tow notifications
+	# Min seconds between two notifications
 	MIN_WAIT_NOTIFICATION = 15
 
 	def __init__(self, app):
@@ -115,6 +115,8 @@ class TrayIcon(QtGui.QSystemTrayIcon):
 		self.showRequest = newValue
 
 	def showNotification(self, message, system, char, distance):
+		if message is None:
+			return
 		room = message.room
 		title = None
 		text = None
@@ -133,6 +135,6 @@ class TrayIcon(QtGui.QSystemTrayIcon):
 			text = (u"Someone is requesting status of {system} in {room}.")
 			self.lastNotifications[states.REQUEST] = time.time()
 			SoundThread.sharedInstance.playSound("request", text)
-		if title and text and icon:
+		if not (title is None or text is None or icon):
 			text = text.format(**locals())
 			self.showMessage(title, text, icon)
