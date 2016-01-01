@@ -32,7 +32,7 @@ def getJumpbridgeData(region):
 		cache = Cache()
 		data = cache.getFromCache(cacheKey)
 
-		if not data:
+		if data:
 			data = json.loads(data)
 		else:
 			data = []
