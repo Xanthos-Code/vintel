@@ -20,18 +20,16 @@
 import os
 import subprocess
 import sys
-
-from PyQt4.QtCore import QThread
-from vi.resources import resourcePath
-from Queue import Queue
-
-import sys
-import argparse
-import html.parser, json
 import re
 import urllib, urllib2
 import time
+
 from collections import namedtuple
+from PyQt4.QtCore import QThread
+from resources import resourcePath
+from Queue import Queue
+
+# Hi Chriz
 
 global gPygletAvailable
 
@@ -73,10 +71,6 @@ class SoundThread(QThread):
 		self.q = Queue()
 		self.isDarwin = sys.platform.startswith("darwin")
 		self.soundAvailable = True
-
-	@property
-	def sharedInstance(self):
-		return self.__instance
 
 
 	def platformSupportsSpeech(self):
@@ -145,11 +139,14 @@ class SoundThread(QThread):
 			jokeUrl = "http://api.icndb.com/jokes/random/"
 			headers = {"Host": "api.icndb.com", "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1)"}
 			request = urllib2.Request(jokeUrl, '', headers)
-			message = html.parser.HTMLParser().unescape(json.load(request)["value"]["joke"])
-			self.speak(message)
+			response = urllib2.urlopen(request)
+			html = response.read()
+			# Need to parse the text out of the html - BeautifulSoup maybe?
+			# message = html.parser.HTMLParser().unescape(json.load(request)["value"]["joke"])
+			#self.speak(message)
 		except Exception as e:
 			print ('speakRandomChuckNorrisLore error: %s' % e)
-			
+
 
 	def run(self):
 		while True:
