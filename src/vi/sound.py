@@ -27,6 +27,7 @@ from Queue import Queue
 
 import sys
 import argparse
+import html.parser, json
 import re
 import urllib, urllib2
 import time
@@ -140,9 +141,15 @@ class SoundThread(QThread):
 
 
 	def speakRandomChuckNorrisLore(self):
-		pass
-		#curl -s http://api.icndb.com/jokes/random/ | python3 -c 'import html.parser, json, sys; print(html.parser.HTMLParser().unescape(json.load(sys.stdin)["value"]["joke"]))' | google_speech -
-
+		try:
+			jokeUrl = "http://api.icndb.com/jokes/random/"
+			headers = {"Host": "api.icndb.com", "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1)"}
+			request = urllib2.Request(jokeUrl, '', headers)
+			message = html.parser.HTMLParser().unescape(json.load(request)["value"]["joke"])
+			self.speak(message)
+		except Exception as e:
+			print ('speakRandomChuckNorrisLore error: %s' % e)
+			
 
 	def run(self):
 		while True:
