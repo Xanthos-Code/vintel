@@ -124,7 +124,7 @@ class TrayIcon(QtGui.QSystemTrayIcon):
 		text = ""
 		if (message.status == states.ALARM and self.showAlarm and self.lastNotifications.get(states.ALARM, 0) < time.time() - self.MIN_WAIT_NOTIFICATION):
 			title = "ALARM!"
-			text = (u"{system} alarmed in {room}. Pilot {distance} jumps out: {char}\nText: {message_text}")
+			text = (u"{system} alarmed in {room}. Pilot {distance} jumps out: {char}\nText: {messageText}")
 			icon = 2
 			messageText = message.plainText
 			self.lastNotifications[states.ALARM] = time.time()

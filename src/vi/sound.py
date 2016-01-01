@@ -53,17 +53,29 @@ class SoundThread(QThread):
 	soundAvailable = False
 	useDarwinSound = False
 	useSpokenNotifications = True
-	useGoogleTTS = True
-	sharedInstance = None
-	ttsApiKey = '896a7f61ec5e478cba856a78babab79c'
 
+	# Text-to-speech
+	useGoogleTTS = False
+	useVoiceRss = False
+	VOICE_RSS_API_KEY = '896a7f61ec5e478cba856a78babab79c'
+	GOOGLE_TTS_API_KEY = ''
+
+	# Singleton pattern
+	__instance = None
+	def __new__(cls):
+		if SoundThread.__instance is None:
+			SoundThread.__instance = QThread.__new__(cls)
+		return SoundThread.__instance
 
 	def __init__(self):
 		QThread.__init__(self)
 		self.q = Queue()
-		self.sharedInstance = self
 		self.isDarwin = sys.platform.startswith("darwin")
 		self.soundAvailable = True
+
+	@property
+	def sharedInstance(self):
+		return self.__instance
 
 
 	def platformSupportsSpeech(self):
@@ -84,6 +96,8 @@ class SoundThread(QThread):
 
 
 	def playSound(self, name="alarm", message=""):
+		""" Schedules the work, which is picked up by run()
+		"""
 		if self.useSpokenNotifications:
 			audioFile = None
 		else:
@@ -91,46 +105,72 @@ class SoundThread(QThread):
 		self.q.put((audioFile, message))
 
 
+	def playAudioFile(self, filename, stream=False):
+		try:
+			volume = float(self.soundVolume) / 100.0
+			if gPygletAvailable:
+				src = media.load(filename, streaming=stream)
+				player = media.Player()
+				player.queue(src)
+				player.volume = volume
+				player.play()
+			elif self.isDarwin:
+				subprocess.call(["afplay -v {0} {1}".format(volume, filename)], shell=True)
+		except Exception as e:
+			print "SoundThread.playAudioFile exception: %s" % str(e)
+
+
+	def speak(self, message):
+		if self.useGoogleTTS:
+			self.audioExtractToMp3(inputText=message) # experimental
+		elif self.useVoiceRss:
+			self.playTTS(message)  # experimental
+		elif self.isDarwin:
+			self.darwinSpeak(message)
+		else:
+			return False
+		return True
+
+
+	def darwinSpeak(self, message):
+		try:
+			os.system("say [[volm {0}]] {1}".format(float(self.soundVolume) / 100.0, message))
+		except Exception as e:
+			print "SoundThread._speakText exception: %s" % str(e)
+
+
+	def speakRandomChuckNorrisLore(self):
+		pass
+		#curl -s http://api.icndb.com/jokes/random/ | python3 -c 'import html.parser, json, sys; print(html.parser.HTMLParser().unescape(json.load(sys.stdin)["value"]["joke"]))' | google_speech -
+
+
 	def run(self):
 		while True:
 			audioFile, message = self.q.get()
 
 			if self.useSpokenNotifications and message != "":
-				if self.useGoogleTTS:
-					#mp3Filename = self.audioExtractToMp3(inputText=message)
-					#mp3Filename = self.get_tts_mp3('en-us', message)
-
-					self.playTTS(message)
-				elif self.isDarwin:
-					volume = float(self.soundVolume) / 100.0
-					os.system("say [[volm {0}]] {1}".format(volume, message))
-				else:
+				if not self.speak(message):
 					self.playAudioFile(audioFile, False)
 					print "SoundThread: sorry, speech not yet implemented on this platform"
 			elif audioFile is not None:
 				self.playAudioFile(audioFile, False)
 
 
-	def playAudioFile(self, filename, stream=False):
-		volume = float(self.soundVolume) / 100.0
-		if gPygletAvailable:
-			src = media.load(filename, streaming=stream)
-			player = media.Player()
-			player.queue(src)
-			player.volume = volume
-			player.play()
-		elif self.isDarwin:
-			subprocess.call(["afplay -v {0} {1}".format(volume, filename)], shell=True)
+	''' Experimental text-to-speech stuff below
+	'''
 
+	# VoiceRss
 
 	def playTTS(self, inputText=''):
 		try:
-			mp3url = 'http://api.voicerss.org/?c=WAV&key={self.ttsApiKey}&src={inputText}&hl=en-us'.format(**vars())
+			mp3url = 'http://api.voicerss.org/?c=WAV&key={self.VOICE_RSS_API_KEY}&src={inputText}&hl=en-us'.format(**vars())
 			self.playAudioFile(urllib2.urlopen(mp3url))
 			time.sleep(.5)
 		except urllib2.URLError as e:
 			print ('playTTS error: %s' % e)
 
+
+	# google_tts
 
 	def audioExtractToMp3(self, inputText='', args=None):
 		# This accepts :
@@ -150,7 +190,7 @@ class SoundThread(QThread):
 		# Download chunks and write them to the output file
 		for idx, val in enumerate(combinedText):
 			mp3url = "http://translate.google.com/translate_tts?tl=%s&q=%s&total=%s&idx=%s&ie=UTF-8&client=t&key=%s" % \
-					 (args.language, urllib.quote(val), len(combinedText), idx, self.ttsApiKey)
+					 (args.language, urllib.quote(val), len(combinedText), idx, self.GOOGLE_TTS_API_KEY)
 			headers = {"Host": "translate.google.com", "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1)"}
 			request = urllib2.Request(mp3url, '', headers)
 			sys.stdout.write('.')

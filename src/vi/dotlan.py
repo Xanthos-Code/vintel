@@ -465,5 +465,5 @@ def convertRegionName(name):
 if __name__ == "__main__":
 	map = Map("Providence", "Providence.svg")
 	s = map.systems["I7S-1S"]
-	s.setAlarm(True)
+	s.setStatus(states.ALARM)
 	print map.svg
