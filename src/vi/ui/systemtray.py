@@ -22,7 +22,7 @@ import time
 from PyQt4 import QtGui, QtCore, Qt
 
 from vi.resources import resourcePath
-from vi import sound, states
+from vi import states
 from vi.sound import SoundThread
 
 class TrayContextMenu(QtGui.QMenu):
@@ -36,6 +36,7 @@ class TrayContextMenu(QtGui.QMenu):
 		TrayContextMenu.instances.add(self)
 		self.trayicon = trayicon
 		self._buildMenu()
+
 
 	def _buildMenu(self):
 		self.framelessCheck = QtGui.QAction("Frameless Window", self, checkable=True)
@@ -128,13 +129,13 @@ class TrayIcon(QtGui.QSystemTrayIcon):
 			icon = 2
 			messageText = message.plainText
 			self.lastNotifications[states.ALARM] = time.time()
-			SoundThread.__instance.playSound("alarm", text)
+			SoundThread.sharedInstance.playSound("alarm", text)
 		elif (message.status == states.REQUEST and self.showRequest and self.lastNotifications.get(states.REQUEST, 0) < time.time() - self.MIN_WAIT_NOTIFICATION):
 			title = "Status request"
 			icon = 1
 			text = (u"Someone is requesting status of {system} in {room}.")
 			self.lastNotifications[states.REQUEST] = time.time()
-			SoundThread.__instance.playSound("request", text)
+			SoundThread.sharedInstance.playSound("request", text)
 		if not (title is None or text is None or icon):
 			text = text.format(**locals())
 			self.showMessage(title, text, icon)

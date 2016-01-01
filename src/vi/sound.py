@@ -73,6 +73,10 @@ class SoundThread(QThread):
 		self.soundAvailable = True
 
 
+	def sharedInstance(self):
+		return self.__instance
+
+
 	def platformSupportsSpeech(self):
 		if sys.platform.startswith("darwin"):
 			return True
