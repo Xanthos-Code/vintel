@@ -84,7 +84,7 @@ class Map(object):
 						"temporary problem (like dotlan is not reachable), or "\
 						"everythig went to hell. Sorry. This makes no sense "\
 						"without the map.\n\nRemember the site for possible "\
-						"updates: http://drachenjaeger.eu/vintel/vintel.html"\
+						"updates: https://github.com/XanthosX/vintel"\
 						.format(type(e), unicode(e))
 					raise DotlanException(t)
 		# and now creating soup from the svg

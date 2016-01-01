@@ -22,7 +22,6 @@ import urllib2
 
 from PyQt4 import Qt
 from PyQt4.QtCore import QThread
-from bs4 import BeautifulSoup
 from vi import version
 from vi.cache.cache import Cache
 
@@ -33,11 +32,11 @@ def getJumpbridgeData(region):
 		cache = Cache()
 		data = cache.getFromCache(cacheKey)
 
-		if data:
+		if not data:
 			data = json.loads(data)
 		else:
 			data = []
-			url = "http://drachenjaeger.eu/vintel/{region}_jb.txt"
+			url = "https://s3.amazonaws.com/vintel-resources/{region}_jb.txt"
 			request = urllib2.urlopen(url.format(region=region))
 			content = request.read()
 			for line in content.split("\n"):
@@ -53,11 +52,9 @@ def getJumpbridgeData(region):
 
 def getNewestVersion():
 	try:
-		url = "http://drachenjaeger.eu/vintel/vintel.html"
+		url = "https://s3.amazonaws.com/vintel-resources/current-version.txt"
 		request = urllib2.urlopen(url)
-		content = request.read()
-		soup = BeautifulSoup(content, 'html.parser')
-		newestVersion = soup.select("#version")[0].text
+		newestVersion = request.read()
 		return float(newestVersion)
 	except Exception as e:
 		print("Failed version-request: {0}".format(str(e)))

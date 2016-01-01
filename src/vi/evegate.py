@@ -29,7 +29,6 @@ from vi.version import VERSION
 ERROR = -1
 NOT_EXISTS = 0
 EXISTS = 1
-USERAGENT = "VINTEL/{version} (+http://drachenjaeger.eu/vintel/vintel.html)".format(version=VERSION)
 
 
 def charnameToId(name):

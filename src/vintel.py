@@ -105,7 +105,7 @@ if __name__ == "__main__":
 	if not os.path.exists(outputDir):
 		os.mkdir(outputDir)
 
-	cache.Cache.PATH_TO_CACHE = os.path.join(outputDir, "cache.sqlite3")
+	cache.Cache.PATH_TO_CACHE = os.path.join(outputDir, "cache-2.sqlite3")
 	gErrorFile = os.path.join(outputDir, "error.log")
 
 	#print "Vintel expects to find logs at: ", pathToLogs

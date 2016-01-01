@@ -29,7 +29,7 @@ from PyQt4.QtCore import QPoint
 from PyQt4.QtGui import QImage, QPixmap, QMessageBox
 from PyQt4.QtWebKit import QWebPage
 from vi import chatparser, dotlan, filewatcher
-from vi import drachenjaeger, evegate
+from vi import amazon_s3, evegate
 from vi import states
 from vi.cache.cache import Cache
 from vi.resources import resourcePath
@@ -196,7 +196,7 @@ class MainWindow(QtGui.QMainWindow):
 
 		self.chatparser = chatparser.ChatParser(self.pathToLogs, roomnames, self.systems)
 
-		self.versionCheckThread = drachenjaeger.NotifyNewVersionThread()
+		self.versionCheckThread = amazon_s3.NotifyNewVersionThread()
 		self.versionCheckThread.connect(self.versionCheckThread, Qt.SIGNAL("newer_version"), self.notifyNewerVersion)
 		self.versionCheckThread.run()
 
@@ -448,7 +448,7 @@ class MainWindow(QtGui.QMainWindow):
 					if len(parts) == 3:
 						data.append(parts)
 			else:
-				data = drachenjaeger.getJumpbridgeData(self.dotlan.region.lower())
+				data = amazon_s3.getJumpbridgeData(self.dotlan.region.lower())
 			self.dotlan.setJumpbridges(data)
 			self.cache.putIntoCache("jumpbridge_url", url, 60 * 60 * 24 * 365 * 8)
 		except Exception as e:
