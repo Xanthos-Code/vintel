@@ -30,7 +30,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QPlainTextEdit" name="roomNamesField"/>
+      <widget class="QPlainTextEdit" name="roomnamesField"/>
      </item>
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_2">

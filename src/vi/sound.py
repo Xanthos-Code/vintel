@@ -82,14 +82,14 @@ class Sound():
 		self.soundVolume = max(0, min(100, newValue))
 
 
-	def playSound(self, name="alarm", message=""):
+	def playSound(self, name="alarm", message="", abbreviatedMessage=""):
 		""" Schedules the work, which is picked up by SoundThread.run()
 		"""
 		if self.useSpokenNotifications:
 			audioFile = None
 		else:
 			audioFile = resourcePath("vi/ui/res/{0}".format(self.SOUNDS[name]))
-		self._soundThread.queue.put((audioFile, message))
+		self._soundThread.queue.put((audioFile, message, abbreviatedMessage))
 
 
 	def quit(self):
@@ -115,9 +115,11 @@ class Sound():
 
 		def run(self):
 			while True:
-				audioFile, message = self.queue.get()
+				audioFile, message, abbreviatedMessage = self.queue.get()
 
-				if Sound.useSpokenNotifications and message != "":
+				if Sound.useSpokenNotifications and (message != "" or abbreviatedMessage != ""):
+					if abbreviatedMessage != "":
+						message = abbreviatedMessage
 					if not self.speak(message):
 						self.playAudioFile(audioFile, False)
 						print "SoundThread: sorry, speech not yet implemented on this platform"
