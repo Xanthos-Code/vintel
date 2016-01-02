@@ -29,7 +29,7 @@ from PyQt4.QtCore import QThread
 from resources import resourcePath
 from Queue import Queue
 
-# Hi Chriz
+from vi.singleton import Singleton
 
 global gPygletAvailable
 
@@ -42,9 +42,12 @@ except ImportError:
 	gPygletAvailable = False
 
 
-class SoundThread(QThread):
-	SOUNDS = {"alarm": "178032__zimbot__redalert-klaxon-sttos-recreated.wav",
-			  "kos": "178031__zimbot__transporterstartbeep0-sttos-recreated.wav",
+class Sound():
+	__metaclass__ = Singleton
+
+
+	SOUNDS = {"alarm":   "178032__zimbot__redalert-klaxon-sttos-recreated.wav",
+			  "kos":     "178031__zimbot__transporterstartbeep0-sttos-recreated.wav",
 			  "request": "178028__zimbot__bosun-whistle-sttos-recreated.wav"}
 
 	soundVolume = 25  # Must be an integer beween 0 and 100
@@ -53,32 +56,17 @@ class SoundThread(QThread):
 	useDarwinSound = False
 	useSpokenNotifications = True
 
-	# Text-to-speech
-	useGoogleTTS = False
-	useVoiceRss = False
-	VOICE_RSS_API_KEY = '896a7f61ec5e478cba856a78babab79c'
-	GOOGLE_TTS_API_KEY = ''
+	_soundThread = None
 
-	# Singleton pattern
-	__instance = None
-	def __new__(cls):
-		if SoundThread.__instance is None:
-			SoundThread.__instance = QThread.__new__(cls)
-		return SoundThread.__instance
 
 	def __init__(self):
-		QThread.__init__(self)
-		self.q = Queue()
-		self.isDarwin = sys.platform.startswith("darwin")
+		self._soundThread = self.SoundThread()
+		self._soundThread.start()
 		self.soundAvailable = True
 
 
-	def sharedInstance(self):
-		return self.__instance
-
-
 	def platformSupportsSpeech(self):
-		if sys.platform.startswith("darwin"):
+		if self._soundThread.isDarwin:
 			return True
 		return False
 
@@ -95,175 +83,199 @@ class SoundThread(QThread):
 
 
 	def playSound(self, name="alarm", message=""):
-		""" Schedules the work, which is picked up by run()
+		""" Schedules the work, which is picked up by SoundThread.run()
 		"""
 		if self.useSpokenNotifications:
 			audioFile = None
 		else:
 			audioFile = resourcePath("vi/ui/res/{0}".format(self.SOUNDS[name]))
-		self.q.put((audioFile, message))
+		self._soundThread.queue.put((audioFile, message))
 
 
-	def playAudioFile(self, filename, stream=False):
-		try:
-			volume = float(self.soundVolume) / 100.0
-			if gPygletAvailable:
-				src = media.load(filename, streaming=stream)
-				player = media.Player()
-				player.queue(src)
-				player.volume = volume
-				player.play()
-			elif self.isDarwin:
-				subprocess.call(["afplay -v {0} {1}".format(volume, filename)], shell=True)
-		except Exception as e:
-			print "SoundThread.playAudioFile exception: %s" % str(e)
+	def quit(self):
+		self._soundThread.quit()
 
 
-	def speak(self, message):
-		if self.useGoogleTTS:
-			self.audioExtractToMp3(inputText=message) # experimental
-		elif self.useVoiceRss:
-			self.playTTS(message)  # experimental
-		elif self.isDarwin:
-			self.darwinSpeak(message)
-		else:
-			return False
-		return True
+	#
+	#  Inner class handle audio playback without blocking the UI
+	#
+
+	class SoundThread(QThread):
+		queue = None
+		useGoogleTTS = False
+		useVoiceRss = False
+		VOICE_RSS_API_KEY = '896a7f61ec5e478cba856a78babab79c'
+		GOOGLE_TTS_API_KEY = ''
+		isDarwin = sys.platform.startswith("darwin")
+
+		def __init__(self):
+			QThread.__init__(self)
+			self.queue = Queue()
 
 
-	def darwinSpeak(self, message):
-		try:
-			os.system("say [[volm {0}]] {1}".format(float(self.soundVolume) / 100.0, message))
-		except Exception as e:
-			print "SoundThread._speakText exception: %s" % str(e)
+		def run(self):
+			while True:
+				audioFile, message = self.queue.get()
 
-
-	def speakRandomChuckNorrisLore(self):
-		try:
-			jokeUrl = "http://api.icndb.com/jokes/random/"
-			headers = {"Host": "api.icndb.com", "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1)"}
-			request = urllib2.Request(jokeUrl, '', headers)
-			response = urllib2.urlopen(request)
-			html = response.read()
-			# Need to parse the text out of the html - BeautifulSoup maybe?
-			# message = html.parser.HTMLParser().unescape(json.load(request)["value"]["joke"])
-			#self.speak(message)
-		except Exception as e:
-			print ('speakRandomChuckNorrisLore error: %s' % e)
-
-
-	def run(self):
-		while True:
-			audioFile, message = self.q.get()
-
-			if self.useSpokenNotifications and message != "":
-				if not self.speak(message):
+				if Sound.useSpokenNotifications and message != "":
+					if not self.speak(message):
+						self.playAudioFile(audioFile, False)
+						print "SoundThread: sorry, speech not yet implemented on this platform"
+				elif audioFile is not None:
 					self.playAudioFile(audioFile, False)
-					print "SoundThread: sorry, speech not yet implemented on this platform"
-			elif audioFile is not None:
-				self.playAudioFile(audioFile, False)
 
 
-	''' Experimental text-to-speech stuff below
-	'''
-
-	# VoiceRss
-
-	def playTTS(self, inputText=''):
-		try:
-			mp3url = 'http://api.voicerss.org/?c=WAV&key={self.VOICE_RSS_API_KEY}&src={inputText}&hl=en-us'.format(**vars())
-			self.playAudioFile(urllib2.urlopen(mp3url))
-			time.sleep(.5)
-		except urllib2.URLError as e:
-			print ('playTTS error: %s' % e)
+		def speak(self, message):
+			if self.useGoogleTTS:
+				self.audioExtractToMp3(inputText=message) # experimental
+			elif self.useVoiceRss:
+				self.playTTS(message)  # experimental
+			elif self.isDarwin:
+				self.darwinSpeak(message)
+			else:
+				return False
+			return True
 
 
-	# google_tts
+		# Audio subsytem access
 
-	def audioExtractToMp3(self, inputText='', args=None):
-		# This accepts :
-		#   a dict,
-		#   an audio_args named tuple
-		#   or arg parse object
-		audioArgs = namedtuple('audio_args', ['language', 'output'])
-		if args is None:
-			args = audioArgs(language='en', output=open('output.mp3', 'w'))
-		if type(args) is dict:
-			args = audioArgs(language=args.get('language', 'en'), output=open(args.get('output', 'output.mp3'), 'w'))
-		# Process inputText into chunks
-		# Google TTS only accepts up to (and including) 100 characters long texts.
-		# Split the text in segments of maximum 100 characters long.
-		combinedText = self.splitText(inputText)
-
-		# Download chunks and write them to the output file
-		for idx, val in enumerate(combinedText):
-			mp3url = "http://translate.google.com/translate_tts?tl=%s&q=%s&total=%s&idx=%s&ie=UTF-8&client=t&key=%s" % \
-					 (args.language, urllib.quote(val), len(combinedText), idx, self.GOOGLE_TTS_API_KEY)
-			headers = {"Host": "translate.google.com", "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1)"}
-			request = urllib2.Request(mp3url, '', headers)
-			sys.stdout.write('.')
-			sys.stdout.flush()
-			if len(val) > 0:
-				try:
-					response = urllib2.urlopen(request)
-					args.output.write(response.read())
-					time.sleep(.5)
-				except urllib2.URLError as e:
-					print ('audioExtractToMp3 error: %s' % e)
-		args.output.close()
-		return args.output.name
+		def playAudioFile(self, filename, stream=False):
+			try:
+				volume = float(Sound.soundVolume) / 100.0
+				if gPygletAvailable:
+					src = media.load(filename, streaming=stream)
+					player = media.Player()
+					player.queue(src)
+					player.volume = volume
+					player.play()
+				elif self.isDarwin:
+					subprocess.call(["afplay -v {0} {1}".format(volume, filename)], shell=True)
+			except Exception as e:
+				print "SoundThread.playAudioFile exception: %s" % str(e)
 
 
-	def splitText(self, inputText, maxLength=100):
-		"""
-		Try to split between sentences to avoid interruptions mid-sentence.
-		Failing that, split between words.
-		See splitText_rec
-		"""
+		def darwinSpeak(self, message):
+			try:
+				os.system("say [[volm {0}]] {1}".format(float(Sound.soundVolume) / 100.0, message))
+			except Exception as e:
+				print "SoundThread.darwinSpeak exception: %s" % str(e)
 
-		def splitTextRecursive(inputText, regexps, maxLength=maxLength):
+
+		def speakRandomChuckNorrisJoke(self):
+			try:
+				jokeUrl = "http://api.icndb.com/jokes/random/"
+				headers = {"Host": "api.icndb.com", "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1)"}
+				request = urllib2.Request(jokeUrl, '', headers)
+				response = urllib2.urlopen(request)
+				html = response.read()
+				# Need to parse the text out of the html - BeautifulSoup maybe?
+				# message = html.parser.HTMLParser().unescape(json.load(request)["value"]["joke"])
+				#self.speak(message)
+			except Exception as e:
+				print ('SoundThread.speakRandomChuckNorrisLore error: %s' % e)
+
+
+		#
+		#  Experimental text-to-speech stuff below
+		#
+
+		# VoiceRss
+
+		def playTTS(self, inputText=''):
+			try:
+				mp3url = 'http://api.voicerss.org/?c=WAV&key={self.VOICE_RSS_API_KEY}&src={inputText}&hl=en-us'.format(**vars())
+				self.playAudioFile(urllib2.urlopen(mp3url))
+				time.sleep(.5)
+			except urllib2.URLError as e:
+				print ('playTTS error: %s' % e)
+
+
+		# google_tts
+
+		def audioExtractToMp3(self, inputText='', args=None):
+			# This accepts :
+			#   a dict,
+			#   an audio_args named tuple
+			#   or arg parse object
+			audioArgs = namedtuple('audio_args', ['language', 'output'])
+			if args is None:
+				args = audioArgs(language='en', output=open('output.mp3', 'w'))
+			if type(args) is dict:
+				args = audioArgs(language=args.get('language', 'en'), output=open(args.get('output', 'output.mp3'), 'w'))
+			# Process inputText into chunks
+			# Google TTS only accepts up to (and including) 100 characters long texts.
+			# Split the text in segments of maximum 100 characters long.
+			combinedText = self.splitText(inputText)
+
+			# Download chunks and write them to the output file
+			for idx, val in enumerate(combinedText):
+				mp3url = "http://translate.google.com/translate_tts?tl=%s&q=%s&total=%s&idx=%s&ie=UTF-8&client=t&key=%s" % \
+						 (args.language, urllib.quote(val), len(combinedText), idx, self.GOOGLE_TTS_API_KEY)
+				headers = {"Host": "translate.google.com", "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1)"}
+				request = urllib2.Request(mp3url, '', headers)
+				sys.stdout.write('.')
+				sys.stdout.flush()
+				if len(val) > 0:
+					try:
+						response = urllib2.urlopen(request)
+						args.output.write(response.read())
+						time.sleep(.5)
+					except urllib2.URLError as e:
+						print ('audioExtractToMp3 error: %s' % e)
+			args.output.close()
+			return args.output.name
+
+
+		def splitText(self, inputText, maxLength=100):
 			"""
-			Split a string into substrings which are at most maxLength.
-			Tries to make each substring as big as possible without exceeding
-			maxLength.
-			Will use the first regexp in regexps to split the input into
-			substrings.
-			If it it impossible to make all the segments less or equal than
-			maxLength with a regexp then the next regexp in regexps will be used
-			to split those into subsegments.
-			If there are still substrings who are too big after all regexps have
-			been used then the substrings, those will be split at maxLength.
-
-			Args:
-				inputText: The text to split.
-				regexps: A list of regexps.
-					If you want the separator to be included in the substrings you
-					can add parenthesis around the regular expression to create a
-					group. Eg.: '[ab]' -> '([ab])'
-
-			Returns:
-				a list of strings of maximum maxLength length.
+			Try to split between sentences to avoid interruptions mid-sentence.
+			Failing that, split between words.
+			See splitText_rec
 			"""
-			if (len(inputText) <= maxLength):
-				return [inputText]
 
-			# Mistakenly passed a string instead of a list
-			if isinstance(regexps, basestring):
-				regexps = [regexps]
-			regexp = regexps.pop(0) if regexps else '(.{%d})' % maxLength
+			def splitTextRecursive(inputText, regexps, maxLength=maxLength):
+				"""
+				Split a string into substrings which are at most maxLength.
+				Tries to make each substring as big as possible without exceeding
+				maxLength.
+				Will use the first regexp in regexps to split the input into
+				substrings.
+				If it it impossible to make all the segments less or equal than
+				maxLength with a regexp then the next regexp in regexps will be used
+				to split those into subsegments.
+				If there are still substrings who are too big after all regexps have
+				been used then the substrings, those will be split at maxLength.
 
-			textList = re.split(regexp, inputText)
-			combinedText = []
-			# First segment could be >max_length
-			combinedText.extend(splitTextRecursive(textList.pop(0), regexps, maxLength))
-			for val in textList:
-				current = combinedText.pop()
-				concat = current + val
-				if (len(concat) <= maxLength):
-					combinedText.append(concat)
-				else:
-					combinedText.append(current)
-					# val could be > maxLength
-					combinedText.extend(splitTextRecursive(val, regexps, maxLength))
-			return combinedText
-		return splitTextRecursive(inputText.replace('\n', ''), ['([\,|\.|;]+)', '( )'])
+				Args:
+					inputText: The text to split.
+					regexps: A list of regexps.
+						If you want the separator to be included in the substrings you
+						can add parenthesis around the regular expression to create a
+						group. Eg.: '[ab]' -> '([ab])'
+
+				Returns:
+					a list of strings of maximum maxLength length.
+				"""
+				if (len(inputText) <= maxLength):
+					return [inputText]
+
+				# Mistakenly passed a string instead of a list
+				if isinstance(regexps, basestring):
+					regexps = [regexps]
+				regexp = regexps.pop(0) if regexps else '(.{%d})' % maxLength
+
+				textList = re.split(regexp, inputText)
+				combinedText = []
+				# First segment could be >max_length
+				combinedText.extend(splitTextRecursive(textList.pop(0), regexps, maxLength))
+				for val in textList:
+					current = combinedText.pop()
+					concat = current + val
+					if (len(concat) <= maxLength):
+						combinedText.append(concat)
+					else:
+						combinedText.append(current)
+						# val could be > maxLength
+						combinedText.extend(splitTextRecursive(val, regexps, maxLength))
+				return combinedText
+			return splitTextRecursive(inputText.replace('\n', ''), ['([\,|\.|;]+)', '( )'])

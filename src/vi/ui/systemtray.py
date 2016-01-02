@@ -23,7 +23,7 @@ from PyQt4 import QtGui, QtCore, Qt
 
 from vi.resources import resourcePath
 from vi import states
-from vi.sound import SoundThread
+from vi.sound import Sound
 
 class TrayContextMenu(QtGui.QMenu):
 
@@ -89,6 +89,7 @@ class TrayIcon(QtGui.QSystemTrayIcon):
 		self.showRequest = True
 		self.alarmDistance = 0
 
+
 	def changeAlarmDistance(self):
 		distance = self.alarmDistance
 		self.emit(Qt.SIGNAL("alarm_distance"), distance)
@@ -129,13 +130,13 @@ class TrayIcon(QtGui.QSystemTrayIcon):
 			icon = 2
 			messageText = message.plainText
 			self.lastNotifications[states.ALARM] = time.time()
-			SoundThread.sharedInstance.playSound("alarm", text)
+			Sound().playSound("alarm", text)
 		elif (message.status == states.REQUEST and self.showRequest and self.lastNotifications.get(states.REQUEST, 0) < time.time() - self.MIN_WAIT_NOTIFICATION):
 			title = "Status request"
 			icon = 1
 			text = (u"Someone is requesting status of {system} in {room}.")
 			self.lastNotifications[states.REQUEST] = time.time()
-			SoundThread.sharedInstance.playSound("request", text)
+			Sound().playSound("request", text)
 		if not (title is None or text is None or icon):
 			text = text.format(**locals())
 			self.showMessage(title, text, icon)
