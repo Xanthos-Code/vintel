@@ -39,7 +39,7 @@ def concat(firstFile, secondFile):
 	secondSvg = loadSvg(secondFile)
 	symbols = []
 	jumps = []
-	sysuses = []
+	systemUses = []
 	for defElement in secondSvg.select("defs"):
 		for symbol in defElement.select("symbol"):
 			symbols.append(symbol)
@@ -51,7 +51,7 @@ def concat(firstFile, secondFile):
 	for sysgroup in secondSvg.select("#sysuse"):
 		for sysuse in sysgroup.select("use"):
 			sysuse["x"] = float(sysuse["x"]) + 3000
-			sysuses.append(sysuse)
+			systemUses.append(sysuse)
 	defElement = firstSvg.select("defs")[0]
 	for symbol in symbols:
 		defElement.append(symbol)
