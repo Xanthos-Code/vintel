@@ -74,45 +74,43 @@ class AvatarFindThread(QThread):
 class KOSCheckerThread(QThread):
 	def __init__(self):
 		QThread.__init__(self)
-		self.q = Queue()
-		self.recentRequestNames = {}
+		self.queue = Queue()
+		self.recentRequestNamesAndTimes = {}
 
 	def addRequest(self, names, requestType, onlyKos=False):
 		try:
-			self.q.put((names, requestType, onlyKos))
+			# Spam control for multi-client users
+			now = time.time()
+			if self.recentRequestNamesAndTimes.has_key(names):
+				lastRequestTime = self.recentRequestNamesAndTimes[names]
+				if now - lastRequestTime < 10:
+					return
+			self.recentRequestNamesAndTimes[names] = now
+			self.queue.put((names, requestType, onlyKos))
 		except Exception as e:
 			print "An error in the KOSCheckerThread: {0}".format(str(e))
 
 
 	def run(self):
 		while True:
-			names, requestType, onlyKos = self.q.get()
-			namesCopy, names = itertools.tee(names, 2)
-
-			# Prevent the same request from multiple clients on the same machine
-			namesString = ', '.join(map(str, [name.strip() for name in namesCopy]))
-			if self.recentRequestNames.has_key(namesString):
-				requestTime = self.recentRequestNames[namesString]
-				timeTime = time.time()
-				print str(timeTime - requestTime)
-				if time.time() - requestTime < 10:
-					continue
-
+			names, requestType, onlyKos = self.queue.get()
 			try:
 				hasKos = False
-				state = "ok"
+				if not names:
+					continue
 				checkResult = koschecker.check(names)
+				if not checkResult:
+					continue
 				text = koschecker.resultToText(checkResult, onlyKos)
 				for name, data in checkResult.items():
 					if data["kos"] in (koschecker.KOS, koschecker.RED_BY_LAST):
 						hasKos = True
 						break
 			except Exception as e:
-				state = "error"
-				text = unicode(e)
 				print "An error in the KOSCheckerThread : {0}".format(str(e))
-			print "KOSCheckerThread emitting kos_result for: state = {0}, text = {1}, requestType = {2}, hasKos = {3}".format(state, text, requestType, hasKos)
-			self.recentRequestNames[namesString] = time.time()
+				continue
+
+			print "KOSCheckerThread emitting kos_result for: text = %s, requestType = %s, hasKos = %s" % ("ok", text, requestType, hasKos)
 			self.emit(SIGNAL("kos_result"), state, text, requestType, hasKos)
 
 

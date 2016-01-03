@@ -204,8 +204,10 @@ def getCharinfoForCharId(charId):
 			cacheUntil = datetime.datetime.strptime(soup.select("cacheduntil")[0].text, "%Y-%m-%d %H:%M:%S")
 			diff = cacheUntil - currentEveTime()
 			cache.putIntoCache(cacheKey, str(soup), diff.seconds)
-		except Exception as e:
-			print "Exception during getCharinfoForCharId: {0}".format(str(e))
+		except urllib2.HTTPError as e:
+			# We get a 400 when we pass non-pilot names for KOS check so fail silently for that one only
+			if (e.code != 400):
+				print "Exception during getCharinfoForCharId: {0}".format(str(e))
 	return soup
 
 

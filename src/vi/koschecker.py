@@ -41,10 +41,12 @@ def check(parts):
 
 	try:
 		request = urllib2.urlopen(targetUrl)
+		kosData = json.loads(request.read())
 	except URLError as e:
 		print "Error on pilot KOS check request" + e.reason
 
-	kosData = json.loads(request.read())
+	if not kosData["results"]:
+		return data
 
 	for char in kosData["results"]:
 		charname = char["label"]

@@ -93,6 +93,7 @@ class Sound():
 
 
 	def quit(self):
+		self._soundThread.queue.task_done()
 		self._soundThread.quit()
 
 
