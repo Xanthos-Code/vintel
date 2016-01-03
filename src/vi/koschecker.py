@@ -45,9 +45,6 @@ def check(parts):
 	except URLError as e:
 		print "Error on pilot KOS check request" + e.reason
 
-	if not kosData["results"]:
-		return data
-
 	for char in kosData["results"]:
 		charname = char["label"]
 		corpname = char["corp"]["label"]
@@ -67,55 +64,65 @@ def check(parts):
 
 	# Corporation check
 	corpCheckData = {}
-	namesAsIds = evegate.namesToIds(checkBylastChars)
+	try:
+		namesAsIds = evegate.namesToIds(checkBylastChars)
+	except Exception:
+		pass
 
-	for name, id in namesAsIds.items():
-		corpCheckData[name] = {"id": id, "need_check": False, "corpids": evegate.getCorpidsForCharId(id)}
+	# Prune any pairs that have no id
+	for key, value in namesAsIds.items():
+		if int(value) == 0:
+			del namesAsIds[key]
 
-	corpIds = set()
-	for name in namesAsIds.keys():
-		for number in corpCheckData[name]["corpids"]:
-			corpIds.add(number)
+	# Anything left - do the corp check and fill in kos status
+	if namesAsIds:
+		for name, id in namesAsIds.items():
+			corpCheckData[name] = {"id": id, "need_check": False, "corpids": evegate.getCorpidsForCharId(id)}
 
-	corpIdName = evegate.idsToNames(corpIds)
-	for name, nameData in corpCheckData.items():
-		nameData["corpnames"] = [corpIdName[id] for id in nameData["corpids"]]
-		for corpname in nameData["corpnames"]:
-			if corpname not in evegate.NPC_CORPS:
-				nameData["need_check"] = True
-				nameData["corp_to_check"] = corpname
-				break
+		corpIds = set()
+		for name in namesAsIds.keys():
+			for number in corpCheckData[name]["corpids"]:
+				corpIds.add(number)
 
-	corpsToCheck = set([nameData["corp_to_check"] for nameData in corpCheckData.values() if nameData["need_check"] == True])
-	corpsResult = {}
-	baseUrl = "http://kos.cva-eve.org/api/?c=json&type=unit&q="
+		corpIdName = evegate.idsToNames(corpIds)
+		for name, nameData in corpCheckData.items():
+			nameData["corpnames"] = [corpIdName[id] for id in nameData["corpids"]]
+			for corpname in nameData["corpnames"]:
+				if corpname not in evegate.NPC_CORPS:
+					nameData["need_check"] = True
+					nameData["corp_to_check"] = corpname
+					break
 
-	for corp in corpsToCheck:
-		quotedName = urllib.quote_plus(corp)
-		targetUrl = "".join((baseUrl, quotedName))
+		corpsToCheck = set([nameData["corp_to_check"] for nameData in corpCheckData.values() if nameData["need_check"] == True])
+		corpsResult = {}
+		baseUrl = "http://kos.cva-eve.org/api/?c=json&type=unit&q="
 
-		try:
-			request = urllib2.urlopen(targetUrl)
-		except URLError as e:
-			print "Error on corp KOS check request" + e.reason
+		for corp in corpsToCheck:
+			quotedName = urllib.quote_plus(corp)
+			targetUrl = "".join((baseUrl, quotedName))
 
-		kosData = json.loads(request.read())
-		kosResult = False
+			try:
+				request = urllib2.urlopen(targetUrl)
+			except URLError as e:
+				print "Error on corp KOS check request" + e.reason
 
-		for result in kosData["results"]:
-			if result["kos"] == True:
-				kosResult = True
-			elif "alliance" in result and result["alliance"]["kos"] == True:
-				kosResult = True
-		corpsResult[corp] = kosResult
+			kosData = json.loads(request.read())
+			kosResult = False
 
-	for charname, nameData in corpCheckData.items():
-		if not nameData["need_check"]:
-			data[charname] = {"kos": UNKNOWN}
-		if nameData["need_check"] and corpsResult[nameData["corp_to_check"]] == True:
-			data[charname] = {"kos": RED_BY_LAST}
-		else:
-			data[charname] = {"kos": UNKNOWN}
+			for result in kosData["results"]:
+				if result["kos"] == True:
+					kosResult = True
+				elif "alliance" in result and result["alliance"]["kos"] == True:
+					kosResult = True
+			corpsResult[corp] = kosResult
+
+		for charname, nameData in corpCheckData.items():
+			if not nameData["need_check"]:
+				data[charname] = {"kos": UNKNOWN}
+			if nameData["need_check"] and corpsResult[nameData["corp_to_check"]] == True:
+				data[charname] = {"kos": RED_BY_LAST}
+			else:
+				data[charname] = {"kos": UNKNOWN}
 
 	return data
 
