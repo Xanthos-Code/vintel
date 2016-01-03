@@ -110,8 +110,8 @@ class KOSCheckerThread(QThread):
 				print "An error in the KOSCheckerThread : {0}".format(str(e))
 				continue
 
-			print "KOSCheckerThread emitting kos_result for: text = %s, requestType = %s, hasKos = %s" % ("ok", text, requestType, hasKos)
-			self.emit(SIGNAL("kos_result"), state, text, requestType, hasKos)
+			print "KOSCheckerThread emitting kos_result for: state = {0}, text = {1}, requestType = {2}, hasKos = {3}".format("ok", text, requestType, hasKos)
+			self.emit(SIGNAL("kos_result"), "ok", text, requestType, hasKos)
 
 
 class MapStatisticsThread(QThread):
