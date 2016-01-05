@@ -159,7 +159,7 @@ class Sound():
 
 		def darwinSpeak(self, message):
 			try:
-				os.system("say [[volm {0}]] {1}".format(float(Sound.soundVolume) / 100.0, message))
+				os.system("say [[volm {0}]] '{1}'".format(float(Sound.soundVolume) / 100.0, message))
 			except Exception as e:
 				print "SoundThread.darwinSpeak exception: %s" % str(e)
 
