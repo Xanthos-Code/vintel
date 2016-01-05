@@ -586,10 +586,13 @@ class MainWindow(QtGui.QMainWindow):
 			# if it is a 'normal' chat message
 			elif (message.user not in ("EVE-System", "EVE System") and message.status != states.IGNORE):
 				self.addMessageToIntelChat(message)
+
 				if message.systems:
 					for system in message.systems:
 						systemname = system.name
 						self.dotlan.systems[systemname].setStatus(message.status)
+
+						# Dispatch alarms
 						if message.status in (states.REQUEST, states.ALARM) and message.user not in self.knownPlayerNames:
 							alarmDistance = self.alarmDistance if message.status == states.ALARM else 0
 							for nsystem, data in system.getNeighbours(alarmDistance).items():
