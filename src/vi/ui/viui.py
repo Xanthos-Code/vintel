@@ -367,15 +367,17 @@ class MainWindow(QtGui.QMainWindow):
 	def clipboardChanged(self, mode):
 		if mode == 0 and self.kosClipboardActiveAction.isChecked():
 			content = unicode(self.clipboard.text())
+			contentTuple = tuple(content)
 			# Limit redundant kos checks
-			if content != self.oldClipboardContent:
-				parts = content.split("\n")
+			if contentTuple != self.oldClipboardContent:
+				parts = tuple(content.split("\n"))
 				for part in parts:
+					# Make sure user is in the content (this is a check of the local system in Eve)
 					if part in self.knownPlayerNames:
 						self.trayIcon.setIcon(QtGui.QIcon(resourcePath("vi/ui/res/logo_small_green.png")))
 						self.kosRequestThread.addRequest(parts, "clipboard", True)
 						break
-				self.oldClipboardContent = content
+				self.oldClipboardContent = contentTuple
 
 
 	def mapLinkClicked(self, url):
