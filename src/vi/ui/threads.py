@@ -39,6 +39,8 @@ class AvatarFindThread(QThread):
 			if clearCache:
 				cache = Cache()
 				cache.removeAvatar(chatEntry.message.user)
+
+			# Enqeue the data to be picked up in run()
 			self.q.put(chatEntry)
 		except Exception as e:
 			print "An error in the AvatarFindThread: ", str(e)
@@ -49,6 +51,7 @@ class AvatarFindThread(QThread):
 		wait = 300  # time between 2 requests in ms
 		while True:
 			try:
+				# Block waiting for addChatEntry() to enqueue something
 				chatEntry = self.q.get()
 				charname = chatEntry.message.user
 				avatar = None
@@ -86,6 +89,8 @@ class KOSCheckerThread(QThread):
 				if now - lastRequestTime < 10:
 					return
 			self.recentRequestNamesAndTimes[names] = now
+
+			# Enqeue the data to be picked up in run()
 			self.queue.put((names, requestType, onlyKos))
 		except Exception as e:
 			print "An error in the KOSCheckerThread: {0}".format(str(e))
@@ -93,6 +98,7 @@ class KOSCheckerThread(QThread):
 
 	def run(self):
 		while True:
+			# Block waiting for addRequest() to enqueue something
 			names, requestType, onlyKos = self.queue.get()
 			try:
 				hasKos = False
