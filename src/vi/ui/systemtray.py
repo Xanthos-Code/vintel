@@ -131,7 +131,7 @@ class TrayIcon(QtGui.QSystemTrayIcon):
 			icon = 2
 			messageText = message.plainText
 			self.lastNotifications[states.ALARM] = time.time()
-			Sound().playSound("alarm", text, text)
+			Sound().playSound("alarm", text, textAbbreviated)
 		elif (message.status == states.REQUEST and self.showRequest and self.lastNotifications.get(states.REQUEST, 0) < time.time() - self.MIN_WAIT_NOTIFICATION):
 			title = "Status request"
 			icon = 1
