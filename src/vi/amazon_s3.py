@@ -19,6 +19,7 @@
 
 import json
 import urllib2
+import time
 
 from PyQt4 import Qt
 from PyQt4.QtCore import QThread
@@ -65,12 +66,17 @@ class NotifyNewVersionThread(QThread):
 
 	def __init__(self):
 		QThread.__init__(self)
+		self.alerted = False
 
 	def run(self):
-		try:
-		# is there a newer version available?
-			newestVersion = float(getNewestVersion())
-			if newestVersion and newestVersion > float(version.VERSION):
-				self.emit(Qt.SIGNAL("newer_version"), newestVersion)
-		except Exception as e:
-			print("Failed NotifyNewVersionThread: {0}".format(str(e)))
+		if not self.alerted:
+			try:
+				# Is there a newer version available?
+				newestVersion = float(getNewestVersion())
+				if newestVersion and newestVersion > float(version.VERSION):
+					self.emit(Qt.SIGNAL("newer_version"), newestVersion)
+					self.alerted = True
+			except Exception as e:
+				print("Failed NotifyNewVersionThread: {0}".format(str(e)))
+		# Only check every half hour
+		time.sleep(30)
