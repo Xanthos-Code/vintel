@@ -569,7 +569,7 @@ class MainWindow(QtGui.QMainWindow):
 	def logFileChanged(self, path):
 		messages = self.chatparser.fileModified(path)
 		for message in messages:
-			# if players location changed
+			# If players location has changed
 			if message.status == states.LOCATION:
 				self.knownPlayerNames.add(message.user)
 				self.setLocation(message.user, message.systems[0])
@@ -585,16 +585,15 @@ class MainWindow(QtGui.QMainWindow):
 				parts = (name.strip() for name in text.split(","))
 				self.trayIcon.setIcon(QtGui.QIcon(resourcePath("vi/ui/res/logo_small_green.png")))
 				self.kosRequestThread.addRequest(parts, "xxx", False)
-			# if it is a 'normal' chat message
+			# Otherwise consider it a 'normal' chat message
 			elif (message.user not in ("EVE-System", "EVE System") and message.status != states.IGNORE):
 				self.addMessageToIntelChat(message)
-
+				# For each system that was mentioned in the message, check for alarm distance to the current system
+				# and alarm if within alram distance.
 				if message.systems:
 					for system in message.systems:
 						systemname = system.name
 						self.dotlan.systems[systemname].setStatus(message.status)
-
-						# Dispatch alarms
 						if message.status in (states.REQUEST, states.ALARM) and message.user not in self.knownPlayerNames:
 							alarmDistance = self.alarmDistance if message.status == states.ALARM else 0
 							for nsystem, data in system.getNeighbours(alarmDistance).items():
