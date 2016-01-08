@@ -32,7 +32,7 @@ from vi.resources import resourcePath
 class AvatarFindThread(QThread):
 	def __init__(self):
 		QThread.__init__(self)
-		self.q = Queue()
+		self.queue = Queue()
 
 	def addChatEntry(self, chatEntry, clearCache=False):
 		try:
@@ -41,7 +41,7 @@ class AvatarFindThread(QThread):
 				cache.removeAvatar(chatEntry.message.user)
 
 			# Enqeue the data to be picked up in run()
-			self.q.put(chatEntry)
+			self.queue.put(chatEntry)
 		except Exception as e:
 			print "An error in the AvatarFindThread: ", str(e)
 
@@ -52,7 +52,7 @@ class AvatarFindThread(QThread):
 		while True:
 			try:
 				# Block waiting for addChatEntry() to enqueue something
-				chatEntry = self.q.get()
+				chatEntry = self.queue.get()
 				charname = chatEntry.message.user
 				avatar = None
 				if charname == "VINTEL":
