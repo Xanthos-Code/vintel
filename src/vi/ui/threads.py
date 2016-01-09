@@ -133,4 +133,3 @@ class MapStatisticsThread(QThread):
 			print "An error in the MapStatisticsThread: {0}".format(str(e))
 			result = {"result": "error", "text": unicode(e)}
 		self.emit(SIGNAL("statistic_data_update"), result)
-		time.sleep(20)

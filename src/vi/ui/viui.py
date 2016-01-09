@@ -40,7 +40,7 @@ from vi.ui.threads import MapStatisticsThread
 
 VERSION = vi.version.VERSION
 DEBUG = False
-
+MESSAGE_EXPIRY_IN_SECONDS = 5 * 60
 
 class MainWindow(QtGui.QMainWindow):
 	def __init__(self, pathToLogs, trayIcon):
@@ -331,21 +331,21 @@ class MainWindow(QtGui.QMainWindow):
 		if newValue is None:
 			newValue = self.showChatAvatarsAction.isChecked()
 		self.showChatAvatarsAction.setChecked(newValue)
-		ChatEntry.SHOW_AVATAR = newValue
+		ChatEntryWidget.SHOW_AVATAR = newValue
 		for entry in self.chatEntries:
 			entry.avatarLabel.setVisible(newValue)
 
 
 	def chatSmaller(self):
-		newSize = ChatEntry.TEXT_SIZE - 1
-		ChatEntry.TEXT_SIZE = newSize
+		newSize = ChatEntryWidget.TEXT_SIZE - 1
+		ChatEntryWidget.TEXT_SIZE = newSize
 		for entry in self.chatEntries:
 			entry.changeFontSize(newSize)
 
 
 	def chatLarger(self):
-		newSize = ChatEntry.TEXT_SIZE + 1
-		ChatEntry.TEXT_SIZE = newSize
+		newSize = ChatEntryWidget.TEXT_SIZE + 1
+		ChatEntryWidget.TEXT_SIZE = newSize
 		for entry in self.chatEntries:
 			entry.changeFontSize(newSize)
 
@@ -463,17 +463,38 @@ class MainWindow(QtGui.QMainWindow):
 		scrollToBottom = False
 		if (self.chatListWidget.verticalScrollBar().value() == self.chatListWidget.verticalScrollBar().maximum()):
 			scrollToBottom = True
-		entry = ChatEntry(message)
+		chatEntryWidget = ChatEntryWidget(message)
 		listWidgetItem = QtGui.QListWidgetItem(self.chatListWidget)
-		listWidgetItem.setSizeHint(entry.sizeHint())
+		listWidgetItem.setSizeHint(chatEntryWidget.sizeHint())
 		self.chatListWidget.addItem(listWidgetItem)
-		self.chatListWidget.setItemWidget(listWidgetItem, entry)
-		self.avatarFindThread.addChatEntry(entry)
-		self.chatEntries.append(entry)
-		self.connect(entry, Qt.SIGNAL("mark_system"), self.markSystemOnMap)
-		self.emit(Qt.SIGNAL("chat_message_added"), entry)
+		self.chatListWidget.setItemWidget(listWidgetItem, chatEntryWidget)
+		self.avatarFindThread.addChatEntry(chatEntryWidget)
+		self.chatEntries.append(chatEntryWidget)
+		self.connect(chatEntryWidget, Qt.SIGNAL("mark_system"), self.markSystemOnMap)
+		self.emit(Qt.SIGNAL("chat_message_added"), chatEntryWidget)
+		self.pruneMessages()
 		if scrollToBottom:
 			self.chatListWidget.scrollToBottom()
+
+
+	def pruneMessages(self):
+		try:
+			now = time.mktime(evegate.currentEveTime().timetuple())
+			for row in range(self.chatListWidget.count()):
+				chatListWidgetItem = self.chatListWidget.item(0)
+				chatEntryWidget = self.chatListWidget.itemWidget(chatListWidgetItem)
+				message = chatEntryWidget.message
+				if now - time.mktime(message.timestamp.timetuple()) > MESSAGE_EXPIRY_IN_SECONDS:
+					self.chatEntries.remove(chatEntryWidget)
+					self.chatListWidget.takeItem(0)
+
+					for widgetInMessage in message.widgets:
+						widgetInMessage.removeItemWidget(chatListWidgetItem)
+
+				else:
+					break
+		except Exception as e:
+			print e
 
 
 	def showKosResult(self, state, text, requestType, hasKos):
@@ -715,7 +736,7 @@ class SystemChat(QtGui.QDialog):
 		scrollToBottom = False
 		if (self.chat.verticalScrollBar().value() == self.chat.verticalScrollBar().maximum()):
 			scrollToBottom = True
-		entry = ChatEntry(message)
+		entry = ChatEntryWidget(message)
 		entry.avatarLabel.setPixmap(avatarPixmap)
 		listWidgetItem = QtGui.QListWidgetItem(self.chat)
 		listWidgetItem.setSizeHint(entry.sizeHint())
@@ -759,7 +780,7 @@ class SystemChat(QtGui.QDialog):
 		self.accept()
 
 
-class ChatEntry(QtGui.QWidget):
+class ChatEntryWidget(QtGui.QWidget):
 	TEXT_SIZE = 11
 	SHOW_AVATAR = True
 
@@ -771,7 +792,7 @@ class ChatEntry(QtGui.QWidget):
 		self.updateText()
 		self.connect(self.textLabel, QtCore.SIGNAL("linkActivated(QString)"), self.linkClicked)
 		self.changeFontSize(self.TEXT_SIZE)
-		if not ChatEntry.SHOW_AVATAR:
+		if not ChatEntryWidget.SHOW_AVATAR:
 			self.avatarLabel.setVisible(False)
 
 
