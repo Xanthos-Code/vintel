@@ -78,5 +78,3 @@ class NotifyNewVersionThread(QThread):
 					self.alerted = True
 			except Exception as e:
 				print("Failed NotifyNewVersionThread: {0}".format(str(e)))
-		# Only check every half hour
-		time.sleep(30)
