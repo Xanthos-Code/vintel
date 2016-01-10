@@ -1,3 +1,5 @@
+[](http://github.com/Xanthos-Eve/vintel/src/vi/ui/res/logo.png)
+
 # Welcome To Vintel
 
 Visual intel chat analysis, planning and notification application for [EVE Online](http://www.eveonline.com). Gathers status through in-game intelligence channels on all known hostiles and presents all the data on a [dotlan](http://evemaps.dotlan.net/map/Cache#npc24) generated regional map.
