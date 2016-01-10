@@ -1,11 +1,14 @@
 Welcome To Vintel
 =======
 
-Visual intel chat analysis, planning and notification application for the MMORPG EVE Online.
+Visual intel chat analysis, planning and notification application for the MMORPG EVE Online. Gathers status through in-game intelligence channels on all known hostiles and presents all the data on a dotlan generated regional map.
+
+Vintel is written with Python 2.7, using PyQt4 for its application presentation layer.
 
 Features
 -----
 
+ - Platforms supported: Mac, Windows and Linux.
  - A pilot may be KOS-checked right from in-game chat channels.
  - Quick batch KOS-checking of the Local system when foregrounding Vintel.
  - Notifications and alarms can be spoken using text-to-speech on select platforms (currently only OS X).
