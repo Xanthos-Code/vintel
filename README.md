@@ -123,23 +123,28 @@ Vintel looks for a new version at startup and loads dynamic infomations from hom
 
 **Vintel does not find my chatlogs. What can I do?**
 
-The program looks for your logs on some default pathes. If those pathes not exist, Vintel will fail with an error at startup. You can set this path on your own by giving it to Vintel at startup. For this you have to start it on the command line and call the program with the path to the logs. Examples:
-vintel-0.46.exe "d:\strange\path\EVE\logs\chatlogs"
-python vintel.py " /home/user/myverypecialpath/EVE/logs/chatlogs"
+The program looks for your logs on some default pathes. If those pathes not exist, Vintel will fail with an error at startup. You can set this path on your own by giving it to Vintel at startup. For this you have to start it on the command line and call the program with the path to the logs.
+
+Examples:
+
+`> vintel-0.7.exe "d:\strange\path\EVE\logs\chatlogs"`
+
+    – or –
+
+`> python vintel.py "/home/user/myverypecialpath/EVE/logs/chatlogs"`
 
 **Vintel does not start! What can I do?**
 
 Please try to delete Vintel's Cache. It is located in the EVE-directory where the chatlogs are in. If your chatlogs are in \Documents\EVE\logs\chatlogs Vintel writes the cachte to \Documents\EVE\vintel
 
-**When I do a KOS-check an: "empty certificate data" error occurs**
+**How can I resolve the "empty certificate data" error?**
 
-Do not use the standalone EXE, install the environment and use the sourcecode directly.
-(long version: there are missing certificates that must be provided by the environment. This error was discovered when running the standalone EXE on Linux using wine.
+Do not use the standalone EXE, install the environment and use the sourcecode directly. There are missing certificates that must be provided by the environment. This error was discovered when running the standalone EXE on Linux using wine.
 
-**I love Vintel - how can I help**
+**I love Vintel - how can I help?**
 
-If you are technically inclined, have a solid grasp of Python and QT, and work on either Windows or Linux, we need your help.
+If you are technically inclined, have a solid grasp of Python, and have either a Windows or Linux box, we need your help.
 
-**I'm not a coder, how can I help**
+**I'm not a coder, how can I help?**
 
-You can help fund continued development with motivational contributions of EVE ISK. Send donations in-game, directly to the project maintainer and lead dev [Xanthos](http://image.eveonline.com/Character/183452271_256.jpg).
+We want your feedback! Use the program for a while, then come back here and create issues. Tell us anything you think about Vintel - bugs, frustrations, and ideas to make Vintel better. You can help fund continued development with motivational contributions of EVE ISK. Send donations in-game, directly to the project maintainer and lead dev [Xanthos](http://image.eveonline.com/Character/183452271_256.jpg).
