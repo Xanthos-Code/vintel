@@ -46,7 +46,7 @@ Usage
  Type xxx in any chat and drag and drop the pilots names after this. (e.g., xxx Xanthos)
  - Checking the whole local system:
 The option must be activated via the Vintel app menu: File > Activate local KOS-Check.
-To use this feature: click on a pilot in the local pilot list and then type the shortcuts for select-all, and copy. Next switch to the VIntel app and back to Eve. KOS checking of these pilots will continue in the background.
+To use this feature: click on a pilot in the local pilot list and then type the shortcuts for select-all, and copy. Next switch to the Vintel app and back to Eve. KOS checking of these pilots will continue in the background.
 
 
 KOS Results
