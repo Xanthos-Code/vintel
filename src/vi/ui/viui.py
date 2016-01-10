@@ -40,7 +40,7 @@ from vi.ui.threads import MapStatisticsThread
 
 VERSION = vi.version.VERSION
 DEBUG = False
-MESSAGE_EXPIRY_IN_SECONDS = 5 * 60
+MESSAGE_EXPIRY_IN_SECONDS = 20 * 60
 
 class MainWindow(QtGui.QMainWindow):
 	def __init__(self, pathToLogs, trayIcon):
