@@ -67,7 +67,7 @@ sound option will be disabled.
 Building the Vintel Standalone Package 
 -------
 
-The standalone is created using pyinstaller. All media files and the .spec-file with the configuration for pyinstaller are included in the source-archive. Pyinstaller can be found here: https://github.com/pyinstaller/pyinstaller/wiki.
+The standalone is created using pyinstaller. All media files and the .spec-file with the configuration for pyinstaller are included in the source repo. Pyinstaller can be found here: https://github.com/pyinstaller/pyinstaller/wiki.
 
 FAQ
 ---
