@@ -100,7 +100,7 @@ The .exe ships with the complete environment and needed libs. You are free to us
 There are no plans to bring the GUI to HTML/JS. Sorry. But you can set the vintel-window always on top (look at the menu).
 
 **EXE? I'm using Linux!**
-Great! Same here. VINTEL works great on Linux. Use the sourcecode and install following dependencies: Python 2.7.x, pyQt 4.x, BeautifulSoup 4 and pygame. Should be available through your software repositories.
+Great! Same here. Vintel works great on Linux. Use the sourcecode and install following dependencies: Python 2.7.x, pyQt 4.x, BeautifulSoup 4 and pygame. Should be available through your software repositories.
 
 **I'm using a Mac. Does Vintel run?**
 Yes it does! Install all the requirements and follow the instructions above.
@@ -112,15 +112,15 @@ It needs to connect the internet (dotlan.evemaps.net, eveonline.com, cva-eve.org
 
 **Vintel calls home?**
 Yes it does. If you don't want it, use a firewall to forbid it.
-VINTEL looks for a new version at startup and loads dynamic infomations from home. It will run without this connection.
+Vintel looks for a new version at startup and loads dynamic infomations from home. It will run without this connection.
 
-**VINTEL does not find my chatlogs. What can I do?**
-The program looks for your logs on some default pathes. If those pathes not exist, VINTEL will fail with an error at startup. You can set this path on your own by giving it to VINTEL at startup. For this you have to start it on the command line and call the program with the path to the logs. Examples:
+**Vintel does not find my chatlogs. What can I do?**
+The program looks for your logs on some default pathes. If those pathes not exist, Vintel will fail with an error at startup. You can set this path on your own by giving it to Vintel at startup. For this you have to start it on the command line and call the program with the path to the logs. Examples:
 vintel-0.46.exe "d:\strange\path\EVE\logs\chatlogs"
 python vintel.py " /home/user/myverypecialpath/EVE/logs/chatlogs"
 
 **Vintel does not start! What can I do?**
-Please try to delete VINTEL's Cache. It is located in the EVE-directory where the chatlogs are in. If your chatlogs are in \Documents\EVE\logs\chatlogs Vintel writes the cachte to \Documents\EVE\vintel
+Please try to delete Vintel's Cache. It is located in the EVE-directory where the chatlogs are in. If your chatlogs are in \Documents\EVE\logs\chatlogs Vintel writes the cachte to \Documents\EVE\vintel
 
 **If I do a KOS-check an error occured, telling: "empty certificate data"**
 Do not use the standalone EXE, install the environment and use the sourcecode directly.
