@@ -1,19 +1,37 @@
-Welcome To Vintel
-=======
+[](http://github.com/Xanthos-Eve/vintel/src/vi/ui/res/logo.png)
 
-Visual intel chat analysis, planning and notification application for the MMORPG EVE Online.
+# Welcome To Vintel
 
-Features
------
+Visual intel chat analysis, planning and notification application for [EVE Online](http://www.eveonline.com). Gathers status through in-game intelligence channels on all known hostiles and presents all the data on a [dotlan](http://evemaps.dotlan.net/map/Cache#npc24) generated regional map.
 
+Vintel is written with Python 2.7, using PyQt4 for its application presentation layer.
+
+### News
+The current release version is 0.62.
+
+A planned update (version 0.7) is nearing completion and will be released soon; features include:
+- Scan and KOS-check local pilots on clipboard when switching to Vintel now works reliably
+- Intel messages are removed after 15 minutes to conserve memory usage
+- MapStatisticsThread no longer crashing
+- Threads are shutdown in an orderly manner when exiting Vintel
+- Sound is now played a background thread so the UI is not blocked
+- Minor menu changes
+- More debugging statements and try blocks everywhere to minmize crashes and bad bahavior due to network errors
+- Notifications can be spoken using text-to-speech on OSX
+- Replaced pygame with pyglet for audio playback as pygame was difficult to install for some users
+- Bug fixes and performance improvements
+
+## Features
+
+ - Platforms supported: Mac, Windows and Linux.
  - A pilot may be KOS-checked right from in-game chat channels.
  - Quick batch KOS-checking of the Local system when foregrounding Vintel.
  - Notifications and alarms can be spoken using text-to-speech on select platforms (currently only OS X).
- - "TheCitadel", "North Provi Intel", and "North Catch Intel" are merged to one chat stream. You can add more channels by an option in the menu.
- - An interactive map of Providence / Catch is provided.  Systems on the map display real-time intel data as reported through intel channels.
+ - "TheCitadel", "North Provi Intel", and "North Catch Intel" are merged to one chat stream. You can add or remove channels via a menu option.
+ - An interactive map of Providence / Catch is provided. Systems on the map display real-time intel data as reported through intel channels.
  - Systems on the map display different color backgrounds as their alarms age, with text indicating how long ago the specific system was reported.
-Background start at red when a system is reported and lighten in at the following minute intervals:  4min, 10min, 15m, 25min, 25min.
- - Systems reported clear,  will display a green background for 10 minutes.
+Background start at red when a system is reported and lighten in at the following minute intervals: 4min, 10min, 15m, 25min.
+ - Systems reported clear display on the map with a green background for 10 minutes.
  - Clicking on a specific system will display all messages bound on that system. From there one can can set a system clear and alarmed.
  - Clicking on a system in the intel channel causes it to be highlighted on the map with a blue background for 10 seconds.
  - The system where your character is currently located is highlighted on the map with an violet background (works only after first use of a gate).
@@ -28,7 +46,7 @@ Usage
  Type xxx in any chat and drag and drop the pilots names after this. (e.g., xxx Xanthos)
  - Checking the whole local system:
 The option must be activated via the Vintel app menu: File > Activate local KOS-Check.
-To use this feature: click on a pilot in the local pilot list and then type the shortcuts for select-all, and copy. Next switch to the VIntel app and back to Eve. KOS checking of these pilots will continue in the background.
+To use this feature: click on a pilot in the local pilot list and then type the shortcuts for select-all, and copy. Next switch to the Vintel app and back to Eve. KOS checking of these pilots will continue in the background.
 
 
 KOS Results
@@ -64,7 +82,7 @@ sound option will be disabled.
 Building the Vintel Standalone Package 
 -------
 
-The standalone is created using pyinstaller. All media files and the .spec-file with the configuration for pyinstaller are included in the source-archive. Pyinstaller can be found here: https://github.com/pyinstaller/pyinstaller/wiki.
+The standalone is created using pyinstaller. All media files and the .spec-file with the configuration for pyinstaller are included in the source repo. Pyinstaller can be found here: https://github.com/pyinstaller/pyinstaller/wiki.
 
 FAQ
 ---
@@ -82,7 +100,7 @@ The .exe ships with the complete environment and needed libs. You are free to us
 There are no plans to bring the GUI to HTML/JS. Sorry. But you can set the vintel-window always on top (look at the menu).
 
 **EXE? I'm using Linux!**
-Great! Same here. VINTEL works great on Linux. Use the sourcecode and install following dependencies: Python 2.7.x, pyQt 4.x, BeautifulSoup 4 and pygame. Should be available through your software repositories.
+Great! Same here. Vintel works great on Linux. Use the sourcecode and install following dependencies: Python 2.7.x, pyQt 4.x, BeautifulSoup 4 and pygame. Should be available through your software repositories.
 
 **I'm using a Mac. Does Vintel run?**
 Yes it does! Install all the requirements and follow the instructions above.
@@ -94,15 +112,15 @@ It needs to connect the internet (dotlan.evemaps.net, eveonline.com, cva-eve.org
 
 **Vintel calls home?**
 Yes it does. If you don't want it, use a firewall to forbid it.
-VINTEL looks for a new version at startup and loads dynamic infomations from home. It will run without this connection.
+Vintel looks for a new version at startup and loads dynamic infomations from home. It will run without this connection.
 
-**VINTEL does not find my chatlogs. What can I do?**
-The program looks for your logs on some default pathes. If those pathes not exist, VINTEL will fail with an error at startup. You can set this path on your own by giving it to VINTEL at startup. For this you have to start it on the command line and call the program with the path to the logs. Examples:
+**Vintel does not find my chatlogs. What can I do?**
+The program looks for your logs on some default pathes. If those pathes not exist, Vintel will fail with an error at startup. You can set this path on your own by giving it to Vintel at startup. For this you have to start it on the command line and call the program with the path to the logs. Examples:
 vintel-0.46.exe "d:\strange\path\EVE\logs\chatlogs"
 python vintel.py " /home/user/myverypecialpath/EVE/logs/chatlogs"
 
 **Vintel does not start! What can I do?**
-Please try to delete VINTEL's Cache. It is located in the EVE-directory where the chatlogs are in. If your chatlogs are in \Documents\EVE\logs\chatlogs Vintel writes the cachte to \Documents\EVE\vintel
+Please try to delete Vintel's Cache. It is located in the EVE-directory where the chatlogs are in. If your chatlogs are in \Documents\EVE\logs\chatlogs Vintel writes the cachte to \Documents\EVE\vintel
 
 **If I do a KOS-check an error occured, telling: "empty certificate data"**
 Do not use the standalone EXE, install the environment and use the sourcecode directly.
