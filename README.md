@@ -19,8 +19,6 @@ Background start at red when a system is reported and lighten in at the followin
  - The main window can be set up to remain "always on top" and be displayed with a specified level of transparency.
  - Shipnames in the intel chat are marked blue.
 
-----------
-
 Usage
 -----
 
@@ -30,7 +28,6 @@ Usage
 The option must be activated via the Vintel app menu: File > Activate local KOS-Check.
 To use this feature: click on a pilot in the local pilot list and then type the shortcuts for select-all, and copy. Next switch to the VIntel app and back to Eve. KOS checking of these pilots will continue in the background.
 
-----------
 
 KOS Results
 -----------
@@ -40,8 +37,6 @@ KOS Results
  - **Not KOS**: the pilot is known as NOT KOS by the KOS-checker.
  - **KOS**: the pilot is known as KOS by the KOS-checker.
  - **RED by last**: the last non-NPC-Corp the pilot was employed is KOS.
-
-----------
 
 Running Vintel from Source
 --------------------------
@@ -64,18 +59,13 @@ https://bitbucket.org/pyglet/pyglet/wiki/Download
 pyglet is used to play the sound: If it is not available the
 sound option will be disabled.
 
-----------
-
 Building the Vintel Standalone Package 
 -------
 
 The standalone is created using pyinstaller. All media files and the .spec-file with the configuration for pyinstaller are included in the source-archive. Pyinstaller can be found here: https://github.com/pyinstaller/pyinstaller/wiki.
 
-----------
-
 FAQ
 ---
-
 
 **License?**
 Vintel is licensed under the GPLv3.
