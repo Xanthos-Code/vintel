@@ -9,7 +9,7 @@ Visual intel chat analysis, planning and notification application for [EVE Onlin
 Vintel is written with Python 2.7, using PyQt4 for its application presentation layer.
 
 ### News
-The current release version is 0.62.
+_The current release of Vintel is **version 0.62**._
 
 A planned update (version 0.7) is nearing completion and will be released soon; features include:
 - Scan and KOS-check local pilots on clipboard when switching to Vintel now works reliably
