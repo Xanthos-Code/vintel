@@ -1,5 +1,7 @@
-[](http://github.com/Xanthos-Eve/vintel/src/vi/ui/res/logo.png)
 
+<p align="center">
+  <img align="middle" src="src/vi/ui/res/logo.png">
+</p>
 # Welcome To Vintel
 
 Visual intel chat analysis, planning and notification application for [EVE Online](http://www.eveonline.com). Gathers status through in-game intelligence channels on all known hostiles and presents all the data on a [dotlan](http://evemaps.dotlan.net/map/Cache#npc24) generated regional map.
@@ -82,7 +84,8 @@ sound option will be disabled.
 Building the Vintel Standalone Package 
 -------
 
-The standalone is created using pyinstaller. All media files and the .spec-file with the configuration for pyinstaller are included in the source repo. Pyinstaller can be found here: https://github.com/pyinstaller/pyinstaller/wiki.
+ - Windows - The standalone is created using pyinstaller. All media files and the .spec-file with the configuration for pyinstaller are included in the source repo. Pyinstaller can be found here: https://github.com/pyinstaller/pyinstaller/wiki.
+ - Mac - The simplest method is to download all the requirements for running Vintel and use Automator to create a launchable application. Create a new automator Application. Add a Run Shell Script action and configure it as follows: ![Automator setup](https://raw.github.com/Xanthos-Eve/vintel/master/src/docs/automator-setup.jpg)
 
 FAQ
 ---
