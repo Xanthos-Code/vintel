@@ -10,7 +10,7 @@ Vintel is written with Python 2.7, using PyQt4 for its application presentation 
 The current release version is 0.62.
 
 A planned update (version 0.7) is nearing completion and will be released soon; features include:
-- Scan and KOS Check local pilots on clipboard when switching to Vintel now works reliably
+- Scan and KOS-check local pilots on clipboard when switching to Vintel now works reliably
 - Intel messages are removed after 15 minutes to conserve memory usage
 - MapStatisticsThread no longer crashing
 - Threads are shutdown in an orderly manner when exiting Vintel
