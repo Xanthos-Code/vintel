@@ -3,7 +3,9 @@ Welcome To Vintel
 
 Visual intel chat analysis, planning and notification application for the MMORPG EVE Online.
 
-Current features:
+Features
+-----
+
  - A pilot may be KOS-checked right from in-game chat channels.
  - Quick batch KOS-checking of the Local system when foregrounding Vintel.
  - Notifications and alarms can be spoken using text-to-speech on select platforms (currently only OS X).
