@@ -88,7 +88,7 @@ FAQ
 ---
 
 **License?**
-Vintel is licensed under the GPLv3.
+Vintel is licensed under the [GPLv3](http://www.gnu.org/licenses/gpl-3.0.html).
 
 **Vintel does not show any chat. What can I do?**
 Vintel only analyzes your chatlogs. It looks for them in USER\EVE\logs\chatlogs and DOCUMENTS\EVE\logs\chatlogs. In EVE you have to enable the logging. Go to the settings, use the register "chat" and activate "log chat to file".
