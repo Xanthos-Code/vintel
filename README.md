@@ -1,22 +1,20 @@
-Welcome To Vintel
-=======
+# Welcome To Vintel
 
-Visual intel chat analysis, planning and notification application for the MMORPG EVE Online. Gathers status through in-game intelligence channels on all known hostiles and presents all the data on a dotlan generated regional map.
+Visual intel chat analysis, planning and notification application for [EVE Online](http://www.eveonline.com). Gathers status through in-game intelligence channels on all known hostiles and presents all the data on a [dotlan](http://evemaps.dotlan.net/map/Cache#npc24) generated regional map.
 
 Vintel is written with Python 2.7, using PyQt4 for its application presentation layer.
 
-Features
------
+## Features
 
  - Platforms supported: Mac, Windows and Linux.
  - A pilot may be KOS-checked right from in-game chat channels.
  - Quick batch KOS-checking of the Local system when foregrounding Vintel.
  - Notifications and alarms can be spoken using text-to-speech on select platforms (currently only OS X).
- - "TheCitadel", "North Provi Intel", and "North Catch Intel" are merged to one chat stream. You can add more channels by an option in the menu.
- - An interactive map of Providence / Catch is provided.  Systems on the map display real-time intel data as reported through intel channels.
+ - "TheCitadel", "North Provi Intel", and "North Catch Intel" are merged to one chat stream. You can add or remove channels via a menu option.
+ - An interactive map of Providence / Catch is provided. Systems on the map display real-time intel data as reported through intel channels.
  - Systems on the map display different color backgrounds as their alarms age, with text indicating how long ago the specific system was reported.
-Background start at red when a system is reported and lighten in at the following minute intervals:  4min, 10min, 15m, 25min, 25min.
- - Systems reported clear,  will display a green background for 10 minutes.
+Background start at red when a system is reported and lighten in at the following minute intervals: 4min, 10min, 15m, 25min.
+ - Systems reported clear display on the map with a green background for 10 minutes.
  - Clicking on a specific system will display all messages bound on that system. From there one can can set a system clear and alarmed.
  - Clicking on a system in the intel channel causes it to be highlighted on the map with a blue background for 10 seconds.
  - The system where your character is currently located is highlighted on the map with an violet background (works only after first use of a gate).
