@@ -53,8 +53,8 @@ class MainWindow(QtGui.QMainWindow):
 		self.pathToLogs = pathToLogs
 		self.trayIcon = trayIcon
 		self.trayIcon.activated.connect(self.systemTrayActivated)
-		self.taskbarIconQuiescent = resourcePath("vi/ui/res/logo_small.png")
-		self.taskbarIconWorking = resourcePath("vi/ui/res/logo_small_green.png")
+		self.taskbarIconQuiescent = QtGui.QIcon(resourcePath("vi/ui/res/logo_small.png"))
+		self.taskbarIconWorking = QtGui.QIcon(resourcePath("vi/ui/res/logo_small_green.png"))
 		self.cache = Cache()
 
 
