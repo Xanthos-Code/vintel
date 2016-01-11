@@ -55,6 +55,9 @@ class AvatarFindThread(QThread):
 				chatEntry = self.queue.get()
 				charname = chatEntry.message.user
 				avatar = None
+				if charname == "VINTEL":
+					with open(resourcePath("vi/ui/res/logo_small.png"), "rb") as f:
+						avatar = f.read()
 				if not avatar:
 					avatar = cache.getAvatar(charname)
 				if not avatar:

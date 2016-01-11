@@ -49,12 +49,12 @@ class MainWindow(QtGui.QMainWindow):
 		QtGui.QMainWindow.__init__(self)
 		uic.loadUi(resourcePath('vi/ui/MainWindow.ui'), self)
 		self.setWindowTitle("Vintel " + VERSION)
-		self.setWindowIcon(QtGui.QIcon(resourcePath("vi/ui/res/logo_small.png")))
+		self.taskbarIconQuiescent = QtGui.QIcon(resourcePath("vi/ui/res/logo_small.png"))
+		self.taskbarIconWorking = QtGui.QIcon(resourcePath("vi/ui/res/logo_small_green.png"))
+		self.setWindowIcon(self.taskbarIconQuiescent)
 		self.pathToLogs = pathToLogs
 		self.trayIcon = trayIcon
 		self.trayIcon.activated.connect(self.systemTrayActivated)
-		self.taskbarIconQuiescent = QtGui.QIcon(resourcePath("vi/ui/res/logo_small.png"))
-		self.taskbarIconWorking = QtGui.QIcon(resourcePath("vi/ui/res/logo_small_green.png"))
 		self.cache = Cache()
 
 
@@ -229,11 +229,14 @@ class MainWindow(QtGui.QMainWindow):
 					(None, "changeAlreadyShowedSoundWarning", self.alreadyShowedSoundWarning))
 		self.cache.putIntoCache("settings", str(settings), 60 * 60 * 24 * 365)
 
-		# stop the threads
-		self.filewatcherThread.quit()
-		self.kosRequestThread.quit()
-		Sound().quit()
-		self.versionCheckThread.quit()
+		# Stop the threads
+		try:
+			self.filewatcherThread.quit()
+			self.kosRequestThread.quit()
+			Sound().quit()
+			self.versionCheckThread.quit()
+		except Exception:
+			pass
 		event.accept()
 
 
