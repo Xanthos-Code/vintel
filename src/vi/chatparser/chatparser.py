@@ -122,32 +122,28 @@ class ChatParser(object):
 		if roomname not in self.rooms:
 			return None
 
-		# and now creating message object
 		message = Message(roomname, "", timestamp, username, systems, text, originalText)
-		# is the message allready here? may happen if someone plays > 1 account
+		# May happen if someone plays > 1 account
 		if message in self.knownMessages:
 			message.status = states.IGNORE
 			return message
-		# and going on with parsing
+
 		removeChars = ("*", "?", ",", "!")
 		for char in removeChars:
 			text = text.replace(char, "")
-		# ships in the message?
 		run = True
 		while run:
 			run = parseShips(rtext)
-		# urls in the message?
 		run = True
 		while run:
 			run = parseUrls(rtext)
-		# trying to find the system in the text
 		run = True
 		while run:
 			run = parseSystems(self.systems, rtext, systems)
-		# and the status
 		parsedStatus = parseStatus(rtext)
 		status = parsedStatus if parsedStatus is not None else states.ALARM
-		# if message says clear and no system? Maybe an answer to a request?
+
+		# If message says clear and no system? Maybe an answer to a request?
 		if status == states.CLEAR and not systems:
 			maxSearch = 2  # we search only max_search messages in the room
 			for count, oldMessage in enumerate(
@@ -173,15 +169,18 @@ class ChatParser(object):
 		charname = self.fileData[path]["charname"]
 		if charname not in self.locations:
 			self.locations[charname] = {"system": "?", "timestamp": datetime.datetime(1970, 1, 1, 0, 0, 0, 0)}
-		# finding the timestamp
+
+		# Finding the timestamp
 		timeStart = line.find("[") + 1
 		timeEnds = line.find("]")
 		timeStr = line[timeStart:timeEnds].strip()
 		timestamp = datetime.datetime.strptime(timeStr, "%Y.%m.%d %H:%M:%S")
-		# finding the username of the poster
+
+		# Finding the username of the poster
 		userEnds = line.find(">")
 		username = line[timeEnds + 1:userEnds].strip()
-		# finding the pure message
+
+		# Finding the pure message
 		text = line[userEnds + 1:].strip()  # text will the text to work an
 		if username in ("EVE-System", "EVE System"):
 			if ":" in text:
@@ -198,8 +197,8 @@ class ChatParser(object):
 		messages = []
 		if path in self.ignoredPaths:
 			return []
-		# checking if we must do anything with the changed file.
-		# we are only need those, which name is in the rooms-list
+		# Checking if we must do anything with the changed file.
+		# We only need those which name is in the rooms-list
 		# EvE names the file like room_20140913_200737.txt, so we don't need
 		# the last 20 chars
 		filename = os.path.basename(path)

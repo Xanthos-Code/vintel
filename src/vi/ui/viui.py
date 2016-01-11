@@ -53,6 +53,8 @@ class MainWindow(QtGui.QMainWindow):
 		self.pathToLogs = pathToLogs
 		self.trayIcon = trayIcon
 		self.trayIcon.activated.connect(self.systemTrayActivated)
+		self.taskbarIconQuiescent = resourcePath("vi/ui/res/logo_small.png")
+		self.taskbarIconWorking = resourcePath("vi/ui/res/logo_small_green.png")
 		self.cache = Cache()
 
 
@@ -236,7 +238,7 @@ class MainWindow(QtGui.QMainWindow):
 
 
 	def notifyNewerVersion(self, newestVersion):
-		self.trayIcon.showMessage("Newer Version", ("A newer Version of VINTEL is available.\nFind the URL in the info!"), 1)
+		self.trayIcon.showMessage("Newer Version", ("A newer Version of Vintel is available.\nFind the URL in the info!"), 1)
 
 
 	def changeFloatingOverview(self, newValue=None):
@@ -288,7 +290,7 @@ class MainWindow(QtGui.QMainWindow):
 			self.soundButton.setEnabled(False)
 			if not self.alreadyShowedSoundWarning:
 				self.alreadyShowedSoundWarning = True
-				QtGui.QMessageBox.warning(None, "Sound disabled", "I can't find the lib 'pyglet' which is used to play sounds, ""so I have to disable the soundsystem.\nIf you want sound, please install the 'pyglet' library. This warning will not be shown again.", "OK")
+				QtGui.QMessageBox.warning(None, "Sound disabled", "The lib 'pyglet' which is used to play sounds cannot be found, ""so the soundsystem is disabled.\nIf you want sound, please install the 'pyglet' library. This warning will not be shown again.", "OK")
 		else:
 			if newValue is None:
 				newValue = self.activateSoundAction.isChecked()
@@ -365,7 +367,7 @@ class MainWindow(QtGui.QMainWindow):
 
 
 	def clipboardChanged(self, mode):
-		if mode == 0 and self.kosClipboardActiveAction.isChecked():
+		if mode == 0 and self.kosClipboardActiveAction.isChecked() and self.clipboard.mimeData().hasText():
 			content = unicode(self.clipboard.text())
 			contentTuple = tuple(content)
 			# Limit redundant kos checks
@@ -374,7 +376,7 @@ class MainWindow(QtGui.QMainWindow):
 				for part in parts:
 					# Make sure user is in the content (this is a check of the local system in Eve)
 					if part in self.knownPlayerNames:
-						self.trayIcon.setIcon(QtGui.QIcon(resourcePath("vi/ui/res/logo_small_green.png")))
+						self.trayIcon.setIcon(self.taskbarIconWorking)
 						self.kosRequestThread.addRequest(parts, "clipboard", True)
 						break
 				self.oldClipboardContent = contentTuple
@@ -498,22 +500,25 @@ class MainWindow(QtGui.QMainWindow):
 
 
 	def showKosResult(self, state, text, requestType, hasKos):
-		if hasKos:
-			Sound().playSound("kos", text)
-		self.trayIcon.setIcon(QtGui.QIcon(resourcePath("vi/ui/res/logo_small.png")))
-		if state == "ok":
-			if requestType == "xxx":  # a xxx request out of the chat
-				self.trayIcon.showMessage("Player KOS-Check", text, 1)
-			elif requestType == "clipboard":  # request from clipboard-change
-				if len(text) <= 0:
-					text = "None KOS"
-				self.trayIcon.showMessage("Your KOS-Check", text, 1)
-			text = text.replace("\n\n", "<br>")
-			message = chatparser.chatparser.Message("Vintel KOS-Check", text, evegate.currentEveTime(), "VINTEL", [],
-													states.NOT_CHANGE, text.upper(), text)
-			self.addMessageToIntelChat(message)
-		elif state == "error":
-			self.trayIcon.showMessage("KOS Failure", text, 3)
+		try:
+			if hasKos:
+				Sound().playSound("kos", text)
+			if state == "ok":
+				if requestType == "xxx":  # a xxx request out of the chat
+					self.trayIcon.showMessage("Player KOS-Check", text, 1)
+				elif requestType == "clipboard":  # request from clipboard-change
+					if len(text) <= 0:
+						text = "None KOS"
+					self.trayIcon.showMessage("Your KOS-Check", text, 1)
+				text = text.replace("\n\n", "<br>")
+				message = chatparser.chatparser.Message("Vintel KOS-Check", text, evegate.currentEveTime(), "VINTEL", [],
+														states.NOT_CHANGE, text.upper(), text)
+				self.addMessageToIntelChat(message)
+			elif state == "error":
+				self.trayIcon.showMessage("KOS Failure", text, 3)
+		except Exception:
+			pass
+		self.trayIcon.setIcon(self.taskbarIconQuiescent)
 
 
 	def changedRoomnames(self, newRoomnames):
@@ -604,7 +609,7 @@ class MainWindow(QtGui.QMainWindow):
 				text = message.message[4:]
 				text = text.replace("  ", ",")
 				parts = (name.strip() for name in text.split(","))
-				self.trayIcon.setIcon(QtGui.QIcon(resourcePath("vi/ui/res/logo_small_green.png")))
+				self.trayIcon.setIcon(self.taskbarIconWorking)
 				self.kosRequestThread.addRequest(parts, "xxx", False)
 			# Otherwise consider it a 'normal' chat message
 			elif (message.user not in ("EVE-System", "EVE System") and message.status != states.IGNORE):
@@ -783,11 +788,14 @@ class SystemChat(QtGui.QDialog):
 class ChatEntryWidget(QtGui.QWidget):
 	TEXT_SIZE = 11
 	SHOW_AVATAR = True
+	questionMarkPixmap = None
 
 	def __init__(self, message):
 		QtGui.QWidget.__init__(self)
+		if not self.questionMarkPixmap:
+			self.questionMarkPixmap = QtGui.QPixmap(resourcePath("vi/ui/res/qmark.png"))
 		uic.loadUi(resourcePath("vi/ui/ChatEntry.ui"), self)
-		self.avatarLabel.setPixmap(QtGui.QPixmap(resourcePath("vi/ui/res/qmark.png")))
+		self.avatarLabel.setPixmap(self.questionMarkPixmap)
 		self.message = message
 		self.updateText()
 		self.connect(self.textLabel, QtCore.SIGNAL("linkActivated(QString)"), self.linkClicked)
