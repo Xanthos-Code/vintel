@@ -110,15 +110,15 @@ class ChatParser(object):
 		soup = BeautifulSoup(formatedText, 'html.parser')
 		rtext = soup.select("rtext")[0]
 		systems = set()
-		utext = text.upper()
+		upperText = text.upper()
 
 		# KOS request
-		if utext.startswith("XXX "):
-			return Message(roomname, text, timestamp, username, systems, utext, status=states.KOS_STATUS_REQUEST)
+		if upperText.startswith("XXX "):
+			return Message(roomname, text, timestamp, username, systems, upperText, status=states.KOS_STATUS_REQUEST)
 		elif roomname.startswith("="):
-			return Message(roomname, "xxx " + text, timestamp, username, systems, "XXX " + utext, status=states.KOS_STATUS_REQUEST)
-		elif utext.startswith("VINTELSOUND_TEST"):
-			return Message(roomname, text, timestamp, username, systems, utext, status=states.SOUND_TEST)
+			return Message(roomname, "xxx " + text, timestamp, username, systems, "XXX " + upperText, status=states.KOS_STATUS_REQUEST)
+		elif upperText.startswith("VINTELSOUND_TEST"):
+			return Message(roomname, text, timestamp, username, systems, upperText, status=states.SOUND_TEST)
 		if roomname not in self.rooms:
 			return None
 
@@ -224,14 +224,14 @@ class ChatParser(object):
 
 
 class Message(object):
-	def __init__(self, room, message, timestamp, user, systems, utext, plainText="", status=states.ALARM):
+	def __init__(self, room, message, timestamp, user, systems, upperText, plainText="", status=states.ALARM):
 		self.room = room  # chatroom the message was posted
 		self.message = message  # the messages text
 		self.timestamp = timestamp  # time stamp of the massage
 		self.user = user  # user who posted the message
 		self.systems = systems  # list of systems mentioned in the message
 		self.status = status  # status related to the message
-		self.utext = utext  # the text in UPPER CASE
+		self.upperText = upperText  # the text in UPPER CASE
 		self.plainText = plainText  # plain text of the message, as posted
 		# if you add the message to a widget, please add it to widgets
 		self.widgets = []

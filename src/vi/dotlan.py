@@ -95,16 +95,16 @@ class Map(object):
 			self.systemsById[system.systemId] = system
 		self._preparingSvg(self.soup, self.systems)
 		self._connectNeighbours()
-		self._jumpmapsVisible = False
+		self._jumpMapsVisible = False
 		self._statisticsVisible = False
 		self.marker = self.soup.select("#select_marker")[0]
 
 	def changeJumpbrigdeVisibility(self):
-		newStatus = False if self._jumpmapsVisible else True
+		newStatus = False if self._jumpMapsVisible else True
 		value = "visible" if newStatus else "hidden"
 		for line in self.soup.select(".jumpbridge"):
 			line["visibility"] = value
-		self._jumpmapsVisible = newStatus
+		self._jumpMapsVisible = newStatus
 
 	def changeStatisticsVisibility(self):
 		newStatus = False if self._statisticsVisible else True
@@ -411,9 +411,9 @@ class System(object):
 	def update(self):
 		# state changed?
 		if (self.status == states.ALARM):
-			alarmtime = time.time() - self.lastAlarmTime
+			alarmTime = time.time() - self.lastAlarmTime
 			for maxDiff, alarmColor, secondLineColor in self.ALARM_COLORS:
-				if alarmtime < maxDiff:
+				if alarmTime < maxDiff:
 					if self.backgroundColor != alarmColor:
 						self.backgroundColor = alarmColor
 						for rect in self.svgElement("rect"):
