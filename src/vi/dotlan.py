@@ -117,15 +117,15 @@ class Map(object):
 		systems = {}
 		uses = {}
 		for use in soup.select("use"):
-			useid = use["xlink:href"][1:]
-			uses[useid] = use
+			useId = use["xlink:href"][1:]
+			uses[useId] = use
 		symbols = soup.select("symbol")
 		for symbol in symbols:
 			symbolId = symbol["id"]
 			systemId = symbolId[3:]
 			# workaround for sov changes 7/2015
 			try:
-				sysemid = int(systemId)
+				systemId = int(systemId)
 			except ValueError as e:
 				continue
 			for element in symbol.select(".sys"):
@@ -148,8 +148,8 @@ class Map(object):
 			if "jumpbridge" in jump["class"]: continue
 			parts = jump["id"].split("-")
 			if parts[0] == "j":
-				startSystem = self.systemsById[parts[1]]
-				stopSystem = self.systemsById[parts[2]]
+				startSystem = self.systemsById[int(parts[1])]
+				stopSystem = self.systemsById[int(parts[2])]
 				startSystem.addNeighbour(stopSystem)
 
 	def _getSvgFromDotlan(self, region):

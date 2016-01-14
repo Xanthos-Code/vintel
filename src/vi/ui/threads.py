@@ -127,7 +127,7 @@ class MapStatisticsThread(QThread):
 	def run(self):
 		try:
 			statistics = evegate.getSystemStatistics()
-			time.sleep(20)  # sleeping to prevent a "need 2 arguments"-error
+			#time.sleep(20)  # sleeping to prevent a "need 2 arguments"-error
 			result = {"result": "ok", "statistics": statistics}
 		except Exception as e:
 			print "An error in the MapStatisticsThread: {0}".format(str(e))
