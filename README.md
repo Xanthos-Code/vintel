@@ -110,14 +110,14 @@ Vintel works great on Mac! Install the dependencies listed above and the source 
 
 **What file system permissions does Vintel need?**
 
-It reads your EVE Chatlogs
+It reads your EVE chatlogs
 It creates and writes to PathToYourChatlogs/../../vintel/.
-It needs to connect the internet (dotlan.evemaps.net, eveonline.com, cva-eve.org, eve gate).
+It needs to connect the internet (dotlan.evemaps.net, eveonline.com, cva-eve.org, and eve gate).
 
 **Vintel calls home?**
 
-Yes it does. If you don't want it, use a firewall to forbid it.
-Vintel looks for a new version at startup and loads dynamic infomations from home. It will run without this connection.
+Yes it does. If you don't want to this, use a firewall to forbid it.
+Vintel looks for a new version at startup and loads dynamic infomation (i.e., jump bridge routes) from home. It will run without this connection but some functionality will be limited.
 
 **Vintel does not find my chatlogs. What can I do?**
 
@@ -145,4 +145,4 @@ If you are technically inclined, have a solid grasp of Python, and have either a
 
 **I'm not a coder, how can I help?**
 
-We want your feedback! Use the program for a while, then come back here and create issues. Tell us anything you think about Vintel - bugs, frustrations, and ideas to make Vintel better. You can help fund continued development with motivational contributions of EVE ISK. Send donations in-game, directly to the project maintainer and lead dev [Xanthos](http://image.eveonline.com/Character/183452271_256.jpg).
+We want your feedback! Use the program for a while, then come back here and create issues. Tell us anything you think about Vintel - bugs, frustrations, and ideas to make Vintel better. You can help fund continued development with motivational contributions of EVE ISK. Send donations in-game, directly to the project maintainer and lead developer [Xanthos](http://image.eveonline.com/Character/183452271_256.jpg).
