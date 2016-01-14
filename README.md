@@ -21,6 +21,7 @@ A planned update (version 0.7) is nearing completion and will be released soon; 
 - More debugging statements and try blocks everywhere to minmize crashes and bad bahavior due to network errors
 - Notifications can be spoken using text-to-speech on OSX
 - Replaced pygame with pyglet for audio playback as pygame was difficult to install for some users
+- System statistics updating as expected
 - Bug fixes and performance improvements
 
 ## Features
