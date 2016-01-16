@@ -135,13 +135,13 @@ class MainWindow(QtGui.QMainWindow):
 		self.connect(self.clipboard, Qt.SIGNAL("changed(QClipboard::Mode)"), self.clipboardChanged)
 		self.connect(self.zoomInButton, Qt.SIGNAL("clicked()"), self.zoomMapIn)
 		self.connect(self.zoomOutButton, Qt.SIGNAL("clicked()"), self.zoomMapOut)
-		self.connect(self.statisticsButton, Qt.SIGNAL("clicked()"), self.dotlan.changeStatisticsVisibility)
+		self.connect(self.statisticsButton, Qt.SIGNAL("clicked()"), self.changeStatisticsVisibility)
+		self.connect(self.jumpbridgesButton, Qt.SIGNAL("clicked()"), self.changeJumpbridgesVisibility)
 		self.connect(self.chatLargeButton, Qt.SIGNAL("clicked()"), self.chatLarger)
 		self.connect(self.chatSmallButton, Qt.SIGNAL("clicked()"), self.chatSmaller)
 		self.connect(self.infoAction, Qt.SIGNAL("triggered()"), self.showInfo)
 		self.connect(self.showChatAvatarsAction, Qt.SIGNAL("triggered()"), self.changeShowAvatars)
 		self.connect(self.alwaysOnTopAction, Qt.SIGNAL("triggered()"), self.changeAlwaysOnTop)
-		self.connect(self.jumpbridgeDataAction, Qt.SIGNAL("triggered()"), self.changeJumpbridgeView)
 		self.connect(self.chooseChatRoomsAction, Qt.SIGNAL("triggered()"), self.showChatroomChooser)
 		self.connect(self.chooseRegionAction, Qt.SIGNAL("triggered()"), self.showRegionChooser)
 		self.connect(self.showChatAction, Qt.SIGNAL("triggered()"), self.changeChatVisibility)
@@ -364,10 +364,14 @@ class MainWindow(QtGui.QMainWindow):
 		self.trayIcon.alarmDistance = distance
 
 
-	def changeJumpbridgeView(self):
-		self.dotlan.changeJumpbrigdeVisibility()
+	def changeJumpbridgesVisibility(self):
+		newValue = self.dotlan.changeJumpbridgesVisibility()
+		self.jumpbridgesButton.setChecked(newValue)
 		self.updateMap()
 
+	def changeStatisticsVisibility(self):
+		newValue = self.dotlan.changeStatisticsVisibility()
+		self.statisticsButton.setChecked(newValue)
 
 	def clipboardChanged(self, mode):
 		if mode == 0 and self.kosClipboardActiveAction.isChecked() and self.clipboard.mimeData().hasText():

@@ -96,29 +96,11 @@
                  </property>
                  <property name="font">
                   <font>
-                   <pointsize>8</pointsize>
+                   <pointsize>11</pointsize>
                   </font>
                  </property>
                  <property name="text">
                   <string>Restore Frame</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="soundButton">
-                 <property name="maximumSize">
-                  <size>
-                   <width>16777215</width>
-                   <height>19</height>
-                  </size>
-                 </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>8</pointsize>
-                  </font>
-                 </property>
-                 <property name="text">
-                  <string>Sound</string>
                  </property>
                 </widget>
                </item>
@@ -143,6 +125,13 @@
                    <height>19</height>
                   </size>
                  </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>13</pointsize>
+                   <weight>50</weight>
+                   <bold>false</bold>
+                  </font>
+                 </property>
                  <property name="text">
                   <string>-</string>
                  </property>
@@ -158,11 +147,17 @@
                  </property>
                  <property name="font">
                   <font>
-                   <pointsize>8</pointsize>
+                   <pointsize>11</pointsize>
                   </font>
                  </property>
                  <property name="text">
-                  <string>JumpBridges</string>
+                  <string>Jump Bridges</string>
+                 </property>
+                 <property name="checkable">
+                  <bool>true</bool>
+                 </property>
+                 <property name="checked">
+                  <bool>false</bool>
                  </property>
                 </widget>
                </item>
@@ -176,11 +171,14 @@
                  </property>
                  <property name="font">
                   <font>
-                   <pointsize>8</pointsize>
+                   <pointsize>11</pointsize>
                   </font>
                  </property>
                  <property name="text">
                   <string>Statistics</string>
+                 </property>
+                 <property name="checkable">
+                  <bool>true</bool>
                  </property>
                 </widget>
                </item>
@@ -202,6 +200,11 @@
               <width>1050</width>
               <height>790</height>
              </size>
+            </property>
+            <property name="font">
+             <font>
+              <pointsize>13</pointsize>
+             </font>
             </property>
             <property name="contextMenuPolicy">
              <enum>Qt::DefaultContextMenu</enum>
@@ -234,7 +237,7 @@
         </size>
        </property>
        <property name="title">
-        <string>All Intel</string>
+        <string>All Intel (past 20 minutes)</string>
        </property>
        <layout class="QGridLayout" name="gridLayout_6">
         <property name="leftMargin">
@@ -360,10 +363,19 @@
     <addaction name="chooseRegionAction"/>
     <addaction name="jumpbridgeDataAction"/>
    </widget>
+   <widget class="QMenu" name="menuWindow">
+    <property name="title">
+     <string>Window</string>
+    </property>
+    <addaction name="actionAlway_On_Top"/>
+    <addaction name="actionFrameless"/>
+    <addaction name="actionTransparency"/>
+   </widget>
    <addaction name="menu"/>
    <addaction name="menuChat"/>
    <addaction name="menuSound"/>
    <addaction name="menuRegion"/>
+   <addaction name="menuWindow"/>
   </widget>
   <action name="infoAction">
    <property name="text">
@@ -436,7 +448,7 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>KOS-Check Clipboard on Foreground</string>
+    <string>Auto KOS-Check Clipboard</string>
    </property>
    <property name="toolTip">
     <string>Activate Clipboard KOS-Check</string>
@@ -509,6 +521,24 @@
   <action name="floatingOverviewAction">
    <property name="text">
     <string>Show Mini Overview...</string>
+   </property>
+   <property name="visible">
+    <bool>false</bool>
+   </property>
+  </action>
+  <action name="actionAlway_On_Top">
+   <property name="text">
+    <string>Always On Top</string>
+   </property>
+  </action>
+  <action name="actionFrameless">
+   <property name="text">
+    <string>Frameless</string>
+   </property>
+  </action>
+  <action name="actionTransparency">
+   <property name="text">
+    <string>Transparency</string>
    </property>
   </action>
  </widget>

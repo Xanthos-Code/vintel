@@ -99,12 +99,13 @@ class Map(object):
 		self._statisticsVisible = False
 		self.marker = self.soup.select("#select_marker")[0]
 
-	def changeJumpbrigdeVisibility(self):
+	def changeJumpbridgesVisibility(self):
 		newStatus = False if self._jumpMapsVisible else True
 		value = "visible" if newStatus else "hidden"
 		for line in self.soup.select(".jumpbridge"):
 			line["visibility"] = value
 		self._jumpMapsVisible = newStatus
+		return newStatus
 
 	def changeStatisticsVisibility(self):
 		newStatus = False if self._statisticsVisible else True
@@ -112,6 +113,7 @@ class Map(object):
 		for line in self.soup.select(".statistics"):
 			line["visibility"] = value
 		self._statisticsVisible = newStatus
+		return newStatus
 
 	def _extractSystemsFromSoup(self, soup):
 		systems = {}
