@@ -99,6 +99,9 @@
                    <pointsize>11</pointsize>
                   </font>
                  </property>
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
+                 </property>
                  <property name="text">
                   <string>Restore Frame</string>
                  </property>
@@ -111,6 +114,9 @@
                    <width>16777215</width>
                    <height>19</height>
                   </size>
+                 </property>
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
                  </property>
                  <property name="text">
                   <string>+</string>
@@ -132,6 +138,9 @@
                    <bold>false</bold>
                   </font>
                  </property>
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
+                 </property>
                  <property name="text">
                   <string>-</string>
                  </property>
@@ -149,6 +158,9 @@
                   <font>
                    <pointsize>11</pointsize>
                   </font>
+                 </property>
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
                  </property>
                  <property name="text">
                   <string>Jump Bridges</string>
@@ -173,6 +185,9 @@
                   <font>
                    <pointsize>11</pointsize>
                   </font>
+                 </property>
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
                  </property>
                  <property name="text">
                   <string>Statistics</string>
@@ -267,6 +282,9 @@
                 <height>15</height>
                </size>
               </property>
+              <property name="focusPolicy">
+               <enum>Qt::NoFocus</enum>
+              </property>
               <property name="text">
                <string>+</string>
               </property>
@@ -279,6 +297,9 @@
                 <width>16777215</width>
                 <height>15</height>
                </size>
+              </property>
+              <property name="focusPolicy">
+               <enum>Qt::NoFocus</enum>
               </property>
               <property name="text">
                <string>-</string>
@@ -324,19 +345,11 @@
     <property name="title">
      <string>Menu</string>
     </property>
-    <widget class="QMenu" name="menuTransparency">
-     <property name="title">
-      <string>Transparency</string>
-     </property>
-    </widget>
-    <addaction name="alwaysOnTopAction"/>
-    <addaction name="menuTransparency"/>
-    <addaction name="framelessWindowAction"/>
     <addaction name="floatingOverviewAction"/>
-    <addaction name="separator"/>
     <addaction name="kosClipboardActiveAction"/>
     <addaction name="separator"/>
     <addaction name="infoAction"/>
+    <addaction name="separator"/>
     <addaction name="quitAction"/>
    </widget>
    <widget class="QMenu" name="menuChat">
@@ -344,7 +357,6 @@
      <string>Chat</string>
     </property>
     <addaction name="showChatAction"/>
-    <addaction name="separator"/>
     <addaction name="chooseChatRoomsAction"/>
     <addaction name="showChatAvatarsAction"/>
    </widget>
@@ -354,6 +366,7 @@
     </property>
     <addaction name="activateSoundAction"/>
     <addaction name="soundSetupAction"/>
+    <addaction name="separator"/>
     <addaction name="useSpokenNotificationsAction"/>
    </widget>
    <widget class="QMenu" name="menuRegion">
@@ -367,9 +380,14 @@
     <property name="title">
      <string>Window</string>
     </property>
-    <addaction name="actionAlway_On_Top"/>
-    <addaction name="actionFrameless"/>
-    <addaction name="actionTransparency"/>
+    <widget class="QMenu" name="menuTransparency">
+     <property name="title">
+      <string>Transparency</string>
+     </property>
+    </widget>
+    <addaction name="alwaysOnTopAction"/>
+    <addaction name="framelessWindowAction"/>
+    <addaction name="menuTransparency"/>
    </widget>
    <addaction name="menu"/>
    <addaction name="menuChat"/>
@@ -390,7 +408,7 @@
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>Always on top</string>
+    <string>Always On Top</string>
    </property>
   </action>
   <action name="opac100">
@@ -523,6 +541,9 @@
     <string>Show Mini Overview...</string>
    </property>
    <property name="visible">
+    <bool>false</bool>
+   </property>
+   <property name="iconVisibleInMenu">
     <bool>false</bool>
    </property>
   </action>
