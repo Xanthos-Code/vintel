@@ -13,16 +13,17 @@ _The current release version of Vintel is **0.62**._
 
 A planned update (version 0.7) is nearing completion and will be released soon; features include:
 - Scan and KOS-check local pilots on clipboard when switching to Vintel now works reliably
-- Intel messages are removed after 20 minutes to conserve memory usage
+- Intel messages are removed after 20 minutes to limit memory usage
 - MapStatisticsThread no longer crashing
 - Threads are shutdown in an orderly manner when exiting Vintel
-- Sound is now played a background thread so the UI is not blocked
-- Minor menu changes
-- More debugging statements and try blocks everywhere to minmize crashes and bad bahavior due to network errors
+- Sound is now played on a background thread so the UI is not blocked
+- More defensive code everywhere to minmize crashes and bad bahavior
 - Notifications can be spoken using text-to-speech on OSX
 - Replaced pygame with pyglet for audio playback as pygame was difficult to install for some users
 - System statistics updating as expected
 - Bug fixes and performance improvements
+- Menu reorganization
+
 
 ## Features
 
@@ -44,7 +45,7 @@ A planned update (version 0.7) is nearing completion and will be released soon; 
 ## Usage
 
  - Manually checking pilot(s) using an EVE client chat channel:
- Type xxx in any chat channel and drag and drop the pilots names after this. (e.g., xxx [Xanthos](http://image.eveonline.com/Character/183452271_256.jpg)). Vintel recognizes this and checks the pilots listed.
+ Type xxx in any chat channel and drag and drop the pilots names after this. (e.g., xxx [Xanthos](http://image.eveonline.com/Character/183452271_256.jpg)). Vintel recognizes this as a request and checks the pilots listed.
  - Checking all pilots in the local system:
 The option must be activated via the Vintel app menu: File > Auto KOS-Check Clipboard.
 To use this feature: click on a pilot in the local pilot list and then type the shortcuts, specific to your computing platform, for select-all and copy-selection. Next switch to the Vintel app and back to Eve. KOS checking of these pilots will continue in the background.
@@ -121,7 +122,7 @@ Vintel looks for a new version at startup and loads dynamic infomation (i.e., ju
 
 **Vintel does not find my chatlogs. What can I do?**
 
-The program looks for your logs on some default pathes. If those pathes not exist, Vintel will fail with an error at startup. You can set this path on your own by giving it to Vintel at startup. For this you have to start it on the command line and call the program with the path to the logs.
+The program looks for your logs on some default pathes. If those paths do not exist, Vintel will fail with an error at startup. You can set this path on your own by giving it to Vintel at startup. For this you have to start it on the command line and call the program with the path to the logs.
 
 Examples:
 
@@ -145,4 +146,4 @@ If you are technically inclined, have a solid grasp of Python, and have either a
 
 **I'm not a coder, how can I help?**
 
-We want your feedback! Use the program for a while, then come back here and create issues. Tell us anything you think about Vintel - bugs, frustrations, and ideas to make Vintel better. You can help fund continued development with motivational contributions of EVE ISK. Send donations in-game, directly to the project maintainer and lead developer [Xanthos](http://image.eveonline.com/Character/183452271_256.jpg).
+We want your feedback! Use the program for a while, then come back here and create issues. Tell us anything you think about Vintel - bugs, frustrations, and ideas to make Vintel better. You can help fund continued development with motivational contributions of EVE ISK. Send donations in-game to the project maintainer [Xanthos](http://image.eveonline.com/Character/183452271_256.jpg).
