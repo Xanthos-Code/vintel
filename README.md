@@ -6,7 +6,7 @@
 
 Visual intel chat analysis, planning and notification application for [EVE Online](http://www.eveonline.com). Gathers status through in-game intelligence channels on all known hostiles and presents all the data on a [dotlan](http://evemaps.dotlan.net/map/Cache#npc24) generated regional map.
 
-Vintel is written with Python 2.7, using PyQt4 for the application presentation layer, BeautifulSoup for html parsing, and Pyglet for audio playback.
+Vintel is written with Python 2.7, using PyQt4 for the application presentation layer, BeautifulSoup4 for html parsing, and Pyglet for audio playback.
 
 ### News
 _The current release version of Vintel is **0.62**._
@@ -142,8 +142,9 @@ Do not use the standalone EXE, install the environment and use the sourcecode di
 
 **I love Vintel - how can I help?**
 
-If you are technically inclined, have a solid grasp of Python, and have either a Windows or Linux box, we need your help.
+If you are technically inclined, have a solid grasp of Python, and have either a Windows or Linux box, we need your help. [Contact the project maintainer via email.](mailto:xanthos.eve@gmail.com)
 
 **I'm not a coder, how can I help?**
 
-We want your feedback! Use the program for a while, then come back here and create issues. Tell us anything you think about Vintel - bugs, frustrations, and ideas to make Vintel better. You can help fund continued development with motivational contributions of EVE ISK. Send donations in-game to the project maintainer [Xanthos](http://image.eveonline.com/Character/183452271_256.jpg).
+Your feedback is needed! Use the program for a while, then come back here and create issues. Record anything you think about Vintel - bugs, frustrations, and ideas to make Vintel better.
+You can help encourage continued development with motivational contributions of EVE ISK. Send donations in-game to the project maintainer [Xanthos](http://image.eveonline.com/Character/183452271_256.jpg).
