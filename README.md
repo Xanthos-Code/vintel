@@ -142,7 +142,7 @@ Do not use the standalone EXE, install the environment and use the sourcecode di
 
 **I love Vintel - how can I help?**
 
-If you are technically inclined and have a solid grasp of Python, we need your help. [Contact the project maintainer via email.](mailto:xanthos.eve@gmail.com)
+If you are technically inclined and have a solid grasp of Python, [contact the project maintainer via email](mailto:xanthos.eve@gmail.com) to see how you can best help out.
 
 **I'm not a coder, how can I help?**
 
