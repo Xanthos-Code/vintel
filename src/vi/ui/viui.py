@@ -711,7 +711,7 @@ class RegionChooser(QtGui.QDialog):
 		if correct:
 			cache = Cache()
 			cache.putIntoCache("region_name", text, 60 * 60 * 24 * 365)
-			QMessageBox.information(self, u"VINTEL needs restart", u"Region was changed, you need to restart VINTEL!")
+			QMessageBox.information(self, u"Vintel needs restart", u"Region was changed, you need to restart Vintel!")
 			self.accept()
 
 
