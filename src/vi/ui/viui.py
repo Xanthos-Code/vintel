@@ -242,7 +242,7 @@ class MainWindow(QtGui.QMainWindow):
 
 
 	def notifyNewerVersion(self, newestVersion):
-		self.trayIcon.showMessage("Newer Version", ("A newer Version of Vintel is available.\nFind the URL in the info!"), 1)
+		self.trayIcon.showMessage("Newer Version", ("An update is available for Vintel.\nhttps://github.com/Xanthos-Eve/vintel"), 1)
 
 
 	def changeFloatingOverview(self, newValue=None):
