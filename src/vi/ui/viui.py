@@ -41,6 +41,7 @@ from vi.ui.threads import MapStatisticsThread
 VERSION = vi.version.VERSION
 DEBUG = False
 MESSAGE_EXPIRY_IN_SECONDS = 20 * 60
+STATISTICS_UPDATE_INTERVAL = 5 * 60
 
 class MainWindow(QtGui.QMainWindow):
 
@@ -52,6 +53,9 @@ class MainWindow(QtGui.QMainWindow):
 		self.taskbarIconQuiescent = QtGui.QIcon(resourcePath("vi/ui/res/logo_small.png"))
 		self.taskbarIconWorking = QtGui.QIcon(resourcePath("vi/ui/res/logo_small_green.png"))
 		self.setWindowIcon(self.taskbarIconQuiescent)
+
+		self.mapTimer = QtCore.QTimer(self)
+		self.connect(self.mapTimer, QtCore.SIGNAL("timeout()"), self.updateMap)
 
 		self.pathToLogs = pathToLogs
 		self.trayIcon = trayIcon
@@ -83,7 +87,7 @@ class MainWindow(QtGui.QMainWindow):
 		self.initMapPosition = None
 		self.oldClipboardContent = ""
 		self.alarmDistance = 0
-		self.lastStatisticsUdpdate = 0
+		self.lastStatisticsUpdate = 0
 		self.alreadyShowedSoundWarning = False
 		self.chatEntries = []
 		self.frameButton.setVisible(False)
@@ -151,16 +155,13 @@ class MainWindow(QtGui.QMainWindow):
 		self.connect(self.filewatcherThread, QtCore.SIGNAL("file_change"), self.logFileChanged)
 		self.filewatcherThread.start()
 
-		self.mapTimer = QtCore.QTimer(self)
-		self.connect(self.mapTimer, QtCore.SIGNAL("timeout()"), self.updateMap)
-		self.mapTimer.start(1000)
-
 		self.versionCheckThread = amazon_s3.NotifyNewVersionThread()
 		self.versionCheckThread.connect(self.versionCheckThread, Qt.SIGNAL("newer_version"), self.notifyNewerVersion)
 		self.versionCheckThread.start()
 
 
 	def setupMap(self):
+		self.mapTimer.stop()
 		regionName = self.cache.getFromCache("region_name")
 		if not regionName:
 			regionName = "Providence"
@@ -184,6 +185,12 @@ class MainWindow(QtGui.QMainWindow):
 			print str(e)
 			QtGui.QMessageBox.warning(None, "Using map from my cache", diagText, "OK")
 
+		# Load the jumpbridges
+		self.setJumpbridges(self.cache.getFromCache("jumpbridge_url"))
+		self.initMapPosition = None  # We read this after first rendering
+		self.systems = self.dotlan.systems
+		self.chatparser = chatparser.ChatParser(self.pathToLogs, self.roomnames, self.systems)
+
 		# Add a contextual menu to the map
 		self.map.contextmenu = TrayContextMenu(self.trayIcon)
 		self.setMapContent(self.dotlan.svg)
@@ -194,22 +201,19 @@ class MainWindow(QtGui.QMainWindow):
 		self.map.contextMenuEvent = mapContextMenuEvent
 		self.map.connect(self.map, Qt.SIGNAL("linkClicked(const QUrl&)"), self.mapLinkClicked)
 
-		# Load the jumpbridges
-		self.setJumpbridges(self.cache.getFromCache("jumpbridge_url"))
-		self.initMapPosition = None  # We read this after first rendering
-		self.systems = self.dotlan.systems
-		self.chatparser = chatparser.ChatParser(self.pathToLogs, self.roomnames, self.systems)
+		self.updateMap(force=True)
+		self.mapTimer.start(STATISTICS_UPDATE_INTERVAL)
 
 
 	def closeEvent(self, event):
-		""" writing the cache before closing the window
+		""" Persisting things to the cache before closing the window
 		"""
-		# known playernames
+		# Known playernames
 		if self.knownPlayerNames:
 			value = ",".join(self.knownPlayerNames)
 			self.cache.putIntoCache("known_player_names", value, 60 * 60 * 24 * 365)
 
-		# program state to cache (to read it on next startup)
+		# Program state to cache (to read it on next startup)
 		settings = ((None, "restoreGeometry", str(self.saveGeometry())),
 					(None, "restoreState", str(self.saveState())),
 					("splitter", "restoreGeometry", str(self.splitter.saveGeometry())),
@@ -465,6 +469,7 @@ class MainWindow(QtGui.QMainWindow):
 
 	def showRegionChooser(self):
 		chooser = RegionChooser(self)
+		self.connect(chooser, Qt.SIGNAL("new_region_chosen"), self.setupMap)
 		chooser.show()
 
 
@@ -499,7 +504,6 @@ class MainWindow(QtGui.QMainWindow):
 
 					for widgetInMessage in message.widgets:
 						widgetInMessage.removeItemWidget(chatListWidgetItem)
-
 				else:
 					break
 		except Exception as e:
@@ -575,7 +579,7 @@ class MainWindow(QtGui.QMainWindow):
 			self.emit(Qt.SIGNAL("avatar_loaded"), chatEntry.message.user, avatarData)
 
 
-	def updateMap(self):
+	def updateMap(self, force=False):
 		def updateStatisticsOnMap(data):
 			if data["result"] == "ok":
 				self.dotlan.addSystemStatistics(data["statistics"])
@@ -583,8 +587,8 @@ class MainWindow(QtGui.QMainWindow):
 				text = data["text"]
 				self.trayIcon.showMessage("Loading statstics failed", text, 3)
 
-		if self.lastStatisticsUdpdate < time.time() - (5 * 60):
-			self.lastStatisticsUdpdate = time.time()
+		if force or self.lastStatisticsUpdate < time.time() - STATISTICS_UPDATE_INTERVAL:
+			self.lastStatisticsUpdate = time.time()
 			statisticsThread = MapStatisticsThread()
 			self.connect(statisticsThread, Qt.SIGNAL("statistic_data_update"), updateStatisticsOnMap)
 			statisticsThread.start()
@@ -711,8 +715,7 @@ class RegionChooser(QtGui.QDialog):
 		if correct:
 			cache = Cache()
 			cache.putIntoCache("region_name", text, 60 * 60 * 24 * 365)
-			#QMessageBox.information(self, u"Vintel needs restart", u"Region was changed, you need to restart Vintel!")
-			self.emit(Qt.SIGNAL("region_changed"))
+			self.emit(Qt.SIGNAL("new_region_chosen"))
 			self.accept()
 
 
