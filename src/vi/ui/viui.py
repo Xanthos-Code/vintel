@@ -54,9 +54,6 @@ class MainWindow(QtGui.QMainWindow):
 		self.taskbarIconWorking = QtGui.QIcon(resourcePath("vi/ui/res/logo_small_green.png"))
 		self.setWindowIcon(self.taskbarIconQuiescent)
 
-		self.mapTimer = QtCore.QTimer(self)
-		self.connect(self.mapTimer, QtCore.SIGNAL("timeout()"), self.updateMap)
-
 		self.pathToLogs = pathToLogs
 		self.trayIcon = trayIcon
 		self.cache = Cache()
@@ -132,7 +129,9 @@ class MainWindow(QtGui.QMainWindow):
 		self.connect(self.trayIcon, Qt.SIGNAL("quit"), self.close)
 		self.connect(self.jumpbridgeDataAction, Qt.SIGNAL("triggered()"), self.showJumbridgeChooser)
 
-		# Load up the map, either from cache or dotlan
+		# Create a timer to refresh the map, then load up the map, either from cache or dotlan
+		self.mapTimer = QtCore.QTimer(self)
+		self.connect(self.mapTimer, QtCore.SIGNAL("timeout()"), self.updateMap)
 		self.setupMap()
 
 		# Recall cached user settings
@@ -203,6 +202,9 @@ class MainWindow(QtGui.QMainWindow):
 
 		self.updateMap(force=True)
 		self.mapTimer.start(STATISTICS_UPDATE_INTERVAL)
+
+		self.jumpbridgesButton.setChecked(False)
+		self.statisticsButton.setChecked(False)
 
 
 	def closeEvent(self, event):
