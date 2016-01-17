@@ -41,97 +41,69 @@ from vi.ui.threads import MapStatisticsThread
 VERSION = vi.version.VERSION
 DEBUG = False
 MESSAGE_EXPIRY_IN_SECONDS = 20 * 60
+STATISTICS_UPDATE_INTERVAL = 5 * 60
 
 class MainWindow(QtGui.QMainWindow):
+
 	def __init__(self, pathToLogs, trayIcon):
-		""" systems = list of system-objects created by dotlan.py
-		"""
+
 		QtGui.QMainWindow.__init__(self)
 		uic.loadUi(resourcePath('vi/ui/MainWindow.ui'), self)
 		self.setWindowTitle("Vintel " + VERSION)
 		self.taskbarIconQuiescent = QtGui.QIcon(resourcePath("vi/ui/res/logo_small.png"))
 		self.taskbarIconWorking = QtGui.QIcon(resourcePath("vi/ui/res/logo_small_green.png"))
 		self.setWindowIcon(self.taskbarIconQuiescent)
+
 		self.pathToLogs = pathToLogs
 		self.trayIcon = trayIcon
-		self.trayIcon.activated.connect(self.systemTrayActivated)
 		self.cache = Cache()
 
-
-		# Set up cached items
-		#
-		# Maps
-		regionName = self.cache.getFromCache("region_name")
-		svg = None
-
-		if not regionName:
-			regionName = "Providence"
-		try:
-			with open(resourcePath("vi/ui/res/mapdata/{0}.svg".format(regionName))) as svgFile:
-				svg = svgFile.read()
-		except Exception as e:
-			pass
-
-		try:
-			self.dotlan = dotlan.Map(regionName, svg)
-		except dotlan.DotlanException as e:
-			QtGui.QMessageBox.critical(None, "Error getting map", unicode(e), "Quit")
-			sys.exit(1)
-
-		if self.dotlan.outdatedCacheError:
-			e = self.dotlan.outdatedCacheError
-			diagText = "Something went wrong getting map data. To proceed I use the data I " \
-					   "have in my cache. This could be outdated.\nIf this problem " \
-					   "is permanent, there might be a change in the dotlan data " \
-					   "and Vintel must be modified. Check for a newer version " \
-					   "and inform the maintainer.\n\nWhat went wrong: {0} {1}".format(type(e), unicode(e))
-			print str(e)
-			QtGui.QMessageBox.warning(None, "Using map from my cache", diagText, "OK")
-
-		# Add a contextual menu to the map
-		self.map.contextmenu = TrayContextMenu(self.trayIcon)
-
-		def mapContextMenuEvent(event):
-			self.map.contextmenu.exec_(self.mapToGlobal(QPoint(event.x(), event.y())))
-
-		self.map.contextMenuEvent = mapContextMenuEvent
-		self.map.connect(self.map, Qt.SIGNAL("linkClicked(const QUrl&)"), self.mapLinkClicked)
-
-		# Load the jumpbridges
-		jumpbridgeUrl = self.cache.getFromCache("jumpbridge_url")
-		self.setJumpbridges(jumpbridgeUrl)
-
-		# Load my toon names and intel rooms
+		# Load my toon names
 		self.knownPlayerNames = self.cache.getFromCache("known_player_names")
 		if self.knownPlayerNames:
 			self.knownPlayerNames = set(self.knownPlayerNames.split(","))
 		else:
 			self.knownPlayerNames = set()
+
+		# Set up my intel rooms
 		roomnames = self.cache.getFromCache("room_names")
 		if roomnames:
 			roomnames = roomnames.split(",")
 		else:
 			roomnames = (u"TheCitadel", u"North Provi Intel", u"North Catch Intel")
 			self.cache.putIntoCache("room_names", u",".join(roomnames), 60 * 60 * 24 * 365 * 5)
+		self.roomnames = roomnames
 
-		# Wire up state and UI connections
+		# Disable the sound UI if sound is not available
+		if not Sound().soundAvailable:
+			self.changeSound(disable=True)
+		else:
+			self.changeSound()
+
+		# Initialize state
+		self.initMapPosition = None
 		self.oldClipboardContent = ""
 		self.alarmDistance = 0
-		self.lastStatisticsUdpdate = 0
-		self.initMapPosition = None  # we read this after first rendering
-		self.systems = self.dotlan.systems
-		self.chatEntries = []
+		self.lastStatisticsUpdate = 0
 		self.alreadyShowedSoundWarning = False
-
-		self.setMapContent(self.dotlan.svg)
-		self.avatarFindThread = AvatarFindThread()
-		self.connect(self.avatarFindThread, QtCore.SIGNAL("avatar_update"), self.updateAvatarOnChatEntry)
-		self.avatarFindThread.start()
+		self.chatEntries = []
+		self.frameButton.setVisible(False)
+		self.trayIcon.activated.connect(self.systemTrayActivated)
 		self.clipboard = QtGui.QApplication.clipboard()
 		self.clipboard.clear(mode=self.clipboard.Clipboard)
-		self.frameButton.setVisible(False)
-		self.opacityGroup = QtGui.QActionGroup(self.menu)
 
+		# Fill in opacity values and connections
+		self.opacityGroup = QtGui.QActionGroup(self.menu)
+		for i in (100, 80, 60, 40, 20):
+			action = QtGui.QAction("Opacity {0}%".format(i), None, checkable=True)
+			if i == 100:
+				action.setChecked(True)
+			action.opacity = i / 100.0
+			self.connect(action, QtCore.SIGNAL("triggered()"), self.changeOpacity)
+			self.opacityGroup.addAction(action)
+			self.menuTransparency.addAction(action)
+
+		# Wire up UI connections
 		self.connect(self.clipboard, Qt.SIGNAL("changed(QClipboard::Mode)"), self.clipboardChanged)
 		self.connect(self.zoomInButton, Qt.SIGNAL("clicked()"), self.zoomMapIn)
 		self.connect(self.zoomOutButton, Qt.SIGNAL("clicked()"), self.zoomMapOut)
@@ -157,15 +129,10 @@ class MainWindow(QtGui.QMainWindow):
 		self.connect(self.trayIcon, Qt.SIGNAL("quit"), self.close)
 		self.connect(self.jumpbridgeDataAction, Qt.SIGNAL("triggered()"), self.showJumbridgeChooser)
 
-		# Fill in opacity values and connections
-		for i in (100, 80, 60, 40, 20):
-			action = QtGui.QAction("Opacity {0}%".format(i), None, checkable=True)
-			if i == 100:
-				action.setChecked(True)
-			action.opacity = i / 100.0
-			self.connect(action, QtCore.SIGNAL("triggered()"), self.changeOpacity)
-			self.opacityGroup.addAction(action)
-			self.menuTransparency.addAction(action)
+		# Create a timer to refresh the map, then load up the map, either from cache or dotlan
+		self.mapTimer = QtCore.QTimer(self)
+		self.connect(self.mapTimer, QtCore.SIGNAL("timeout()"), self.updateMap)
+		self.setupMap()
 
 		# Recall cached user settings
 		try:
@@ -174,13 +141,11 @@ class MainWindow(QtGui.QMainWindow):
 			print str(e)
 			self.trayIcon.showMessage("Settings error", "Something went wrong loading saved state:\n {0}".format(str(e)), 1)
 
-		# Disable the sound UI if sound is not available
-		if not Sound().soundAvailable:
-			self.changeSound(disable=True)
-		else:
-			self.changeSound()
-
 		# Set up threads and their connections
+		self.avatarFindThread = AvatarFindThread()
+		self.connect(self.avatarFindThread, QtCore.SIGNAL("avatar_update"), self.updateAvatarOnChatEntry)
+		self.avatarFindThread.start()
+
 		self.kosRequestThread = KOSCheckerThread()
 		self.connect(self.kosRequestThread, Qt.SIGNAL("kos_result"), self.showKosResult)
 		self.kosRequestThread.start()
@@ -189,26 +154,68 @@ class MainWindow(QtGui.QMainWindow):
 		self.connect(self.filewatcherThread, QtCore.SIGNAL("file_change"), self.logFileChanged)
 		self.filewatcherThread.start()
 
-		self.mapTimer = QtCore.QTimer(self)
-		self.connect(self.mapTimer, QtCore.SIGNAL("timeout()"), self.updateMap)
-		self.mapTimer.start(1000)
-
-		self.chatparser = chatparser.ChatParser(self.pathToLogs, roomnames, self.systems)
-
 		self.versionCheckThread = amazon_s3.NotifyNewVersionThread()
 		self.versionCheckThread.connect(self.versionCheckThread, Qt.SIGNAL("newer_version"), self.notifyNewerVersion)
-		self.versionCheckThread.run()
+		self.versionCheckThread.start()
+
+
+	def setupMap(self):
+		self.mapTimer.stop()
+		regionName = self.cache.getFromCache("region_name")
+		if not regionName:
+			regionName = "Providence"
+		svg = None
+		try:
+			with open(resourcePath("vi/ui/res/mapdata/{0}.svg".format(regionName))) as svgFile:
+				svg = svgFile.read()
+		except Exception as e:
+			pass
+
+		try:
+			self.dotlan = dotlan.Map(regionName, svg)
+		except dotlan.DotlanException as e:
+			QtGui.QMessageBox.critical(None, "Error getting map", unicode(e), "Quit")
+			sys.exit(1)
+
+		if self.dotlan.outdatedCacheError:
+			e = self.dotlan.outdatedCacheError
+			diagText = "Something went wrong getting map data. Proceeding with older cached data. " \
+					   "Check for a newer version and inform the maintainer.\n\nError: {0} {1}".format(type(e), unicode(e))
+			print str(e)
+			QtGui.QMessageBox.warning(None, "Using map from my cache", diagText, "OK")
+
+		# Load the jumpbridges
+		self.setJumpbridges(self.cache.getFromCache("jumpbridge_url"))
+		self.initMapPosition = None  # We read this after first rendering
+		self.systems = self.dotlan.systems
+		self.chatparser = chatparser.ChatParser(self.pathToLogs, self.roomnames, self.systems)
+
+		# Add a contextual menu to the map
+		self.map.contextmenu = TrayContextMenu(self.trayIcon)
+		self.setMapContent(self.dotlan.svg)
+
+		def mapContextMenuEvent(event):
+			self.map.contextmenu.exec_(self.mapToGlobal(QPoint(event.x(), event.y())))
+
+		self.map.contextMenuEvent = mapContextMenuEvent
+		self.map.connect(self.map, Qt.SIGNAL("linkClicked(const QUrl&)"), self.mapLinkClicked)
+
+		self.updateMap(force=True)
+		self.mapTimer.start(STATISTICS_UPDATE_INTERVAL)
+
+		self.jumpbridgesButton.setChecked(False)
+		self.statisticsButton.setChecked(False)
 
 
 	def closeEvent(self, event):
-		""" writing the cache before closing the window
+		""" Persisting things to the cache before closing the window
 		"""
-		# known playernames
+		# Known playernames
 		if self.knownPlayerNames:
 			value = ",".join(self.knownPlayerNames)
 			self.cache.putIntoCache("known_player_names", value, 60 * 60 * 24 * 365)
 
-		# program state to cache (to read it on next startup)
+		# Program state to cache (to read it on next startup)
 		settings = ((None, "restoreGeometry", str(self.saveGeometry())),
 					(None, "restoreState", str(self.saveState())),
 					("splitter", "restoreGeometry", str(self.splitter.saveGeometry())),
@@ -241,7 +248,7 @@ class MainWindow(QtGui.QMainWindow):
 
 
 	def notifyNewerVersion(self, newestVersion):
-		self.trayIcon.showMessage("Newer Version", ("A newer Version of Vintel is available.\nFind the URL in the info!"), 1)
+		self.trayIcon.showMessage("Newer Version", ("An update is available for Vintel.\nhttps://github.com/Xanthos-Eve/vintel"), 1)
 
 
 	def changeFloatingOverview(self, newValue=None):
@@ -314,18 +321,17 @@ class MainWindow(QtGui.QMainWindow):
 
 
 	def changeFrameless(self, newValue=None):
-		self.hide()
 		if newValue is None:
-			newValue = self.framelessWindowAction.isChecked()
-
+			newValue = not self.frameButton.isVisible()
+		self.hide()
 		if newValue:
 			self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
 			self.changeAlwaysOnTop(True)
-			self.alwaysOnTopAction.isChecked(True)
 		else:
 			self.setWindowFlags(self.windowFlags() & (~QtCore.Qt.FramelessWindowHint))
 		self.menubar.setVisible(not newValue)
 		self.frameButton.setVisible(newValue)
+		self.framelessWindowAction.setChecked(newValue)
 
 		for cm in TrayContextMenu.instances:
 			cm.framelessCheck.setChecked(newValue)
@@ -465,6 +471,7 @@ class MainWindow(QtGui.QMainWindow):
 
 	def showRegionChooser(self):
 		chooser = RegionChooser(self)
+		self.connect(chooser, Qt.SIGNAL("new_region_chosen"), self.setupMap)
 		chooser.show()
 
 
@@ -499,7 +506,6 @@ class MainWindow(QtGui.QMainWindow):
 
 					for widgetInMessage in message.widgets:
 						widgetInMessage.removeItemWidget(chatListWidgetItem)
-
 				else:
 					break
 		except Exception as e:
@@ -575,7 +581,7 @@ class MainWindow(QtGui.QMainWindow):
 			self.emit(Qt.SIGNAL("avatar_loaded"), chatEntry.message.user, avatarData)
 
 
-	def updateMap(self):
+	def updateMap(self, force=False):
 		def updateStatisticsOnMap(data):
 			if data["result"] == "ok":
 				self.dotlan.addSystemStatistics(data["statistics"])
@@ -583,8 +589,8 @@ class MainWindow(QtGui.QMainWindow):
 				text = data["text"]
 				self.trayIcon.showMessage("Loading statstics failed", text, 3)
 
-		if self.lastStatisticsUdpdate < time.time() - (5 * 60):
-			self.lastStatisticsUdpdate = time.time()
+		if force or self.lastStatisticsUpdate < time.time() - STATISTICS_UPDATE_INTERVAL:
+			self.lastStatisticsUpdate = time.time()
 			statisticsThread = MapStatisticsThread()
 			self.connect(statisticsThread, Qt.SIGNAL("statistic_data_update"), updateStatisticsOnMap)
 			statisticsThread.start()
@@ -711,7 +717,7 @@ class RegionChooser(QtGui.QDialog):
 		if correct:
 			cache = Cache()
 			cache.putIntoCache("region_name", text, 60 * 60 * 24 * 365)
-			QMessageBox.information(self, u"Vintel needs restart", u"Region was changed, you need to restart Vintel!")
+			self.emit(Qt.SIGNAL("new_region_chosen"))
 			self.accept()
 
 
