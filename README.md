@@ -142,9 +142,9 @@ Do not use the standalone EXE, install the environment and use the sourcecode di
 
 **I love Vintel - how can I help?**
 
-If you are technically inclined, have a solid grasp of Python, and have either a Windows or Linux box, we need your help. [Contact the project maintainer via email.](mailto:xanthos.eve@gmail.com)
+If you are technically inclined and have a solid grasp of Python, [contact the project maintainer via email](mailto:xanthos.eve@gmail.com) to see how you can best help out.
 
 **I'm not a coder, how can I help?**
 
 Your feedback is needed! Use the program for a while, then come back [here and create issues](https://github.com/Xanthos-Eve/vintel/issues). Record anything you think about Vintel - bugs, frustrations, and ideas to make Vintel better.
-You can help encourage continued development with motivational contributions of EVE ISK. Send donations in-game to the project maintainer [Xanthos](http://image.eveonline.com/Character/183452271_256.jpg).
+Encourage continued development with motivational contributions of EVE ISK. Send donations in-game to the project maintainer [Xanthos](http://image.eveonline.com/Character/183452271_256.jpg).
