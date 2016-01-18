@@ -379,19 +379,20 @@ class MainWindow(QtGui.QMainWindow):
 		self.statisticsButton.setChecked(newValue)
 
 	def clipboardChanged(self, mode):
-		if mode == 0 and self.kosClipboardActiveAction.isChecked() and self.clipboard.mimeData().hasText():
-			content = unicode(self.clipboard.text())
-			contentTuple = tuple(content)
-			# Limit redundant kos checks
-			if contentTuple != self.oldClipboardContent:
-				parts = tuple(content.split("\n"))
-				for part in parts:
-					# Make sure user is in the content (this is a check of the local system in Eve)
-					if part in self.knownPlayerNames:
-						self.trayIcon.setIcon(self.taskbarIconWorking)
-						self.kosRequestThread.addRequest(parts, "clipboard", True)
-						break
-				self.oldClipboardContent = contentTuple
+		if not (mode == 0 and self.kosClipboardActiveAction.isChecked() and self.clipboard.mimeData().hasText()):
+			return
+		content = unicode(self.clipboard.text())
+		contentTuple = tuple(content)
+		# Limit redundant kos checks
+		if contentTuple != self.oldClipboardContent:
+			parts = tuple(content.split("\n"))
+			for part in parts:
+				# Make sure user is in the content (this is a check of the local system in Eve)
+				if part in self.knownPlayerNames:
+					self.trayIcon.setIcon(self.taskbarIconWorking)
+					self.kosRequestThread.addRequest(parts, "clipboard", True)
+					break
+			self.oldClipboardContent = contentTuple
 
 
 	def mapLinkClicked(self, url):
@@ -627,16 +628,16 @@ class MainWindow(QtGui.QMainWindow):
 			elif (message.user not in ("EVE-System", "EVE System") and message.status != states.IGNORE):
 				self.addMessageToIntelChat(message)
 				# For each system that was mentioned in the message, check for alarm distance to the current system
-				# and alarm if within alram distance.
+				# and alarm if within alarm distance.
 				if message.systems:
 					for system in message.systems:
 						systemname = system.name
 						self.dotlan.systems[systemname].setStatus(message.status)
 						if message.status in (states.REQUEST, states.ALARM) and message.user not in self.knownPlayerNames:
 							alarmDistance = self.alarmDistance if message.status == states.ALARM else 0
-							for nsystem, data in system.getNeighbours(alarmDistance).items():
+							for nSystem, data in system.getNeighbours(alarmDistance).items():
 								distance = data["distance"]
-								chars = nsystem.getLocatedCharacters()
+								chars = nSystem.getLocatedCharacters()
 								if len(chars) > 0 and message.user not in chars:
 									self.trayIcon.showNotification(message, system.name, ", ".join(chars), distance)
 				self.setMapContent(self.dotlan.svg)
@@ -658,15 +659,15 @@ class ChatroomsChooser(QtGui.QDialog):
 		cache = Cache()
 		roomnames = cache.getFromCache("room_names")
 		if not roomnames:
-			roomnames = u"TheCitadel, North Provi Intel, North Catch Intel"
+			roomnames = u"TheCitadel,North Provi Intel,North Catch Intel"
 		self.roomnamesField.setPlainText(roomnames)
 
 
 	def saveClicked(self):
 		text = unicode(self.roomnamesField.toPlainText())
 		rooms = [unicode(name.strip()) for name in text.split(",")]
-		self.emit(Qt.SIGNAL("rooms_changed"), rooms)
 		self.accept()
+		self.emit(Qt.SIGNAL("rooms_changed"), rooms)
 
 
 	def setDefaults(self):
@@ -714,10 +715,9 @@ class RegionChooser(QtGui.QDialog):
 			print str(e)
 			correct = False
 		if correct:
-			cache = Cache()
-			cache.putIntoCache("region_name", text, 60 * 60 * 24 * 365)
-			self.emit(Qt.SIGNAL("new_region_chosen"))
+			Cache().putIntoCache("region_name", text, 60 * 60 * 24 * 365)
 			self.accept()
+			self.emit(Qt.SIGNAL("new_region_chosen"))
 
 
 	def setDefaults(self):
