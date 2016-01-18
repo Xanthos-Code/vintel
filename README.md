@@ -15,6 +15,7 @@ A planned update (version 0.7) is nearing completion and will be released soon; 
 - Scan and KOS-check local pilots on clipboard when switching to Vintel now works reliably
 - Intel messages are removed after 20 minutes to limit memory usage
 - MapStatisticsThread no longer crashing
+- Region and Map can be changed without restarting the app
 - Threads are shutdown in an orderly manner when exiting Vintel
 - Sound is now played on a background thread so the UI is not blocked
 - More defensive code everywhere to minmize crashes and bad bahavior
