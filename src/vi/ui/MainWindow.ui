@@ -203,7 +203,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QWebView" name="map">
+           <widget class="QWebView" name="mapView">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
               <horstretch>0</horstretch>

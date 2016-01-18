@@ -190,20 +190,18 @@ class MainWindow(QtGui.QMainWindow):
 		self.systems = self.dotlan.systems
 		self.chatparser = chatparser.ChatParser(self.pathToLogs, self.roomnames, self.systems)
 
-		# Add a contextual menu to the map
+		# Add a contextual menu to the map (a QWebView) only once
 		if initialize:
-			self.map.contextmenu = TrayContextMenu(self.trayIcon)
-			self.setMapContent(self.dotlan.svg)
-
 			def mapContextMenuEvent(event):
-				self.map.contextmenu.exec_(self.mapToGlobal(QPoint(event.x(), event.y())))
+				self.mapView.contextMenu.exec_(self.mapToGlobal(QPoint(event.x(), event.y())))
 
-			self.map.contextMenuEvent = mapContextMenuEvent
-			self.map.connect(self.map, Qt.SIGNAL("linkClicked(const QUrl&)"), self.mapLinkClicked)
+			self.setMapContent(self.dotlan.svg)
+			self.mapView.contextMenu = TrayContextMenu(self.trayIcon)
+			self.mapView.contextMenuEvent = mapContextMenuEvent
+			self.mapView.connect(self.mapView, Qt.SIGNAL("linkClicked(const QUrl&)"), self.mapLinkClicked)
 
 		self.updateMap(force=True)
 		self.mapTimer.start(STATISTICS_UPDATE_INTERVAL)
-
 		self.jumpbridgesButton.setChecked(False)
 		self.statisticsButton.setChecked(False)
 
@@ -221,14 +219,14 @@ class MainWindow(QtGui.QMainWindow):
 					(None, "restoreState", str(self.saveState())),
 					("splitter", "restoreGeometry", str(self.splitter.saveGeometry())),
 					("splitter", "restoreState", str(self.splitter.saveState())),
-					("map", "setZoomFactor", self.map.zoomFactor()),
+					("mapView", "setZoomFactor", self.mapView.zoomFactor()),
 					(None, "changeOpacity", self.opacityGroup.checkedAction().opacity),
 					(None, "changeAlwaysOnTop", self.alwaysOnTopAction.isChecked()),
 					(None, "changeShowAvatars", self.showChatAvatarsAction.isChecked()),
 					(None, "changeAlarmDistance", self.alarmDistance),
 					(None, "changeSound", self.activateSoundAction.isChecked()),
 					(None, "changeChatVisibility", self.showChatAction.isChecked()),
-					(None, "setInitMapPosition", (self.map.page().mainFrame().scrollPosition().x(), self.map.page().mainFrame().scrollPosition().y())),
+					(None, "setInitMapPosition", (self.mapView.page().mainFrame().scrollPosition().x(), self.mapView.page().mainFrame().scrollPosition().y())),
 					(None, "setSoundVolume", Sound().soundVolume),
 					(None, "changeFrameless", self.framelessWindowAction.isChecked()),
 					(None, "changeUseSpokenNotifications", self.useSpokenNotificationsAction.isChecked()),
@@ -421,13 +419,13 @@ class MainWindow(QtGui.QMainWindow):
 
 	def setMapContent(self, content):
 		if self.initMapPosition is None:
-			scrollposition = self.map.page().mainFrame().scrollPosition()
+			scrollposition = self.mapView.page().mainFrame().scrollPosition()
 		else:
 			scrollposition = self.initMapPosition
 			self.initMapPosition = None
-		self.map.setContent(content)
-		self.map.page().mainFrame().setScrollPosition(scrollposition)
-		self.map.page().setLinkDelegationPolicy(QWebPage.DelegateAllLinks)
+		self.mapView.setContent(content)
+		self.mapView.page().mainFrame().setScrollPosition(scrollposition)
+		self.mapView.page().setLinkDelegationPolicy(QWebPage.DelegateAllLinks)
 
 
 	def setInitMapPosition(self, xy):
@@ -599,11 +597,11 @@ class MainWindow(QtGui.QMainWindow):
 
 
 	def zoomMapIn(self):
-		self.map.setZoomFactor(self.map.zoomFactor() + 0.1)
+		self.mapView.setZoomFactor(self.mapView.zoomFactor() + 0.1)
 
 
 	def zoomMapOut(self):
-		self.map.setZoomFactor(self.map.zoomFactor() - 0.1)
+		self.mapView.setZoomFactor(self.mapView.zoomFactor() - 0.1)
 
 
 	def logFileChanged(self, path):
