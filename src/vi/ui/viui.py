@@ -132,7 +132,10 @@ class MainWindow(QtGui.QMainWindow):
 		# Create a timer to refresh the map, then load up the map, either from cache or dotlan
 		self.mapTimer = QtCore.QTimer(self)
 		self.connect(self.mapTimer, QtCore.SIGNAL("timeout()"), self.updateMap)
-		self.setupMap()
+
+
+		self.setupMap(True)
+
 
 		# Recall cached user settings
 		try:
@@ -159,7 +162,7 @@ class MainWindow(QtGui.QMainWindow):
 		self.versionCheckThread.start()
 
 
-	def setupMap(self):
+	def setupMap(self, initialize=False):
 		self.mapTimer.stop()
 		regionName = self.cache.getFromCache("region_name")
 		if not regionName:
@@ -182,7 +185,7 @@ class MainWindow(QtGui.QMainWindow):
 			diagText = "Something went wrong getting map data. Proceeding with older cached data. " \
 					   "Check for a newer version and inform the maintainer.\n\nError: {0} {1}".format(type(e), unicode(e))
 			print str(e)
-			QtGui.QMessageBox.warning(None, "Using map from my cache", diagText, "OK")
+			QtGui.QMessageBox.warning(None, "Using map from cache", diagText, "Ok")
 
 		# Load the jumpbridges
 		self.setJumpbridges(self.cache.getFromCache("jumpbridge_url"))
@@ -191,14 +194,15 @@ class MainWindow(QtGui.QMainWindow):
 		self.chatparser = chatparser.ChatParser(self.pathToLogs, self.roomnames, self.systems)
 
 		# Add a contextual menu to the map
-		self.map.contextmenu = TrayContextMenu(self.trayIcon)
-		self.setMapContent(self.dotlan.svg)
+		if initialize:
+			self.map.contextmenu = TrayContextMenu(self.trayIcon)
+			self.setMapContent(self.dotlan.svg)
 
-		def mapContextMenuEvent(event):
-			self.map.contextmenu.exec_(self.mapToGlobal(QPoint(event.x(), event.y())))
+			def mapContextMenuEvent(event):
+				self.map.contextmenu.exec_(self.mapToGlobal(QPoint(event.x(), event.y())))
 
-		self.map.contextMenuEvent = mapContextMenuEvent
-		self.map.connect(self.map, Qt.SIGNAL("linkClicked(const QUrl&)"), self.mapLinkClicked)
+			self.map.contextMenuEvent = mapContextMenuEvent
+			self.map.connect(self.map, Qt.SIGNAL("linkClicked(const QUrl&)"), self.mapLinkClicked)
 
 		self.updateMap(force=True)
 		self.mapTimer.start(STATISTICS_UPDATE_INTERVAL)
