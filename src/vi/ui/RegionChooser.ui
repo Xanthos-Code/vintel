@@ -35,13 +35,6 @@
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_2">
        <item>
-        <widget class="QPushButton" name="defaultButton">
-         <property name="text">
-          <string>Restore Default</string>
-         </property>
-        </widget>
-       </item>
-       <item>
         <widget class="QPushButton" name="cancelButton">
          <property name="text">
           <string>Cancel</string>

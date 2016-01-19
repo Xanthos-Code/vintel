@@ -84,7 +84,7 @@ class Map(object):
 						"temporary problem (like dotlan is not reachable), or "\
 						"everythig went to hell. Sorry. This makes no sense "\
 						"without the map.\n\nRemember the site for possible "\
-						"updates: https://github.com/XanthosX/vintel"\
+						"updates: https://github.com/Xanthos-Eve/vintel"\
 						.format(type(e), unicode(e))
 					raise DotlanException(t)
 		# and now creating soup from the svg
@@ -93,27 +93,12 @@ class Map(object):
 		self.systemsById = {}
 		for system in self.systems.values():
 			self.systemsById[system.systemId] = system
-		self._preparingSvg(self.soup, self.systems)
+		self._prepareSvg(self.soup, self.systems)
 		self._connectNeighbours()
 		self._jumpMapsVisible = False
 		self._statisticsVisible = False
 		self.marker = self.soup.select("#select_marker")[0]
 
-	def changeJumpbridgesVisibility(self):
-		newStatus = False if self._jumpMapsVisible else True
-		value = "visible" if newStatus else "hidden"
-		for line in self.soup.select(".jumpbridge"):
-			line["visibility"] = value
-		self._jumpMapsVisible = newStatus
-		return newStatus
-
-	def changeStatisticsVisibility(self):
-		newStatus = False if self._statisticsVisible else True
-		value = "visible" if newStatus else "hidden"
-		for line in self.soup.select(".statistics"):
-			line["visibility"] = value
-		self._statisticsVisible = newStatus
-		return newStatus
 
 	def _extractSystemsFromSoup(self, soup):
 		systems = {}
@@ -125,7 +110,6 @@ class Map(object):
 		for symbol in symbols:
 			symbolId = symbol["id"]
 			systemId = symbolId[3:]
-			# workaround for sov changes 7/2015
 			try:
 				systemId = int(systemId)
 			except ValueError as e:
@@ -141,67 +125,7 @@ class Map(object):
 		return systems
 
 
-	def _connectNeighbours(self):
-		""" This will find all neigbours of the systems and connect them.
-			It takes a look to all the jumps on the map and get the system under
-			which the line ends
-		"""
-		for jump in self.soup.select("#jumps")[0].select(".j"):
-			if "jumpbridge" in jump["class"]: continue
-			parts = jump["id"].split("-")
-			if parts[0] == "j":
-				startSystem = self.systemsById[int(parts[1])]
-				stopSystem = self.systemsById[int(parts[2])]
-				startSystem.addNeighbour(stopSystem)
-
-	def _getSvgFromDotlan(self, region):
-		url = self.DOTLAN_BASIC_URL.format(region)
-		request = urllib2.Request(url)
-		content = urllib2.urlopen(request).read()
-		return content
-
-	def addSystemStatistics(self, statistics):
-		if statistics is not None:
-			for systemId, system in self.systemsById.items():
-				if systemId in statistics:
-					system.setStatistics(statistics[systemId])
-		else:
-			for system in self.self.systemsById.values():
-				system.setStatistics(None)
-
-	def setJumpbridges(self, jumpbridgeData):
-		""" adding the jumpbridges to the map
-			format of data: tuples with 3 values (sys1, connection, sys2)
-		"""
-		soup = self.soup
-		for bridge in soup.select(".jumpbridge"):
-			bridge.decompose()
-		jumps = soup.select("#jumps")[0]
-		colorCount = 0
-		for bridge in jumpbridgeData:
-			if colorCount > len(JB_COLORS) - 1:
-				colorCount = 0
-			jbColor = JB_COLORS[colorCount]
-			start = bridge[0]
-			linetype = bridge[1]
-			stop = bridge[2]
-			if not (start in self.systems and stop in self.systems):
-				continue
-			self.systems[start].setJumpbridgeColor(jbColor)
-			self.systems[stop].setJumpbridgeColor(jbColor)
-			aCoords = self.systems[start].mapCoordinates
-			bCoords = self.systems[stop].mapCoordinates
-			line = soup.new_tag("line", x1 = aCoords["center_x"], y1 = aCoords["center_y"], x2 = bCoords["center_x"], y2 = bCoords["center_y"], visibility = "hidden", style = "stroke:#{0}".format(jbColor))
-			line["stroke-width"] = 2
-			line["class"] = ["jumpbridge",]
-			if "<" in linetype:
-				line["marker-start"] = "url(#arrowstart_{0})".format(jbColor)
-			if ">" in linetype:
-				line["marker-end"] = "url(#arrowend_{0})".format(jbColor)
-			jumps.insert(0, line)
-			colorCount += 1
-
-	def _preparingSvg(self, soup, systems):
+	def _prepareSvg(self, soup, systems):
 		svg = soup.select("svg")[0]
 		svg["onmousedown"] = "return false;"
 		# making all jumps black
@@ -241,7 +165,6 @@ class Map(object):
 
 		for systemId, system in self.systemsById.items():
 			coords = system.mapCoordinates
-			stats = system.statistics
 			text = "stats n/a"
 			style = "text-anchor:middle;font-size:7;font-family:Arial;"
 			svgtext = soup.new_tag("text", x=coords["center_x"], y=coords["y"] + coords["height"] + 7, fill="blue", style=style, visibility="hidden")
@@ -249,6 +172,87 @@ class Map(object):
 			svgtext["class"] = ["statistics",]
 			svgtext.string = text
 			jumps.append(svgtext)
+
+
+	def _connectNeighbours(self):
+		""" This will find all neigbours of the systems and connect them.
+			It takes a look to all the jumps on the map and get the system under
+			which the line ends
+		"""
+		for jump in self.soup.select("#jumps")[0].select(".j"):
+			if "jumpbridge" in jump["class"]: continue
+			parts = jump["id"].split("-")
+			if parts[0] == "j":
+				startSystem = self.systemsById[int(parts[1])]
+				stopSystem = self.systemsById[int(parts[2])]
+				startSystem.addNeighbour(stopSystem)
+
+
+	def _getSvgFromDotlan(self, region):
+		url = self.DOTLAN_BASIC_URL.format(region)
+		request = urllib2.Request(url)
+		content = urllib2.urlopen(request).read()
+		return content
+
+
+	def addSystemStatistics(self, statistics):
+		if statistics is not None:
+			for systemId, system in self.systemsById.items():
+				if systemId in statistics:
+					system.setStatistics(statistics[systemId])
+		else:
+			for system in self.self.systemsById.values():
+				system.setStatistics(None)
+
+
+	def setJumpbridges(self, jumpbridgeData):
+		""" adding the jumpbridges to the map
+			format of data: tuples with 3 values (sys1, connection, sys2)
+		"""
+		soup = self.soup
+		for bridge in soup.select(".jumpbridge"):
+			bridge.decompose()
+		jumps = soup.select("#jumps")[0]
+		colorCount = 0
+		for bridge in jumpbridgeData:
+			if colorCount > len(JB_COLORS) - 1:
+				colorCount = 0
+			jbColor = JB_COLORS[colorCount]
+			start = bridge[0]
+			linetype = bridge[1]
+			stop = bridge[2]
+			if not (start in self.systems and stop in self.systems):
+				continue
+			self.systems[start].setJumpbridgeColor(jbColor)
+			self.systems[stop].setJumpbridgeColor(jbColor)
+			aCoords = self.systems[start].mapCoordinates
+			bCoords = self.systems[stop].mapCoordinates
+			line = soup.new_tag("line", x1 = aCoords["center_x"], y1 = aCoords["center_y"], x2 = bCoords["center_x"], y2 = bCoords["center_y"], visibility = "hidden", style = "stroke:#{0}".format(jbColor))
+			line["stroke-width"] = 2
+			line["class"] = ["jumpbridge",]
+			if "<" in linetype:
+				line["marker-start"] = "url(#arrowstart_{0})".format(jbColor)
+			if ">" in linetype:
+				line["marker-end"] = "url(#arrowend_{0})".format(jbColor)
+			jumps.insert(0, line)
+			colorCount += 1
+
+
+	def changeJumpbridgesVisibility(self):
+		newStatus = False if self._jumpMapsVisible else True
+		value = "visible" if newStatus else "hidden"
+		for line in self.soup.select(".jumpbridge"):
+			line["visibility"] = value
+		self._jumpMapsVisible = newStatus
+		return newStatus
+
+	def changeStatisticsVisibility(self):
+		newStatus = False if self._statisticsVisible else True
+		value = "visible" if newStatus else "hidden"
+		for line in self.soup.select(".statistics"):
+			line["visibility"] = value
+		self._statisticsVisible = newStatus
+		return newStatus
 
 
 class System(object):

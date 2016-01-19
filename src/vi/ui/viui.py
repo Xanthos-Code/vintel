@@ -115,6 +115,9 @@ class MainWindow(QtGui.QMainWindow):
 		self.connect(self.showChatAvatarsAction, Qt.SIGNAL("triggered()"), self.changeShowAvatars)
 		self.connect(self.alwaysOnTopAction, Qt.SIGNAL("triggered()"), self.changeAlwaysOnTop)
 		self.connect(self.chooseChatRoomsAction, Qt.SIGNAL("triggered()"), self.showChatroomChooser)
+		self.connect(self.catchRegionAction, Qt.SIGNAL("triggered()"), lambda item=self.catchRegionAction: self.handleRegionMenuItemSelected(item))
+		self.connect(self.providenceRegionAction, Qt.SIGNAL("triggered()"), lambda item=self.providenceRegionAction: self.handleRegionMenuItemSelected(item))
+		self.connect(self.providenceCatchRegionAction, Qt.SIGNAL("triggered()"), lambda item=self.providenceCatchRegionAction: self.handleRegionMenuItemSelected(item))
 		self.connect(self.chooseRegionAction, Qt.SIGNAL("triggered()"), self.showRegionChooser)
 		self.connect(self.showChatAction, Qt.SIGNAL("triggered()"), self.changeChatVisibility)
 		self.connect(self.soundSetupAction, Qt.SIGNAL("triggered()"), self.showSoundSetup)
@@ -131,7 +134,7 @@ class MainWindow(QtGui.QMainWindow):
 
 		# Create a timer to refresh the map, then load up the map, either from cache or dotlan
 		self.mapTimer = QtCore.QTimer(self)
-		self.connect(self.mapTimer, QtCore.SIGNAL("timeout()"), self.updateMap)
+		self.connect(self.mapTimer, QtCore.SIGNAL("timeout()"), self.updateMapView)
 		self.setupMap(True)
 
 		# Recall cached user settings
@@ -190,8 +193,9 @@ class MainWindow(QtGui.QMainWindow):
 		self.systems = self.dotlan.systems
 		self.chatparser = chatparser.ChatParser(self.pathToLogs, self.roomnames, self.systems)
 
-		# Add a contextual menu to the map (a QWebView) only once
+		# Menus - only once
 		if initialize:
+			# Add a contextual menu to the mapView
 			def mapContextMenuEvent(event):
 				self.mapView.contextMenu.exec_(self.mapToGlobal(QPoint(event.x(), event.y())))
 
@@ -200,7 +204,18 @@ class MainWindow(QtGui.QMainWindow):
 			self.mapView.contextMenuEvent = mapContextMenuEvent
 			self.mapView.connect(self.mapView, Qt.SIGNAL("linkClicked(const QUrl&)"), self.mapLinkClicked)
 
-		self.updateMap(force=True)
+			# Also set up our app menus
+			regionName = self.cache.getFromCache("region_name")
+			if regionName.startswith("Providencecatch"):
+				self.providenceCatchRegionAction.setChecked(True)
+			elif regionName.startswith("Catch"):
+				self.catchRegionAction.setChecked(True)
+			elif regionName.startswith("Providence"):
+				self.providenceRegionAction.setChecked(True)
+			else:
+				self.chooseRegionAction.setChecked(True)
+
+		self.updateMapView(force=True)
 		self.mapTimer.start(STATISTICS_UPDATE_INTERVAL)
 		self.jumpbridgesButton.setChecked(False)
 		self.statisticsButton.setChecked(False)
@@ -372,7 +387,7 @@ class MainWindow(QtGui.QMainWindow):
 	def changeJumpbridgesVisibility(self):
 		newValue = self.dotlan.changeJumpbridgesVisibility()
 		self.jumpbridgesButton.setChecked(newValue)
-		self.updateMap()
+		self.updateMapView()
 
 	def changeStatisticsVisibility(self):
 		newValue = self.dotlan.changeStatisticsVisibility()
@@ -407,7 +422,7 @@ class MainWindow(QtGui.QMainWindow):
 
 	def markSystemOnMap(self, systemname):
 		self.systems[unicode(systemname)].mark()
-		self.updateMap()
+		self.updateMapView()
 
 
 	def setLocation(self, char, newSystem):
@@ -469,9 +484,28 @@ class MainWindow(QtGui.QMainWindow):
 			QtGui.QMessageBox.warning(None, "Loading jumpbridges failed!", "Error: {0}".format(unicode(e)), "OK")
 
 
+	def handleRegionMenuItemSelected(self, menuAction=None):
+		self.catchRegionAction.setChecked(False)
+		self.providenceRegionAction.setChecked(False)
+		self.providenceCatchRegionAction.setChecked(False)
+		self.chooseRegionAction.setChecked(False)
+		if menuAction:
+			menuAction.setChecked(True)
+			regionName = unicode(menuAction.property("regionName").toString())
+			regionName = dotlan.convertRegionName(regionName)
+			Cache().putIntoCache("region_name", regionName, 60 * 60 * 24 * 365)
+			self.setupMap()
+
+
 	def showRegionChooser(self):
+		def handleRegionChosen():
+			self.handleRegionMenuItemSelected(None)
+			self.chooseRegionAction.setChecked(True)
+			self.setupMap()
+
+		self.chooseRegionAction.setChecked(False)
 		chooser = RegionChooser(self)
-		self.connect(chooser, Qt.SIGNAL("new_region_chosen"), self.setupMap)
+		self.connect(chooser, Qt.SIGNAL("new_region_chosen"), handleRegionChosen)
 		chooser.show()
 
 
@@ -581,7 +615,7 @@ class MainWindow(QtGui.QMainWindow):
 			self.emit(Qt.SIGNAL("avatar_loaded"), chatEntry.message.user, avatarData)
 
 
-	def updateMap(self, force=False):
+	def updateMapView(self, force=False):
 		def updateStatisticsOnMap(data):
 			if data["result"] == "ok":
 				self.dotlan.addSystemStatistics(data["statistics"])
@@ -678,7 +712,6 @@ class RegionChooser(QtGui.QDialog):
 	def __init__(self, parent):
 		QtGui.QDialog.__init__(self, parent)
 		uic.loadUi(resourcePath("vi/ui/RegionChooser.ui"), self)
-		self.connect(self.defaultButton, Qt.SIGNAL("clicked()"), self.setDefaults)
 		self.connect(self.cancelButton, Qt.SIGNAL("clicked()"), self.accept)
 		self.connect(self.saveButton, Qt.SIGNAL("clicked()"), self.saveClicked)
 		cache = Cache()
@@ -718,10 +751,6 @@ class RegionChooser(QtGui.QDialog):
 			Cache().putIntoCache("region_name", text, 60 * 60 * 24 * 365)
 			self.accept()
 			self.emit(Qt.SIGNAL("new_region_chosen"))
-
-
-	def setDefaults(self):
-		self.regionNameField.setPlainText(u"Providence")
 
 
 class SystemChat(QtGui.QDialog):
@@ -785,12 +814,12 @@ class SystemChat(QtGui.QDialog):
 
 	def setSystemAlarm(self):
 		self.system.setStatus(states.ALARM)
-		self.parent.updateMap()
+		self.parent.updateMapView()
 
 
 	def setSystemClear(self):
 		self.system.setStatus(states.CLEAR)
-		self.parent.updateMap()
+		self.parent.updateMapView()
 
 
 	def closeDialog(self):

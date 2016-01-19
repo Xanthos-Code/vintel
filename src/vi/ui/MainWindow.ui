@@ -371,9 +371,13 @@
    </widget>
    <widget class="QMenu" name="menuRegion">
     <property name="title">
-     <string>Map</string>
+     <string>Region</string>
     </property>
+    <addaction name="providenceRegionAction"/>
+    <addaction name="catchRegionAction"/>
+    <addaction name="providenceCatchRegionAction"/>
     <addaction name="chooseRegionAction"/>
+    <addaction name="separator"/>
     <addaction name="jumpbridgeDataAction"/>
    </widget>
    <widget class="QMenu" name="menuWindow">
@@ -511,8 +515,11 @@
    </property>
   </action>
   <action name="chooseRegionAction">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
-    <string>Choose Region...</string>
+    <string>Other Region...</string>
    </property>
   </action>
   <action name="soundSetupAction">
@@ -560,6 +567,39 @@
   <action name="actionTransparency">
    <property name="text">
     <string>Transparency</string>
+   </property>
+  </action>
+  <action name="providenceRegionAction">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Providence</string>
+   </property>
+   <property name="regionName" stdset="0">
+    <string>providence</string>
+   </property>
+  </action>
+  <action name="catchRegionAction">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Catch</string>
+   </property>
+   <property name="regionName" stdset="0">
+    <string>catch</string>
+   </property>
+  </action>
+  <action name="providenceCatchRegionAction">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Provi / Catch</string>
+   </property>
+   <property name="regionName" stdset="0">
+    <string>providencecatch</string>
    </property>
   </action>
  </widget>
