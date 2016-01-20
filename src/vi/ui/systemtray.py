@@ -23,7 +23,7 @@ from PyQt4 import QtGui, QtCore, Qt
 
 from vi.resources import resourcePath
 from vi import states
-from vi.sound import Sound
+from vi.soundmanager import SoundManager
 
 class TrayContextMenu(QtGui.QMenu):
 
@@ -131,13 +131,13 @@ class TrayIcon(QtGui.QSystemTrayIcon):
 			icon = 2
 			messageText = message.plainText
 			self.lastNotifications[states.ALARM] = time.time()
-			Sound().playSound("alarm", text, textAbbreviated)
+			SoundManager().playSound("alarm", text, textAbbreviated)
 		elif (message.status == states.REQUEST and self.showRequest and self.lastNotifications.get(states.REQUEST, 0) < time.time() - self.MIN_WAIT_NOTIFICATION):
 			title = "Status request"
 			icon = 1
 			text = (u"Someone is requesting status of {0} in {1}.".format(system, room))
 			self.lastNotifications[states.REQUEST] = time.time()
-			Sound().playSound("request", text)
+			SoundManager().playSound("request", text)
 		if not (title is None or text is None or icon):
 			text = text.format(**locals())
 			self.showMessage(title, text, icon)

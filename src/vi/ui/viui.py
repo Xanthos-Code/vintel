@@ -33,7 +33,7 @@ from vi import amazon_s3, evegate
 from vi import states
 from vi.cache.cache import Cache
 from vi.resources import resourcePath
-from vi.sound import Sound
+from vi.soundmanager import SoundManager
 from vi.ui.systemtray import TrayContextMenu
 from vi.ui.threads import AvatarFindThread, KOSCheckerThread
 from vi.ui.threads import MapStatisticsThread
@@ -75,7 +75,7 @@ class MainWindow(QtGui.QMainWindow):
 		self.roomnames = roomnames
 
 		# Disable the sound UI if sound is not available
-		if not Sound().soundAvailable:
+		if not SoundManager().soundAvailable:
 			self.changeSound(disable=True)
 		else:
 			self.changeSound()
@@ -242,7 +242,7 @@ class MainWindow(QtGui.QMainWindow):
 					(None, "changeSound", self.activateSoundAction.isChecked()),
 					(None, "changeChatVisibility", self.showChatAction.isChecked()),
 					(None, "setInitMapPosition", (self.mapView.page().mainFrame().scrollPosition().x(), self.mapView.page().mainFrame().scrollPosition().y())),
-					(None, "setSoundVolume", Sound().soundVolume),
+					(None, "setSoundVolume", SoundManager().soundVolume),
 					(None, "changeFrameless", self.framelessWindowAction.isChecked()),
 					(None, "changeUseSpokenNotifications", self.useSpokenNotificationsAction.isChecked()),
 					(None, "changeClipboard", self.kosClipboardActiveAction.isChecked()),
@@ -254,7 +254,7 @@ class MainWindow(QtGui.QMainWindow):
 		try:
 			self.filewatcherThread.quit()
 			self.kosRequestThread.quit()
-			Sound().quit()
+			SoundManager().quit()
 			self.versionCheckThread.quit()
 		except Exception:
 			pass
@@ -287,11 +287,11 @@ class MainWindow(QtGui.QMainWindow):
 
 
 	def changeUseSpokenNotifications(self, newValue=None):
-		if Sound().platformSupportsSpeech():
+		if SoundManager().platformSupportsSpeech():
 			if newValue is None:
 				newValue = self.useSpokenNotificationsAction.isChecked()
 			self.useSpokenNotificationsAction.setChecked(newValue)
-			Sound().setUseSpokenNotifications(newValue)
+			SoundManager().setUseSpokenNotifications(newValue)
 		else:
 			self.useSpokenNotificationsAction.setChecked(False)
 			self.useSpokenNotificationsAction.setEnabled(False)
@@ -319,7 +319,7 @@ class MainWindow(QtGui.QMainWindow):
 			if newValue is None:
 				newValue = self.activateSoundAction.isChecked()
 			self.activateSoundAction.setChecked(newValue)
-			Sound().soundActive = newValue
+			SoundManager().soundActive = newValue
 
 
 	def changeAlwaysOnTop(self, newValue=None):
@@ -462,7 +462,7 @@ class MainWindow(QtGui.QMainWindow):
 
 
 	def setSoundVolume(self, value):
-		Sound().setSoundVolume(value)
+		SoundManager().setSoundVolume(value)
 
 
 	def setJumpbridges(self, url):
@@ -549,7 +549,7 @@ class MainWindow(QtGui.QMainWindow):
 	def showKosResult(self, state, text, requestType, hasKos):
 		try:
 			if hasKos:
-				Sound().playSound("kos", text)
+				SoundManager().playSound("kos", text)
 			if state == "ok":
 				if requestType == "xxx":  # a xxx request out of the chat
 					self.trayIcon.showMessage("Player KOS-Check", text, 1)
@@ -589,9 +589,9 @@ class MainWindow(QtGui.QMainWindow):
 	def showSoundSetup(self):
 		dialog = QtGui.QDialog(self)
 		uic.loadUi(resourcePath("vi/ui/SoundSetup.ui"), dialog)
-		dialog.volumeSlider.setValue(Sound().soundVolume)
-		dialog.connect(dialog.volumeSlider, Qt.SIGNAL("valueChanged(int)"), Sound().setSoundVolume)
-		dialog.connect(dialog.testSoundButton, Qt.SIGNAL("clicked()"), Sound().playSound)
+		dialog.volumeSlider.setValue(SoundManager().soundVolume)
+		dialog.connect(dialog.volumeSlider, Qt.SIGNAL("valueChanged(int)"), SoundManager().setSoundVolume)
+		dialog.connect(dialog.testSoundButton, Qt.SIGNAL("clicked()"), SoundManager().playSound)
 		dialog.connect(dialog.closeButton, Qt.SIGNAL("clicked()"), dialog.accept)
 		dialog.show()
 
@@ -650,7 +650,7 @@ class MainWindow(QtGui.QMainWindow):
 			elif message.status == states.SOUND_TEST and message.user in self.knownPlayerNames:
 				words = message.message.split()
 				if len(words) > 1:
-					Sound().playSound(words[1])
+					SoundManager().playSound(words[1])
 			# KOS request
 			elif message.status == states.KOS_STATUS_REQUEST:
 				text = message.message[4:]

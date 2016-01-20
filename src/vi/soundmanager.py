@@ -26,8 +26,10 @@ import time
 
 from collections import namedtuple
 from PyQt4.QtCore import QThread
+from PyQt4 import QtCore
 from resources import resourcePath
 from Queue import Queue
+import ast
 
 from vi.singleton import Singleton
 
@@ -42,7 +44,7 @@ except ImportError:
 	gPygletAvailable = False
 
 
-class Sound():
+class SoundManager():
 	__metaclass__ = Singleton
 
 
@@ -55,7 +57,6 @@ class Sound():
 	soundAvailable = False
 	useDarwinSound = False
 	useSpokenNotifications = True
-
 	_soundThread = None
 
 
@@ -108,17 +109,24 @@ class Sound():
 		VOICE_RSS_API_KEY = '896a7f61ec5e478cba856a78babab79c'
 		GOOGLE_TTS_API_KEY = ''
 		isDarwin = sys.platform.startswith("darwin")
+		IDLE_TIMER_INTERVAL = 60 * 15
 
 		def __init__(self):
 			QThread.__init__(self)
 			self.queue = Queue()
+			self.idleTaskTimer = QtCore.QTimer(self)
+			self.idleTaskTimer.start(self.IDLE_TIMER_INTERVAL)
+			self.connect(self.idleTaskTimer, QtCore.SIGNAL("timeout()"), self.handleIdleTasks)
 
 
 		def run(self):
 			while True:
 				audioFile, message, abbreviatedMessage = self.queue.get()
 
-				if Sound.useSpokenNotifications and (message != "" or abbreviatedMessage != ""):
+				self.idleTaskTimer.stop()
+				self.idleTaskTimer.start(self.IDLE_TIMER_INTERVAL)
+
+				if SoundManager.useSpokenNotifications and (message != "" or abbreviatedMessage != ""):
 					if abbreviatedMessage != "":
 						message = abbreviatedMessage
 					if not self.speak(message):
@@ -140,11 +148,15 @@ class Sound():
 			return True
 
 
+		def handleIdleTasks(self):
+			self.speakRandomChuckNorrisJoke()
+
+
 		# Audio subsytem access
 
 		def playAudioFile(self, filename, stream=False):
 			try:
-				volume = float(Sound.soundVolume) / 100.0
+				volume = float(SoundManager.soundVolume) / 100.0
 				if gPygletAvailable:
 					src = media.load(filename, streaming=stream)
 					player = media.Player()
@@ -159,7 +171,7 @@ class Sound():
 
 		def darwinSpeak(self, message):
 			try:
-				os.system("say [[volm {0}]] '{1}'".format(float(Sound.soundVolume) / 100.0, message))
+				os.system("say [[volm {0}]] '{1}'".format(float(SoundManager.soundVolume) / 100.0, message))
 			except Exception as e:
 				print "SoundThread.darwinSpeak exception: %s" % str(e)
 
@@ -170,10 +182,11 @@ class Sound():
 				headers = {"Host": "api.icndb.com", "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1)"}
 				request = urllib2.Request(jokeUrl, '', headers)
 				response = urllib2.urlopen(request)
-				html = response.read()
-				# Need to parse the text out of the html - BeautifulSoup maybe?
-				# message = html.parser.HTMLParser().unescape(json.load(request)["value"]["joke"])
-				#self.speak(message)
+				jokeData = ast.literal_eval(response.read())
+
+				if jokeData['type'] == "success":
+					jokeText = jokeData['value']['joke']
+					self.speak(jokeText)
 			except Exception as e:
 				print ('SoundThread.speakRandomChuckNorrisLore error: %s' % e)
 
