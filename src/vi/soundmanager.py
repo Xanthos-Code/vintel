@@ -52,7 +52,7 @@ class SoundManager():
 			  "kos":     "178031__zimbot__transporterstartbeep0-sttos-recreated.wav",
 			  "request": "178028__zimbot__bosun-whistle-sttos-recreated.wav"}
 
-	soundVolume = 25  # Must be an integer beween 0 and 100
+	soundVolume = 25  # Must be an integer between 0 and 100
 	soundActive = False
 	soundAvailable = False
 	useDarwinSound = False
@@ -64,7 +64,8 @@ class SoundManager():
 		self._soundThread = self.SoundThread()
 		self._soundThread.start()
 		self.soundAvailable = True
-
+		if self.platformSupportsSpeech():
+			self.useSpokenNotifications = False
 
 	def platformSupportsSpeech(self):
 		if self._soundThread.isDarwin:
@@ -123,10 +124,11 @@ class SoundManager():
 			while True:
 				audioFile, message, abbreviatedMessage = self.queue.get()
 
-				self.idleTaskTimer.stop()
-				self.idleTaskTimer.start(self.IDLE_TIMER_INTERVAL_IN_MSECS)
+				if SoundManager().useSpokenNotifications:
+					self.idleTaskTimer.stop()
+					self.idleTaskTimer.start(self.IDLE_TIMER_INTERVAL_IN_MSECS)
 
-				if SoundManager.useSpokenNotifications and (message != "" or abbreviatedMessage != ""):
+				if SoundManager().useSpokenNotifications and (message != "" or abbreviatedMessage != ""):
 					if abbreviatedMessage != "":
 						message = abbreviatedMessage
 					if not self.speak(message):
@@ -177,6 +179,12 @@ class SoundManager():
 
 
 		def speakRandomChuckNorrisJoke(self):
+			if SoundManager().useSpokenNotifications:
+				self.idleTaskTimer.stop()
+				self.idleTaskTimer.start(self.IDLE_TIMER_INTERVAL_IN_MSECS)
+			else:
+				self.idleTaskTimer.stop()
+
 			try:
 				jokeUrl = "http://api.icndb.com/jokes/random/"
 				headers = {"Host": "api.icndb.com", "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1)"}
