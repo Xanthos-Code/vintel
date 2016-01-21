@@ -42,6 +42,7 @@ VERSION = vi.version.VERSION
 DEBUG = False
 MESSAGE_EXPIRY_IN_SECONDS = 20 * 60
 STATISTICS_UPDATE_INTERVAL_IN_MSECS = 5 * 60 * 1000
+MAP_UPDATE_INTERVAL_IN_MSECS = 4 * 1000
 
 class MainWindow(QtGui.QMainWindow):
 
@@ -218,7 +219,7 @@ class MainWindow(QtGui.QMainWindow):
 				self.chooseRegionAction.setChecked(True)
 
 		self.updateMapView(force=True)
-		self.mapTimer.start(STATISTICS_UPDATE_INTERVAL_IN_MSECS)
+		self.mapTimer.start(MAP_UPDATE_INTERVAL_IN_MSECS)
 		self.jumpbridgesButton.setChecked(False)
 		self.statisticsButton.setChecked(False)
 
