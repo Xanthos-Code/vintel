@@ -206,7 +206,9 @@ class MainWindow(QtGui.QMainWindow):
 
 			# Also set up our app menus
 			regionName = self.cache.getFromCache("region_name")
-			if regionName.startswith("Providencecatch"):
+			if not regionName:
+				self.providenceRegionAction.setChecked(True)
+			elif regionName.startswith("Providencecatch"):
 				self.providenceCatchRegionAction.setChecked(True)
 			elif regionName.startswith("Catch"):
 				self.catchRegionAction.setChecked(True)
@@ -392,6 +394,7 @@ class MainWindow(QtGui.QMainWindow):
 	def changeStatisticsVisibility(self):
 		newValue = self.dotlan.changeStatisticsVisibility()
 		self.statisticsButton.setChecked(newValue)
+		self.updateMapView()
 
 	def clipboardChanged(self, mode):
 		if not (mode == 0 and self.kosClipboardActiveAction.isChecked() and self.clipboard.mimeData().hasText()):
