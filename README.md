@@ -15,7 +15,7 @@ A planned update (version 0.7) is nearing completion and will be released soon; 
 - Scan and KOS-check local pilots on clipboard when switching to Vintel now works reliably
 - Intel messages are removed after 20 minutes to limit memory usage
 - MapStatisticsThread no longer crashing
-- Region and Map can be changed without restarting the app
+- Region menu lets you set the mapped region without restarting Vintel
 - Threads are shutdown in an orderly manner when exiting Vintel
 - Sound is now played on a background thread so the UI is not blocked
 - More defensive code everywhere to minmize crashes and bad bahavior
@@ -42,6 +42,8 @@ A planned update (version 0.7) is nearing completion and will be released soon; 
  - Alarms can be set so that task-bar notifications are displayed if an intel report calls out a system within a specified number of jumps. This can be configured from the task-bar icon.
  - The main window can be set up to remain "always on top" and be displayed with a specified level of transparency.
  - Ship names in the intel chat are marked blue.
+ - Is there an easter egg in the program? Speculation is running wild - there are rumours of a fantastic audio easter eggs
+ - Big performance improvments all over the app were found by adjusting the network request timers so we are no longr ovrloading the netowrk subsystem.
 
 ## Usage
 
