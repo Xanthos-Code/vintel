@@ -28,15 +28,14 @@ from PyQt4 import Qt, QtGui, uic, QtCore
 from PyQt4.QtCore import QPoint
 from PyQt4.QtGui import QImage, QPixmap, QMessageBox
 from PyQt4.QtWebKit import QWebPage
-from vi import chatparser, dotlan, filewatcher
 from vi import amazon_s3, evegate
+from vi import chatparser, dotlan, filewatcher
 from vi import states
 from vi.cache.cache import Cache
 from vi.resources import resourcePath
 from vi.soundmanager import SoundManager
+from vi.threads import AvatarFindThread, KOSCheckerThread, MapStatisticsThread
 from vi.ui.systemtray import TrayContextMenu
-from vi.ui.threads import AvatarFindThread, KOSCheckerThread
-from vi.ui.threads import MapStatisticsThread
 
 VERSION = vi.version.VERSION
 DEBUG = False
