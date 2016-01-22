@@ -238,6 +238,7 @@ class MainWindow(QtGui.QMainWindow):
 					("splitter", "restoreGeometry", str(self.splitter.saveGeometry())),
 					("splitter", "restoreState", str(self.splitter.saveState())),
 					("mapView", "setZoomFactor", self.mapView.zoomFactor()),
+					(None, "changeChatFontSize", ChatEntryWidget.TEXT_SIZE),
 					(None, "changeOpacity", self.opacityGroup.checkedAction().opacity),
 					(None, "changeAlwaysOnTop", self.alwaysOnTopAction.isChecked()),
 					(None, "changeShowAvatars", self.showChatAvatarsAction.isChecked()),
@@ -364,18 +365,21 @@ class MainWindow(QtGui.QMainWindow):
 			entry.avatarLabel.setVisible(newValue)
 
 
+	def changeChatFontSize(self, newSize):
+		if newSize:
+			for entry in self.chatEntries:
+				entry.changeFontSize(newSize)
+
 	def chatSmaller(self):
 		newSize = ChatEntryWidget.TEXT_SIZE - 1
 		ChatEntryWidget.TEXT_SIZE = newSize
-		for entry in self.chatEntries:
-			entry.changeFontSize(newSize)
+		self.changeChatFontSize(newSize)
 
 
 	def chatLarger(self):
 		newSize = ChatEntryWidget.TEXT_SIZE + 1
 		ChatEntryWidget.TEXT_SIZE = newSize
-		for entry in self.chatEntries:
-			entry.changeFontSize(newSize)
+		self.changeChatFontSize(newSize)
 
 
 	def changeAlarmDistance(self, distance):
