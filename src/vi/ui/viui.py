@@ -162,6 +162,12 @@ class MainWindow(QtGui.QMainWindow):
 		self.versionCheckThread.connect(self.versionCheckThread, Qt.SIGNAL("newer_version"), self.notifyNewerVersion)
 		self.versionCheckThread.start()
 
+		if sys.platform.startswith("win32") or sys.platform.startswith("cygwin"):
+			font = self.statisticsButton.font()
+			font.setPointSize(8)
+			self.statisticsButton.setFont(font)
+			self.jumpbridgesButton.setFont(font)
+
 
 	def setupMap(self, initialize=False):
 		self.mapTimer.stop()
@@ -844,6 +850,8 @@ class ChatEntryWidget(QtGui.QWidget):
 		self.message = message
 		self.updateText()
 		self.connect(self.textLabel, QtCore.SIGNAL("linkActivated(QString)"), self.linkClicked)
+		if sys.platform.startswith("win32") or sys.platform.startswith("cygwin"):
+			ChatEntryWidget.TEXT_SIZE = 8
 		self.changeFontSize(self.TEXT_SIZE)
 		if not ChatEntryWidget.SHOW_AVATAR:
 			self.avatarLabel.setVisible(False)
