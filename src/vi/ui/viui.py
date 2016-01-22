@@ -369,16 +369,15 @@ class MainWindow(QtGui.QMainWindow):
 		if newSize:
 			for entry in self.chatEntries:
 				entry.changeFontSize(newSize)
+			ChatEntryWidget.TEXT_SIZE = newSize
 
 	def chatSmaller(self):
 		newSize = ChatEntryWidget.TEXT_SIZE - 1
-		ChatEntryWidget.TEXT_SIZE = newSize
 		self.changeChatFontSize(newSize)
 
 
 	def chatLarger(self):
 		newSize = ChatEntryWidget.TEXT_SIZE + 1
-		ChatEntryWidget.TEXT_SIZE = newSize
 		self.changeChatFontSize(newSize)
 
 
