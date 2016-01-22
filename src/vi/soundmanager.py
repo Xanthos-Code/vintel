@@ -64,7 +64,7 @@ class SoundManager():
 		self._soundThread = self.SoundThread()
 		self._soundThread.start()
 		self.soundAvailable = True
-		if self.platformSupportsSpeech():
+		if not self.platformSupportsSpeech():
 			self.useSpokenNotifications = False
 
 	def platformSupportsSpeech(self):
