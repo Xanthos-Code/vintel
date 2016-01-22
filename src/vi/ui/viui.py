@@ -28,15 +28,14 @@ from PyQt4 import Qt, QtGui, uic, QtCore
 from PyQt4.QtCore import QPoint
 from PyQt4.QtGui import QImage, QPixmap, QMessageBox
 from PyQt4.QtWebKit import QWebPage
-from vi import chatparser, dotlan, filewatcher
 from vi import amazon_s3, evegate
+from vi import chatparser, dotlan, filewatcher
 from vi import states
 from vi.cache.cache import Cache
 from vi.resources import resourcePath
 from vi.soundmanager import SoundManager
+from vi.threads import AvatarFindThread, KOSCheckerThread, MapStatisticsThread
 from vi.ui.systemtray import TrayContextMenu
-from vi.ui.threads import AvatarFindThread, KOSCheckerThread
-from vi.ui.threads import MapStatisticsThread
 
 VERSION = vi.version.VERSION
 DEBUG = False
@@ -244,6 +243,7 @@ class MainWindow(QtGui.QMainWindow):
 					("splitter", "restoreGeometry", str(self.splitter.saveGeometry())),
 					("splitter", "restoreState", str(self.splitter.saveState())),
 					("mapView", "setZoomFactor", self.mapView.zoomFactor()),
+					(None, "changeChatFontSize", ChatEntryWidget.TEXT_SIZE),
 					(None, "changeOpacity", self.opacityGroup.checkedAction().opacity),
 					(None, "changeAlwaysOnTop", self.alwaysOnTopAction.isChecked()),
 					(None, "changeShowAvatars", self.showChatAvatarsAction.isChecked()),
@@ -370,18 +370,20 @@ class MainWindow(QtGui.QMainWindow):
 			entry.avatarLabel.setVisible(newValue)
 
 
+	def changeChatFontSize(self, newSize):
+		if newSize:
+			for entry in self.chatEntries:
+				entry.changeFontSize(newSize)
+			ChatEntryWidget.TEXT_SIZE = newSize
+
 	def chatSmaller(self):
 		newSize = ChatEntryWidget.TEXT_SIZE - 1
-		ChatEntryWidget.TEXT_SIZE = newSize
-		for entry in self.chatEntries:
-			entry.changeFontSize(newSize)
+		self.changeChatFontSize(newSize)
 
 
 	def chatLarger(self):
 		newSize = ChatEntryWidget.TEXT_SIZE + 1
-		ChatEntryWidget.TEXT_SIZE = newSize
-		for entry in self.chatEntries:
-			entry.changeFontSize(newSize)
+		self.changeChatFontSize(newSize)
 
 
 	def changeAlarmDistance(self, distance):
