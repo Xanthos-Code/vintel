@@ -43,20 +43,26 @@
    <property name="title">
     <string>Full GPL:</string>
    </property>
-   <layout class="QGridLayout" name="gridLayout">
-    <item row="0" column="0">
-     <widget class="QPlainTextEdit" name="plainTextEdit">
-      <property name="font">
-       <font>
-        <family>Courier New</family>
-        <pointsize>9</pointsize>
-       </font>
-      </property>
-      <property name="readOnly">
-       <bool>true</bool>
-      </property>
-      <property name="plainText">
-       <string>                    GNU GENERAL PUBLIC LICENSE
+   <widget class="QPlainTextEdit" name="plainTextEdit">
+    <property name="geometry">
+     <rect>
+      <x>22</x>
+      <y>33</y>
+      <width>621</width>
+      <height>172</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Courier New</family>
+      <pointsize>9</pointsize>
+     </font>
+    </property>
+    <property name="readOnly">
+     <bool>true</bool>
+    </property>
+    <property name="plainText">
+     <string>                    GNU GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007
 
  Copyright (C) 2007 Free Software Foundation, Inc. &lt;http://fsf.org/&gt;
@@ -731,22 +737,20 @@ the library.  If this is what you want to do, use the GNU Lesser General
 Public License instead of this License.  But first, please read
 &lt;http://www.gnu.org/philosophy/why-not-lgpl.html&gt;.
 </string>
-      </property>
-     </widget>
-    </item>
-   </layout>
+    </property>
+   </widget>
   </widget>
   <widget class="QLabel" name="label">
    <property name="geometry">
     <rect>
-     <x>290</x>
-     <y>20</y>
-     <width>381</width>
-     <height>231</height>
+     <x>260</x>
+     <y>10</y>
+     <width>411</width>
+     <height>251</height>
     </rect>
    </property>
    <property name="text">
-    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Vintel&lt;/span&gt; - Visual Intel Chat Analyzer&lt;br/&gt;&lt;br/&gt;&lt;br/&gt;© 2015-16 Xanthos &lt;br/&gt;&lt;a href=&quot;mailto:xanthos.eve@gmail.com&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;xanthos.eve@gmail.com&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;This software is based on original work by Sebastian Meyer &lt;br/&gt;and is open source licensed under GPL v3.&lt;/p&gt;&lt;p&gt;Find current sources at&lt;br/&gt;&lt;a href=&quot;https://github.com/XanthosX/vintel&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;https://github.com/xanthos-eve/vintel&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;If you want to donate send ISK in-game to &lt;a href=&quot;http://image.eveonline.com/Character/183452271_256.jpg&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Xanthos&lt;/span&gt;&lt;/a&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Vintel&lt;/span&gt; - Visual Intel Chat Analyzer&lt;br/&gt;&lt;br/&gt;&lt;br/&gt;© 2015-16 Xanthos &lt;br/&gt;&lt;a href=&quot;mailto:xanthos.eve@gmail.com&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;xanthos.eve@gmail.com&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;Dev Team: Lead Dev Xanthos, Biuld &amp;amp; Relese Parrion Hukondo&lt;br/&gt;Design &amp;amp; QA chriz&lt;br/&gt;This software is based on original work by Sebastian Meyer &lt;br/&gt;and is open source licensed under GPL v3.&lt;br/&gt;Find current sources and docuementation at&lt;br/&gt;&lt;a href=&quot;https://github.com/XanthosX/vintel&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;https://github.com/xanthos-eve/vintel&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;Want to donate to the team? Send ISK in-game to &lt;a href=&quot;http://image.eveonline.com/Character/183452271_256.jpg&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Xanthos&lt;/span&gt;&lt;/a&gt;.&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;NRDS!&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
    <property name="alignment">
     <set>Qt::AlignHCenter|Qt::AlignTop</set>
@@ -759,7 +763,7 @@ Public License instead of this License.  But first, please read
    <property name="geometry">
     <rect>
      <x>370</x>
-     <y>40</y>
+     <y>30</y>
      <width>221</width>
      <height>21</height>
     </rect>
