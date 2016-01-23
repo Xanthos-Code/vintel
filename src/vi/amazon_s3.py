@@ -25,6 +25,7 @@ from PyQt4 import Qt
 from PyQt4.QtCore import QThread
 from vi import version
 from vi.cache.cache import Cache
+from distutils.version import LooseVersion, StrictVersion
 
 
 def getJumpbridgeData(region):
@@ -56,10 +57,10 @@ def getNewestVersion():
 		url = "https://s3.amazonaws.com/vintel-resources/current-version.txt"
 		request = urllib2.urlopen(url)
 		newestVersion = request.read()
-		return float(newestVersion)
+		return newestVersion
 	except Exception as e:
 		print("Failed version-request: {0}".format(str(e)))
-		return 0.0
+		return "0.0"
 
 
 class NotifyNewVersionThread(QThread):
@@ -72,8 +73,8 @@ class NotifyNewVersionThread(QThread):
 		if not self.alerted:
 			try:
 				# Is there a newer version available?
-				newestVersion = float(getNewestVersion())
-				if newestVersion and newestVersion > float(version.VERSION):
+				newestVersion = getNewestVersion()
+				if newestVersion and StrictVersion(newestVersion) > StrictVersion(version.VERSION):
 					self.emit(Qt.SIGNAL("newer_version"), newestVersion)
 					self.alerted = True
 			except Exception as e:
