@@ -71,6 +71,7 @@ pyglet is used to play the sound – If it is not available the sound option wil
 ## Building the Vintel Standalone Package
 
  - Windows - The standalone is created using pyinstaller. All media files and the .spec-file with the configuration for pyinstaller are included in the source repo. Pyinstaller can be found here: https://github.com/pyinstaller/pyinstaller/wiki.
+   - Edit the .spec file to match your src path in the "a = Analysis" section and execute "pyinstaller vintel.spec vintel.py". If everything went correctly you should get a dist folder that contains the standalone executable.
  - Mac - The simplest method is to download all the requirements for running Vintel and use Automator to create a launchable application. Create a new automator Application. Add a Run Shell Script action and configure it as follows: ![Automator setup](https://raw.github.com/Xanthos-Eve/vintel/master/src/docs/automator-setup.jpg)
 
 ## FAQ
