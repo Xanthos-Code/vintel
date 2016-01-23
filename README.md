@@ -11,7 +11,7 @@ Vintel is written with Python 2.7, using PyQt4 for the application presentation 
 ### News
 _The current release version of Vintel is **1.0.0** and [can be found here](https://github.com/Xanthos-Eve/vintel/releases/tag/1.0.0)._
 
-The next release is currently being planned - if you have ideas, bugs or suggestions, [please add issues](https://github.com/Xanthos-Eve/vintel/issues).
+The next release is currently being planned - if you have ideas, bugs or suggestions, [please contribute to the  issues here](https://github.com/Xanthos-Eve/vintel/issues).
 
 ## Features
 
@@ -21,24 +21,22 @@ The next release is currently being planned - if you have ideas, bugs or suggest
  - Notifications and alarms can be spoken using text-to-speech on select platforms (currently only OS X).
  - "TheCitadel", "North Provi Intel", and "North Catch Intel" are merged to one chat stream. You can add or remove channels via a menu option.
  - An interactive map of Providence / Catch is provided. Systems on the map display real-time intel data as reported through intel channels.
- - Systems on the map display different color backgrounds as their alarms age, with text indicating how long ago the specific system was reported. Background color becomes red when a system is reported and lightens (red-orange-yellow0white) in following minute intervals: 4min, 10min, 15m, 25min.
+ - Systems on the map display different color backgrounds as their alarms age, with text indicating how long ago the specific system was reported. Background color becomes red when a system is reported and lightens (red->orange->yellow->white) in the following intervals: 4min, 10min, 15min, and 25min.
  - Systems reported clear display on the map with a green background for 10 minutes.
- - Clicking on a specific system will display all messages bound on that system. From there one can can set a system clear and alarmed.
+ - Clicking on a specific system will display all messages bound on that system. From there one can can set a system alarm, set the sytems clear or set it as the current system for one or more of your characters.
  - Clicking on a system in the intel channel causes it to be highlighted on the map with a blue background for 10 seconds.
- - The system where your character is currently located is highlighted on the map with an violet background (works only after first use of a gate).
- - Alarms can be set so that task-bar notifications are displayed if an intel report calls out a system within a specified number of jumps. This can be configured from the task-bar icon.
+ - The system where your character is currently located is highlighted on the map with an violet background automatically whenever a characater changes systems.
+ - Alarms can be set so that task-bar notifications are displayed when an intel report calls out a system within a specified number of jumps from your character(s). This can be configured from the task-bar icon.
  - The main window can be set up to remain "always on top" and be displayed with a specified level of transparency.
  - Ship names in the intel chat are marked blue.
- - Is there an easter egg in the program? Speculation is running wild - there are rumours of a fantastic audio easter eggs
- - Big performance improvments all over the app were found by adjusting the network request timers so we are no longr ovrloading the netowrk subsystem.
 
 ## Usage
 
  - Manually checking pilot(s) using an EVE client chat channel:
  Type xxx in any chat channel and drag and drop the pilots names after this. (e.g., xxx [Xanthos](http://image.eveonline.com/Character/183452271_256.jpg)). Vintel recognizes this as a request and checks the pilots listed.
  - Checking all pilots in the local system:
-The option must be activated via the Vintel app menu: File > Auto KOS-Check Clipboard.
-To use this feature: click on a pilot in the local pilot list and then type the shortcuts, specific to your computing platform, for select-all and copy-selection. Next switch to the Vintel app and back to Eve. KOS checking of these pilots will continue in the background.
+This option must first be activated by checking the Vintel app menu: Menu > Auto KOS-Check Clipboard.
+To use this feature: click on a pilot in the local pilot list and then type the shortcuts for select-all and copy-selection. This places the pilots in local on your clipboard. Next switch to the Vintel app momentarily and back to Eve. KOS checking of these pilots will continue in the background.
 
 
 ## KOS Results
