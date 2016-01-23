@@ -746,11 +746,11 @@ Public License instead of this License.  But first, please read
      <x>260</x>
      <y>10</y>
      <width>411</width>
-     <height>251</height>
+     <height>231</height>
     </rect>
    </property>
    <property name="text">
-    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Vintel&lt;/span&gt; - Visual Intel Chat Analyzer&lt;br/&gt;&lt;br/&gt;&lt;br/&gt;© 2015-16 Xanthos &lt;br/&gt;&lt;a href=&quot;mailto:xanthos.eve@gmail.com&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;xanthos.eve@gmail.com&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;Dev Team: Lead Dev Xanthos, Biuld &amp;amp; Relese Parrion Hukondo&lt;br/&gt;Design &amp;amp; QA chriz&lt;br/&gt;This software is based on original work by Sebastian Meyer &lt;br/&gt;and is open source licensed under GPL v3.&lt;br/&gt;Find current sources and docuementation at&lt;br/&gt;&lt;a href=&quot;https://github.com/XanthosX/vintel&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;https://github.com/xanthos-eve/vintel&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;Want to donate to the team? Send ISK in-game to &lt;a href=&quot;http://image.eveonline.com/Character/183452271_256.jpg&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Xanthos&lt;/span&gt;&lt;/a&gt;.&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;NRDS!&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Vintel&lt;/span&gt; - Visual Intel Chat Analyzer&lt;br/&gt;&lt;br/&gt;&lt;br/&gt;Dev Team: &lt;a href=&quot;xanthos.eve@gmail.com&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Xanthos&lt;/span&gt;&lt;/a&gt;, Parrion Hukondo, chriz&lt;br/&gt;&lt;br/&gt;This software is based on original work by Sebastian Meyer &lt;br/&gt;and is open source licensed under GPL v3.&lt;br/&gt;Find current sources and docuementation at&lt;br/&gt;&lt;a href=&quot;https://github.com/XanthosX/vintel&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;https://github.com/xanthos-eve/vintel&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;Donations of ISK are appreciated.&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;NRDS!&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
    <property name="alignment">
     <set>Qt::AlignHCenter|Qt::AlignTop</set>
@@ -762,7 +762,7 @@ Public License instead of this License.  But first, please read
   <widget class="QLabel" name="versionLabel">
    <property name="geometry">
     <rect>
-     <x>370</x>
+     <x>350</x>
      <y>30</y>
      <width>221</width>
      <height>21</height>
