@@ -83,6 +83,10 @@ pyglet is used to play the sound – If it is not available the sound option wil
 
 Vintel is licensed under the [GPLv3](http://www.gnu.org/licenses/gpl-3.0.html).
 
+**Vintel does not play sounds - is there a remedy for this?**
+
+The most likely cause of this is that pyglet is not installed.
+
 **Vintel does not show any chat. What can I do?**
 
 Vintel looks for your chat logs in ~\EVE\logs\chatlogs and ~\DOCUMENTS\EVE\logs\chatlogs. Logging must be enabled in the EVE client options. Go to the settings, use the register "chat" and activate "log chat to file".
