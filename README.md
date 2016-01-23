@@ -9,22 +9,9 @@ Visual intel chat analysis, planning and notification application for [EVE Onlin
 Vintel is written with Python 2.7, using PyQt4 for the application presentation layer, BeautifulSoup4 for html parsing, and Pyglet for audio playback.
 
 ### News
-_The current release version of Vintel is **0.62**._
+_The current release version of Vintel is **1.0.0** and [can be found here](https://github.com/Xanthos-Eve/vintel/releases/tag/1.0.0)._
 
-A planned update (version 0.7) is nearing completion and will be released soon; features include:
-- Scan and KOS-check local pilots on clipboard when switching to Vintel now works reliably
-- Intel messages are removed after 20 minutes to limit memory usage
-- MapStatisticsThread no longer crashing
-- Region menu lets you set the mapped region without restarting Vintel
-- Threads are shutdown in an orderly manner when exiting Vintel
-- Sound is now played on a background thread so the UI is not blocked
-- More defensive code everywhere to minmize crashes and bad bahavior
-- Notifications can be spoken using text-to-speech on OSX
-- Replaced pygame with pyglet for audio playback as pygame was difficult to install for some users
-- System statistics updating as expected
-- Bug fixes and performance improvements
-- Menu reorganization
-
+The next release is currently being planned - if you have ideas, bugs or suggestions, [please add issues](https://github.com/Xanthos-Eve/vintel/issues).
 
 ## Features
 
