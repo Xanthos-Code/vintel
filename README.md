@@ -13,6 +13,10 @@ _The current release version of Vintel is **1.0.0** and [can be found here](http
 
 The next release is currently being planned - if you have ideas, bugs or suggestions, [please contribute to the  issues here](https://github.com/Xanthos-Eve/vintel/issues).
 
+## Screenshot
+
+![](https://github.com/Xanthos-Eve/vintel/blob/master/src/docs/screenshot.png)
+
 ## Features
 
  - Platforms supported: Mac, Windows and Linux.
