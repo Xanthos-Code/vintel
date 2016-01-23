@@ -45,14 +45,15 @@ To use this feature: click on a pilot in the local pilot list and then type the 
 
 "KOS" status values reported by Vintel
 
- - **? (Unknown)**: the pilot is not known by the KOS-checker and there are no hostile corporations in her employment history.
- - **Not KOS**: the pilot is known as NOT KOS by the KOS-checker.
- - **KOS**: the pilot is known as KOS by the KOS-checker.
- - **RED by last**: the last non-NPC-Corp the pilot was employed is KOS.
+ - **KOS**: the pilot is known as KOS to the alliance and has been marked as such in the KOS-checker system.
+ - **RED by last**: the last player (non-NPC) corp in the pilot's employment history is KOS.
+ - **Not KOS**: the pilot is known as NOT KOS to the alliance and has been marked as such in the KOS-checker system.
+ - **? (Unknown)**: the pilot is not known by the KOS-checker system and there are no hostile corporations in her employment history.
+
 
 ## Running Vintel from Source
 
-This is for Mac and Windows users; Linux users can install the programs and tools mostly using distribution's software management.
+This is for Mac and Windows users; Linux users can install the programs and tools mostly using the distribution's software management tools.
 
 To run or build from the source you need the following packages:
 > - Python 2.7.x
