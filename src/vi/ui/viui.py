@@ -53,7 +53,7 @@ class MainWindow(QtGui.QMainWindow):
 
 		QtGui.QMainWindow.__init__(self)
 		uic.loadUi(resourcePath('vi/ui/MainWindow.ui'), self)
-		self.setWindowTitle("Vintel " + VERSION)
+		self.setWindowTitle("Vintel " + VERSION + "{dev}".format(dev="-SNAPSHOT" if vi.version.SNAPSHOT else ""))
 		self.taskbarIconQuiescent = QtGui.QIcon(resourcePath("vi/ui/res/logo_small.png"))
 		self.taskbarIconWorking = QtGui.QIcon(resourcePath("vi/ui/res/logo_small_green.png"))
 		self.setWindowIcon(self.taskbarIconQuiescent)
