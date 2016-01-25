@@ -110,23 +110,15 @@ class SoundManager():
 		VOICE_RSS_API_KEY = '896a7f61ec5e478cba856a78babab79c'
 		GOOGLE_TTS_API_KEY = ''
 		isDarwin = sys.platform.startswith("darwin")
-		IDLE_TIMER_INTERVAL_IN_MSECS = 60 * 15 * 1000
 
 		def __init__(self):
 			QThread.__init__(self)
 			self.queue = Queue()
-			self.idleTaskTimer = QtCore.QTimer(self)
-			self.idleTaskTimer.start(self.IDLE_TIMER_INTERVAL_IN_MSECS)
-			self.connect(self.idleTaskTimer, QtCore.SIGNAL("timeout()"), self.handleIdleTasks)
 
 
 		def run(self):
 			while True:
 				audioFile, message, abbreviatedMessage = self.queue.get()
-
-				if SoundManager().useSpokenNotifications:
-					self.idleTaskTimer.stop()
-					self.idleTaskTimer.start(self.IDLE_TIMER_INTERVAL_IN_MSECS)
 
 				if SoundManager().useSpokenNotifications and (message != "" or abbreviatedMessage != ""):
 					if abbreviatedMessage != "":
@@ -176,27 +168,6 @@ class SoundManager():
 				os.system("say [[volm {0}]] '{1}'".format(float(SoundManager.soundVolume) / 100.0, message))
 			except Exception as e:
 				print "SoundThread.darwinSpeak exception: %s" % str(e)
-
-
-		def speakRandomChuckNorrisJoke(self):
-			if SoundManager().useSpokenNotifications:
-				self.idleTaskTimer.stop()
-				self.idleTaskTimer.start(self.IDLE_TIMER_INTERVAL_IN_MSECS)
-			else:
-				self.idleTaskTimer.stop()
-
-			try:
-				jokeUrl = "http://api.icndb.com/jokes/random/"
-				headers = {"Host": "api.icndb.com", "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1)"}
-				request = urllib2.Request(jokeUrl, '', headers)
-				response = urllib2.urlopen(request)
-				jokeData = ast.literal_eval(response.read())
-
-				if jokeData['type'] == "success":
-					jokeText = jokeData['value']['joke']
-					self.speak(jokeText)
-			except Exception as e:
-				print ('SoundThread.speakRandomChuckNorrisLore error: %s' % e)
 
 
 		#
