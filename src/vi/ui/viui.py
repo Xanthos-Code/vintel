@@ -39,9 +39,13 @@ from vi.ui.systemtray import TrayContextMenu
 
 VERSION = vi.version.VERSION
 DEBUG = False
-MESSAGE_EXPIRY_IN_SECONDS = 20 * 60
-STATISTICS_UPDATE_INTERVAL_IN_MSECS = 5 * 60 * 1000
-MAP_UPDATE_INTERVAL_IN_MSECS = 4 * 1000
+
+# Timer intervals
+MESSAGE_EXPIRY_SECS = 20 * 60
+FILE_WATCHER_INTERVAL_SECS = 60 * 60 * 24
+STATISTICS_UPDATE_INTERVAL_MSECS = 5 * 60 * 1000
+MAP_UPDATE_INTERVAL_MSECS = 4 * 1000
+CLIPBOARD_CHECK_INTERVAL_MSECS = 4 * 1000
 
 class MainWindow(QtGui.QMainWindow):
 
@@ -103,6 +107,16 @@ class MainWindow(QtGui.QMainWindow):
 			self.opacityGroup.addAction(action)
 			self.menuTransparency.addAction(action)
 
+		# Platform specific UI resizing - we size items in the resource files to look correct on the mac,
+		# then resize other platforms as needed
+		if sys.platform.startswith("win32") or sys.platform.startswith("cygwin"):
+			font = self.statisticsButton.font()
+			font.setPointSize(8)
+			self.statisticsButton.setFont(font)
+			self.jumpbridgesButton.setFont(font)
+		elif sys.platform.startswith("linux"):
+			pass
+
 		# Wire up UI connections
 		self.connect(self.clipboard, Qt.SIGNAL("changed(QClipboard::Mode)"), self.clipboardChanged)
 		self.connect(self.zoomInButton, Qt.SIGNAL("clicked()"), self.zoomMapIn)
@@ -132,11 +146,6 @@ class MainWindow(QtGui.QMainWindow):
 		self.connect(self.trayIcon, Qt.SIGNAL("quit"), self.close)
 		self.connect(self.jumpbridgeDataAction, Qt.SIGNAL("triggered()"), self.showJumbridgeChooser)
 
-		# Create a timer to refresh the map, then load up the map, either from cache or dotlan
-		self.mapTimer = QtCore.QTimer(self)
-		self.connect(self.mapTimer, QtCore.SIGNAL("timeout()"), self.updateMapView)
-		self.setupMap(True)
-
 		# Recall cached user settings
 		try:
 			self.cache.recallAndApplySettings(self, "settings")
@@ -153,7 +162,7 @@ class MainWindow(QtGui.QMainWindow):
 		self.connect(self.kosRequestThread, Qt.SIGNAL("kos_result"), self.showKosResult)
 		self.kosRequestThread.start()
 
-		self.filewatcherThread = filewatcher.FileWatcher(self.pathToLogs, 60 * 60 * 24)
+		self.filewatcherThread = filewatcher.FileWatcher(self.pathToLogs, FILE_WATCHER_INTERVAL_SECS)
 		self.connect(self.filewatcherThread, QtCore.SIGNAL("file_change"), self.logFileChanged)
 		self.filewatcherThread.start()
 
@@ -161,11 +170,17 @@ class MainWindow(QtGui.QMainWindow):
 		self.versionCheckThread.connect(self.versionCheckThread, Qt.SIGNAL("newer_version"), self.notifyNewerVersion)
 		self.versionCheckThread.start()
 
-		if sys.platform.startswith("win32") or sys.platform.startswith("cygwin"):
-			font = self.statisticsButton.font()
-			font.setPointSize(8)
-			self.statisticsButton.setFont(font)
-			self.jumpbridgesButton.setFont(font)
+		# Start a timer to refresh the map, then load up the map, either from cache or dotlan
+		self.mapTimer = QtCore.QTimer(self)
+		self.connect(self.mapTimer, QtCore.SIGNAL("timeout()"), self.updateMapView)
+		self.setupMap(True)
+
+		# Start a timer to check the keyboard for changes and kos check them,
+		# first initializing the content so we dont kos check from random content
+		self.oldClipboardContent = tuple(unicode(self.clipboard.text()))
+		self.clipboardTimer = QtCore.QTimer(self)
+		self.connect(self.mapTimer, QtCore.SIGNAL("timeout()"), self.clipboardChanged)
+		self.clipboardTimer.start(CLIPBOARD_CHECK_INTERVAL_MSECS)
 
 
 	def setupMap(self, initialize=False):
@@ -224,7 +239,7 @@ class MainWindow(QtGui.QMainWindow):
 				self.chooseRegionAction.setChecked(True)
 
 		self.updateMapView(force=True)
-		self.mapTimer.start(MAP_UPDATE_INTERVAL_IN_MSECS)
+		self.mapTimer.start(MAP_UPDATE_INTERVAL_MSECS)
 		self.jumpbridgesButton.setChecked(False)
 		self.statisticsButton.setChecked(False)
 
@@ -376,6 +391,7 @@ class MainWindow(QtGui.QMainWindow):
 				entry.changeFontSize(newSize)
 			ChatEntryWidget.TEXT_SIZE = newSize
 
+
 	def chatSmaller(self):
 		newSize = ChatEntryWidget.TEXT_SIZE - 1
 		self.changeChatFontSize(newSize)
@@ -400,12 +416,14 @@ class MainWindow(QtGui.QMainWindow):
 		self.jumpbridgesButton.setChecked(newValue)
 		self.updateMapView()
 
+
 	def changeStatisticsVisibility(self):
 		newValue = self.dotlan.changeStatisticsVisibility()
 		self.statisticsButton.setChecked(newValue)
 		self.updateMapView()
 
-	def clipboardChanged(self, mode):
+
+	def clipboardChanged(self, mode=0):
 		if not (mode == 0 and self.kosClipboardActiveAction.isChecked() and self.clipboard.mimeData().hasText()):
 			return
 		content = unicode(self.clipboard.text())
@@ -546,7 +564,7 @@ class MainWindow(QtGui.QMainWindow):
 				chatListWidgetItem = self.chatListWidget.item(0)
 				chatEntryWidget = self.chatListWidget.itemWidget(chatListWidgetItem)
 				message = chatEntryWidget.message
-				if now - time.mktime(message.timestamp.timetuple()) > MESSAGE_EXPIRY_IN_SECONDS:
+				if now - time.mktime(message.timestamp.timetuple()) > MESSAGE_EXPIRY_SECS:
 					self.chatEntries.remove(chatEntryWidget)
 					self.chatListWidget.takeItem(0)
 
@@ -635,7 +653,7 @@ class MainWindow(QtGui.QMainWindow):
 				text = data["text"]
 				self.trayIcon.showMessage("Loading statstics failed", text, 3)
 
-		if force or self.lastStatisticsUpdate < time.time() - STATISTICS_UPDATE_INTERVAL_IN_MSECS:
+		if force or self.lastStatisticsUpdate < time.time() - STATISTICS_UPDATE_INTERVAL_MSECS:
 			self.lastStatisticsUpdate = time.time()
 			statisticsThread = MapStatisticsThread()
 			self.connect(statisticsThread, Qt.SIGNAL("statistic_data_update"), updateStatisticsOnMap)
