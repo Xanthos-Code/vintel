@@ -4,7 +4,7 @@ block_cipher = None
 
 
 a = Analysis(['vintel.py'],
-             pathex=['Z:\\home\\sparrow\\Programming\\Python\\Intelvi\\src'],
+             pathex=['z:\\Programming\\git\\vintel\\src'],
              hiddenimports=[],
              hookspath=None,
              runtime_hooks=None,
@@ -49,7 +49,7 @@ exe = EXE(pyz,
           a.binaries,
           a.zipfiles,
           a.datas,
-          name='vintel-0.7.exe',
+          name='vintel-1.0.exe',
           debug=False,
           strip=None,
           upx=True,
