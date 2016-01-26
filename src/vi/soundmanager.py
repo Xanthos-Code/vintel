@@ -82,6 +82,7 @@ class SoundManager():
 		""" Accepts and stores a number between 0 and 100.
 		"""
 		self.soundVolume = max(0, min(100, newValue))
+		self._soundThread.setVolume(self.soundVolume)
 
 
 	def playSound(self, name="alarm", message="", abbreviatedMessage=""):
@@ -111,10 +112,15 @@ class SoundManager():
 		VOICE_RSS_API_KEY = '896a7f61ec5e478cba856a78babab79c'
 		GOOGLE_TTS_API_KEY = ''
 		isDarwin = sys.platform.startswith("darwin")
+		volume = 25
 
 		def __init__(self):
 			QThread.__init__(self)
 			self.queue = Queue()
+
+
+		def setVolume(self, volume):
+			self.volume = volume
 
 
 		def run(self):
@@ -151,7 +157,7 @@ class SoundManager():
 
 		def playAudioFile(self, filename, stream=False):
 			try:
-				volume = float(SoundManager.soundVolume) / 100.0
+				volume = float(self.volume) / 100.0
 				if gPygletAvailable:
 					src = media.load(filename, streaming=stream)
 					player = media.Player()
@@ -166,7 +172,7 @@ class SoundManager():
 
 		def darwinSpeak(self, message):
 			try:
-				os.system("say [[volm {0}]] '{1}'".format(float(SoundManager.soundVolume) / 100.0, message))
+				os.system("say [[volm {0}]] '{1}'".format(float(self.volume) / 100.0, message))
 			except Exception as e:
 				print "SoundThread.darwinSpeak exception: %s" % str(e)
 
