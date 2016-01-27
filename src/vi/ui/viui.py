@@ -61,6 +61,7 @@ class MainWindow(QtGui.QMainWindow):
 		self.pathToLogs = pathToLogs
 		self.trayIcon = trayIcon
 		self.cache = Cache()
+		self.clipboardTimer = None
 
 		# Load my toon names
 		self.knownPlayerNames = self.cache.getFromCache("known_player_names")
@@ -119,6 +120,7 @@ class MainWindow(QtGui.QMainWindow):
 
 		# Wire up UI connections
 		self.connect(self.clipboard, Qt.SIGNAL("changed(QClipboard::Mode)"), self.clipboardChanged)
+		self.connect(self.kosClipboardActiveAction, Qt.SIGNAL("triggered()"), self.changeKosCheckClipboard)
 		self.connect(self.zoomInButton, Qt.SIGNAL("clicked()"), self.zoomMapIn)
 		self.connect(self.zoomOutButton, Qt.SIGNAL("clicked()"), self.zoomMapOut)
 		self.connect(self.statisticsButton, Qt.SIGNAL("clicked()"), self.changeStatisticsVisibility)
@@ -175,12 +177,21 @@ class MainWindow(QtGui.QMainWindow):
 		self.connect(self.mapTimer, QtCore.SIGNAL("timeout()"), self.updateMapView)
 		self.setupMap(True)
 
-		# Start a timer to check the keyboard for changes and kos check them,
-		# first initializing the content so we dont kos check from random content
+
+	# Start a timer to check the keyboard for changes and kos check them,
+	# first initializing the content so we dont kos check from random content
+	def setupAndStartClipboardTimer(self):
+		self.stopAndShutdownClipboardTimer()
 		self.oldClipboardContent = tuple(unicode(self.clipboard.text()))
 		self.clipboardTimer = QtCore.QTimer(self)
 		self.connect(self.mapTimer, QtCore.SIGNAL("timeout()"), self.clipboardChanged)
 		self.clipboardTimer.start(CLIPBOARD_CHECK_INTERVAL_MSECS)
+
+
+	def stopAndShutdownClipboardTimer(self):
+		if self.clipboardTimer:
+			self.clipboardTimer.stop()
+		self.clipboardTimer = None
 
 
 	def setupMap(self, initialize=False):
@@ -269,7 +280,7 @@ class MainWindow(QtGui.QMainWindow):
 					(None, "setSoundVolume", SoundManager().soundVolume),
 					(None, "changeFrameless", self.framelessWindowAction.isChecked()),
 					(None, "changeUseSpokenNotifications", self.useSpokenNotificationsAction.isChecked()),
-					(None, "changeClipboard", self.kosClipboardActiveAction.isChecked()),
+					(None, "changeKosCheckClipboard", self.kosClipboardActiveAction.isChecked()),
 					(None, "changeFloatingOverview", self.floatingOverviewAction.isChecked()),
 					(None, "changeAlreadyShowedSoundWarning", self.alreadyShowedSoundWarning))
 		self.cache.putIntoCache("settings", str(settings), 60 * 60 * 24 * 365)
@@ -294,7 +305,8 @@ class MainWindow(QtGui.QMainWindow):
 
 
 	def changeAlreadyShowedSoundWarning(self, newValue):
-		self.alreadyShowedSoundWarning = newValue
+		# Decided to always show the warning
+		self.alreadyShowedSoundWarning = False
 
 
 	def changeChatVisibility(self, newValue=None):
@@ -304,10 +316,14 @@ class MainWindow(QtGui.QMainWindow):
 		self.chatbox.setVisible(newValue)
 
 
-	def changeClipboard(self, newValue=None):
+	def changeKosCheckClipboard(self, newValue=None):
 		if newValue is None:
 			newValue = self.kosClipboardActiveAction.isChecked()
 		self.kosClipboardActiveAction.setChecked(newValue)
+		if newValue:
+			self.setupAndStartClipboardTimer()
+		else:
+			self.stopAndShutdownClipboardTimer()
 
 
 	def changeUseSpokenNotifications(self, newValue=None):
