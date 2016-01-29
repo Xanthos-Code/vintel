@@ -124,11 +124,11 @@ The program looks for your logs on some default pathes. If those paths do not ex
 
 Examples:
 
-`> vintel-0.7.exe "d:\strange\path\EVE\logs\chatlogs"`
+`win> vintel-1.0.exe "d:\strange\path\EVE\logs\chatlogs"`
 
     – or –
 
-`> python vintel.py "/home/user/myverypecialpath/EVE/logs/chatlogs"`
+`mac> python vintel.py "/home/user/myverypecialpath/EVE/logs/chatlogs"`
 
 **Vintel does not start! What can I do?**
 
