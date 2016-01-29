@@ -11,7 +11,7 @@ Vintel is written with Python 2.7, using PyQt4 for the application presentation 
 ### News
 _The current release version of Vintel is **1.0.0** and [can be found here](https://github.com/Xanthos-Eve/vintel/releases/tag/1.0.0)._
 
-Release 1.1.0 is currently being planned - if you have ideas, bugs or suggestions, [please contribute to the  issues here](https://github.com/Xanthos-Eve/vintel/issues).
+Release 1.1.0 is currently in development - keep up on progress, add ideas, bugs or suggestions [here](https://github.com/Xanthos-Eve/vintel/issues).
 
 ## Screenshot
 
