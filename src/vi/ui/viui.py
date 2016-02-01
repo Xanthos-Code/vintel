@@ -62,6 +62,7 @@ class MainWindow(QtGui.QMainWindow):
 		self.trayIcon = trayIcon
 		self.cache = Cache()
 		self.clipboardTimer = None
+		self.mapTimer = QtCore.QTimer(self)
 
 		# Load my toon names
 		self.knownPlayerNames = self.cache.getFromCache("known_player_names")
@@ -173,7 +174,6 @@ class MainWindow(QtGui.QMainWindow):
 		self.versionCheckThread.start()
 
 		# Start a timer to refresh the map, then load up the map, either from cache or dotlan
-		self.mapTimer = QtCore.QTimer(self)
 		self.connect(self.mapTimer, QtCore.SIGNAL("timeout()"), self.updateMapView)
 		self.setupMap(True)
 
