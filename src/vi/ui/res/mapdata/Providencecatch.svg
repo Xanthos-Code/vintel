@@ -4732,24 +4732,6 @@
   <g id="standings">
   </g>
  </g>
- <g id="controls" transform="translate(0,282)">
-  <a id="a9650" xlink:title="Zoom In">
-   <image height="16" id="zoom_in" width="16" x="5" xlink:href="http://i.dotlan.net/images/icons/magnifier_zoom_in.png" y="5">
-   </image>
-  </a>
-  <a id="a9653" xlink:title="Zoom Out">
-   <image height="16" id="zoom_out" width="16" x="5" xlink:href="http://i.dotlan.net/images/icons/magnifier_zoom_out.png" y="23">
-   </image>
-  </a>
-  <a id="a9656" xlink:title="Enable Mousewheel Support">
-   <image height="16" id="wheel_on" width="16" x="5" xlink:href="http://i.dotlan.net/images/icons/mouse_add.png" y="42">
-   </image>
-  </a>
-  <a id="a9659" xlink:title="Disable Mousewheel Support">
-   <image height="16" id="wheel_off" width="16" x="5" xlink:href="http://i.dotlan.net/images/icons/mouse_delete.png" y="42">
-   </image>
-  </a>
- </g>
  <script id="script9662" type="text/javascript" xlink:href="http://s.dotlan.net/lib/dotSvg.js?1437088642">
  </script>
  <script id="script9664" type="text/javascript">
