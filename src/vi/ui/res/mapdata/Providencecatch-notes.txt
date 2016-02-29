@@ -1,0 +1,39 @@
+Rough notes from re-creation of the Providencecatch.svg by combining Providence.svg
+and Catch.svg. The systems that connect the two must be changed - duplicates removed
+and links between them updated. Then groups of systems must be moved so there are no
+overlaps - nost of catch placed below provi and a few other similar changes. When, due
+to a sov change or other events, the map must be regenerated, the notes below can be
+used to create a python script using BeautifulSoup to make these edits.
+
+- Change map goup name to Providence / Catch
+- Add symbol(s) in defs, from Catch to Provi
+- Add line(s) from Catch to Provi
+- Add use(s) from Catch to Provi
+- Add transform="translate(400,-175)" to specific Providence line and use instances
+- Modify end points on specific lines
+j-30003760-30003731 by 400,-175 on x2,y2
+j-30003730-30003729 by 300,0 on x2,y2
+- Add transform="translate(300,0)" to all Catch line and use instances
+- Add transform="translate(-200,0)" to all Catch line and use instances
+- Update the width, height and viewBox of the svg
+- Remove from Providence map these defs and use(s) and line(s) connecting them
+is-r7p
+br-n97
+s25c-k
+ervk-p
+ul-7i8
+g-aoth
+ta3t-3
+zq-z3y
+7md-s1
+d-gtmi
+t-rpfu
+- Remove from Catch these defs and use(s) and line(s) connecting them
+3kb-j0
+dp-jd4
+qr-k85
+u-hymt
+9uy4-h
+fc-3yi
+5io8-u
+oxiy-v
