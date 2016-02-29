@@ -50,7 +50,6 @@ CLIPBOARD_CHECK_INTERVAL_MSECS = 4 * 1000
 class MainWindow(QtGui.QMainWindow):
 
 	def __init__(self, pathToLogs, trayIcon):
-
 		QtGui.QMainWindow.__init__(self)
 		uic.loadUi(resourcePath('vi/ui/MainWindow.ui'), self)
 		self.setWindowTitle("Vintel " + VERSION + "{dev}".format(dev="-SNAPSHOT" if vi.version.SNAPSHOT else ""))
@@ -178,9 +177,11 @@ class MainWindow(QtGui.QMainWindow):
 		self.setupMap(True)
 
 
-	# Start a timer to check the keyboard for changes and kos check them,
-	# first initializing the content so we dont kos check from random content
 	def setupAndStartClipboardTimer(self):
+		"""
+			Start a timer to check the keyboard for changes and kos check them,
+			first initializing the content so we dont kos check from random content
+		"""
 		self.stopAndShutdownClipboardTimer()
 		self.oldClipboardContent = tuple(unicode(self.clipboard.text()))
 		self.clipboardTimer = QtCore.QTimer(self)
@@ -256,7 +257,8 @@ class MainWindow(QtGui.QMainWindow):
 
 
 	def closeEvent(self, event):
-		""" Persisting things to the cache before closing the window
+		"""
+			Persisting things to the cache before closing the window
 		"""
 		# Known playernames
 		if self.knownPlayerNames:
