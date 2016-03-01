@@ -51,7 +51,7 @@ class Map(object):
 		# Re-render all systems
 		for system in self.systems.values():
 			system.update()
-		# update the marker
+		# Update the marker
 		if not self.marker["opacity"] == "0":
 			now = time.time()
 			newValue = (1 - (now - float(self.marker["activated"]))/10)
@@ -142,7 +142,7 @@ class Map(object):
 		group.append(ellipse)
 		svg.insert(0, group)
 
-		# Marker for jumpbridges
+		# Create jumpbridge markers in a variety of colors
 		for jbColor in JB_COLORS:
 			startPath = soup.new_tag("path", d="M 10 0 L 10 10 L 0 5 z")
 			startMarker = soup.new_tag("marker", viewBox="0 0 20 20",
@@ -162,6 +162,7 @@ class Map(object):
 			svg.insert(0, endmarker)
 		jumps = soup.select("#jumps")[0]
 
+		# Set up the tags for system statistics
 		for systemId, system in self.systemsById.items():
 			coords = system.mapCoordinates
 			text = "stats n/a"
@@ -175,7 +176,7 @@ class Map(object):
 
 	def _connectNeighbours(self):
 		"""
-			This will find all neigbours of the systems and connect them.
+			This will find all neighbours of the systems and connect them.
 			It takes a look at all the jumps on the map and gets the system under
 			which the line ends
 		"""
@@ -231,11 +232,19 @@ class Map(object):
 			systemTwo = self.systems[sys2]
 			systemOneCoords = systemOne.mapCoordinates
 			systemTwoCoords = systemTwo.mapCoordinates
+			systemOneOffsetPoint = systemOne.getTransformOffsetPoint()
+			systemTwoOffsetPoint = systemTwo.getTransformOffsetPoint()
+
 			systemOne.setJumpbridgeColor(jbColor)
 			systemTwo.setJumpbridgeColor(jbColor)
 
 			# Construct the line, color it and add it to the jumps
-			line = soup.new_tag("line", x1 = systemOneCoords["center_x"], y1 = systemOneCoords["center_y"], x2 = systemTwoCoords["center_x"], y2 = systemTwoCoords["center_y"], visibility = "hidden", style = "stroke:#{0}".format(jbColor))
+			line = soup.new_tag("line",
+								x1 = systemOneCoords["center_x"] + systemOneOffsetPoint[0],
+								y1 = systemOneCoords["center_y"] + systemOneOffsetPoint[1],
+								x2 = systemTwoCoords["center_x"] + systemTwoOffsetPoint[0],
+								y2 = systemTwoCoords["center_y"] + systemTwoOffsetPoint[1],
+								visibility = "hidden", style = "stroke:#{0}".format(jbColor))
 			line["stroke-width"] = 2
 			line["class"] = ["jumpbridge",]
 			if "<" in connection:
@@ -301,8 +310,20 @@ class System(object):
 		self.mapCoordinates = mapCoordinates
 		self.systemId = systemId
 		self.transform = transform
+		self.cachedOffsetPoint = None
 		self._neighbours = set()
 		self.statistics = {"jumps": "?", "shipkills": "?", "factionkills": "?", "podkills": "?"}
+
+
+	def getTransformOffsetPoint(self):
+		if not self.cachedOffsetPoint:
+			if self.transform:
+				# Convert data in the form 'transform(0,0)' to a list of two floats
+				pointString = self.transform[9:].strip('()').split(',')
+				self.cachedOffsetPoint = [ float(pointString[0]), float(pointString[1]) ]
+			else:
+				self.cachedOffsetPoint = [0.0, 0.0]
+		return self.cachedOffsetPoint
 
 
 	def setJumpbridgeColor(self, color):
@@ -310,9 +331,10 @@ class System(object):
 		for element in self.mapSoup.select(u"#" + idName):
 			element.decompose()
 		coords = self.mapCoordinates
+		offsetPoint = self.getTransformOffsetPoint()
 		style = "fill:{0};stroke:{0};stroke-width:2;fill-opacity:0.4"
-		tag = self.mapSoup.new_tag("rect", x=coords["x"]-3, y=coords["y"],
-			width=coords["width"]+1.5, height=coords["height"], id=idName,
+		tag = self.mapSoup.new_tag("rect", x=coords["x"] - 3 + offsetPoint[0], y=coords["y"] + offsetPoint[1],
+			width=coords["width"] + 1.5, height=coords["height"], id=idName,
 			style=style.format(color), visibility="hidden")
 		tag["class"] = ["jumpbridge",]
 		jumps = self.mapSoup.select("#jumps")[0]
