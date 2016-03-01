@@ -25,119 +25,118 @@ from vi.resources import resourcePath
 from vi import states
 from vi.soundmanager import SoundManager
 
+
 class TrayContextMenu(QtGui.QMenu):
+    instances = set()
 
-	instances = set()
+    def __init__(self, trayicon):
+        """ trayicon = the object with the methods to call
+        """
+        QtGui.QMenu.__init__(self)
+        TrayContextMenu.instances.add(self)
+        self.trayicon = trayicon
+        self._buildMenu()
 
-	def __init__(self, trayicon):
-		""" trayicon = the object with the methods to call
-		"""
-		QtGui.QMenu.__init__(self)
-		TrayContextMenu.instances.add(self)
-		self.trayicon = trayicon
-		self._buildMenu()
+    def _buildMenu(self):
+        self.framelessCheck = QtGui.QAction("Frameless Window", self, checkable=True)
+        self.connect(self.framelessCheck, QtCore.SIGNAL("triggered()"), self.trayicon.changeFrameless)
+        self.addAction(self.framelessCheck)
+        self.addSeparator()
+        self.requestCheck = QtGui.QAction("Show status request notifications", self, checkable=True)
+        self.requestCheck.setChecked(True)
+        self.addAction(self.requestCheck)
+        self.connect(self.requestCheck, QtCore.SIGNAL("triggered()"), self.trayicon.switchRequest)
+        self.alarmCheck = QtGui.QAction("Show alarm notifications", self, checkable=True)
+        self.alarmCheck.setChecked(True)
+        self.connect(self.alarmCheck, QtCore.SIGNAL("triggered()"), self.trayicon.switchAlarm)
+        self.addAction(self.alarmCheck)
+        distanceMenu = self.addMenu("Alarm Distance")
+        self.distanceGroup = QtGui.QActionGroup(self)
+        for i in xrange(0, 6):
+            action = QtGui.QAction("{0} Jumps".format(i), None, checkable=True)
+            if i == 0:
+                action.setChecked(True)
+            action.alarmDistance = i
+            self.connect(action, QtCore.SIGNAL("triggered()"), self.changeAlarmDistance)
+            self.distanceGroup.addAction(action)
+            distanceMenu.addAction(action)
+        self.addMenu(distanceMenu)
+        self.addSeparator()
+        self.quitAction = QtGui.QAction("Quit", self)
+        self.connect(self.quitAction, Qt.SIGNAL("triggered()"), self.trayicon.quit)
+        self.addAction(self.quitAction)
 
-
-	def _buildMenu(self):
-		self.framelessCheck = QtGui.QAction("Frameless Window", self, checkable=True)
-		self.connect(self.framelessCheck, QtCore.SIGNAL("triggered()"), self.trayicon.changeFrameless)
-		self.addAction(self.framelessCheck)
-		self.addSeparator()
-		self.requestCheck = QtGui.QAction("Show status request notifications", self, checkable=True)
-		self.requestCheck.setChecked(True)
-		self.addAction(self.requestCheck)
-		self.connect(self.requestCheck, QtCore.SIGNAL("triggered()"), self.trayicon.switchRequest)
-		self.alarmCheck = QtGui.QAction("Show alarm notifications", self, checkable=True)
-		self.alarmCheck.setChecked(True)
-		self.connect(self.alarmCheck, QtCore.SIGNAL("triggered()"), self.trayicon.switchAlarm)
-		self.addAction(self.alarmCheck)
-		distanceMenu = self.addMenu("Alarm Distance")
-		self.distanceGroup = QtGui.QActionGroup(self)
-		for i in xrange(0, 6):
-			action = QtGui.QAction("{0} Jumps".format(i), None, checkable=True)
-			if i == 0:
-				action.setChecked(True)
-			action.alarmDistance = i
-			self.connect(action, QtCore.SIGNAL("triggered()"), self.changeAlarmDistance)
-			self.distanceGroup.addAction(action)
-			distanceMenu.addAction(action)
-		self.addMenu(distanceMenu)
-		self.addSeparator()
-		self.quitAction = QtGui.QAction("Quit", self)
-		self.connect(self.quitAction, Qt.SIGNAL("triggered()"), self.trayicon.quit)
-		self.addAction(self.quitAction)
-
-	def changeAlarmDistance(self):
-		for action in self.distanceGroup.actions():
-			if action.isChecked():
-				self.trayicon.alarmDistance = action.alarmDistance
-				self.trayicon.changeAlarmDistance()
+    def changeAlarmDistance(self):
+        for action in self.distanceGroup.actions():
+            if action.isChecked():
+                self.trayicon.alarmDistance = action.alarmDistance
+                self.trayicon.changeAlarmDistance()
 
 
 class TrayIcon(QtGui.QSystemTrayIcon):
+    # Min seconds between two notifications
+    MIN_WAIT_NOTIFICATION = 15
 
-	# Min seconds between two notifications
-	MIN_WAIT_NOTIFICATION = 15
+    def __init__(self, app):
+        self.icon = QtGui.QIcon(resourcePath("vi/ui/res/logo_small.png"))
+        QtGui.QSystemTrayIcon.__init__(self, self.icon, app)
+        self.setToolTip("Your Vintel-Information-Service! :)")
+        self.lastNotifications = {}
+        self.setContextMenu(TrayContextMenu(self))
+        self.showAlarm = True
+        self.showRequest = True
+        self.alarmDistance = 0
 
-	def __init__(self, app):
-		self.icon = QtGui.QIcon(resourcePath("vi/ui/res/logo_small.png"))
-		QtGui.QSystemTrayIcon.__init__(self, self.icon, app)
-		self.setToolTip("Your Vintel-Information-Service! :)")
-		self.lastNotifications = {}
-		self.setContextMenu(TrayContextMenu(self))
-		self.showAlarm = True
-		self.showRequest = True
-		self.alarmDistance = 0
+    def changeAlarmDistance(self):
+        distance = self.alarmDistance
+        self.emit(Qt.SIGNAL("alarm_distance"), distance)
 
+    def changeFrameless(self):
+        self.emit(Qt.SIGNAL("change_frameless"))
 
-	def changeAlarmDistance(self):
-		distance = self.alarmDistance
-		self.emit(Qt.SIGNAL("alarm_distance"), distance)
+    @property
+    def distanceGroup(self):
+        return self.contextMenu().distanceGroup
 
-	def changeFrameless(self):
-		self.emit(Qt.SIGNAL("change_frameless"))
+    def quit(self):
+        self.emit(Qt.SIGNAL("quit"))
 
-	@property
-	def distanceGroup(self):
-		return self.contextMenu().distanceGroup
+    def switchAlarm(self):
+        newValue = not self.showAlarm
+        for cm in TrayContextMenu.instances:
+            cm.alarmCheck.setChecked(newValue)
+        self.showAlarm = newValue
 
-	def quit(self):
-		self.emit(Qt.SIGNAL("quit"))
+    def switchRequest(self):
+        newValue = not self.showRequest
+        for cm in TrayContextMenu.instances:
+            cm.requestCheck.setChecked(newValue)
+        self.showRequest = newValue
 
-	def switchAlarm(self):
-		newValue = not self.showAlarm
-		for cm in TrayContextMenu.instances:
-			cm.alarmCheck.setChecked(newValue)
-		self.showAlarm = newValue
-
-	def switchRequest(self):
-		newValue = not self.showRequest
-		for cm in TrayContextMenu.instances:
-			cm.requestCheck.setChecked(newValue)
-		self.showRequest = newValue
-
-	def showNotification(self, message, system, char, distance):
-		if message is None:
-			return
-		room = message.room
-		title = None
-		text = None
-		icon = None
-		text = ""
-		if (message.status == states.ALARM and self.showAlarm and self.lastNotifications.get(states.ALARM, 0) < time.time() - self.MIN_WAIT_NOTIFICATION):
-			title = "ALARM!"
-			textAbbreviated = (u"{0} alarmed in {1}, {2} jumps from {3}".format(system, room, distance, char))
-			text = textAbbreviated + (u"\nText: %s" % text)
-			icon = 2
-			messageText = message.plainText
-			self.lastNotifications[states.ALARM] = time.time()
-			SoundManager().playSound("alarm", text, textAbbreviated)
-		elif (message.status == states.REQUEST and self.showRequest and self.lastNotifications.get(states.REQUEST, 0) < time.time() - self.MIN_WAIT_NOTIFICATION):
-			title = "Status request"
-			icon = 1
-			text = (u"Someone is requesting status of {0} in {1}.".format(system, room))
-			self.lastNotifications[states.REQUEST] = time.time()
-			SoundManager().playSound("request", text)
-		if not (title is None or text is None or icon):
-			text = text.format(**locals())
-			self.showMessage(title, text, icon)
+    def showNotification(self, message, system, char, distance):
+        if message is None:
+            return
+        room = message.room
+        title = None
+        text = None
+        icon = None
+        text = ""
+        if (message.status == states.ALARM and self.showAlarm and self.lastNotifications.get(states.ALARM,
+                                                                                             0) < time.time() - self.MIN_WAIT_NOTIFICATION):
+            title = "ALARM!"
+            textAbbreviated = (u"{0} alarmed in {1}, {2} jumps from {3}".format(system, room, distance, char))
+            text = textAbbreviated + (u"\nText: %s" % text)
+            icon = 2
+            messageText = message.plainText
+            self.lastNotifications[states.ALARM] = time.time()
+            SoundManager().playSound("alarm", text, textAbbreviated)
+        elif (message.status == states.REQUEST and self.showRequest and self.lastNotifications.get(states.REQUEST,
+                                                                                                   0) < time.time() - self.MIN_WAIT_NOTIFICATION):
+            title = "Status request"
+            icon = 1
+            text = (u"Someone is requesting status of {0} in {1}.".format(system, room))
+            self.lastNotifications[states.REQUEST] = time.time()
+            SoundManager().playSound("request", text)
+        if not (title is None or text is None or icon):
+            text = text.format(**locals())
+            self.showMessage(title, text, icon)

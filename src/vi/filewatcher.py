@@ -37,59 +37,59 @@ if a new file was created. We watch only the newest (last 24h), not all!
 
 
 class FileWatcher(QtCore.QThread):
-	def __init__(self, path, maxAge):
-		QtCore.QThread.__init__(self)
-		self.path = path
-		self.maxAge = maxAge
-		self.files = {}
-		self.qtfw = QtCore.QFileSystemWatcher()
-		self.qtfw.directoryChanged.connect(self.directoryChanged)
-		self.qtfw.addPath(path)
-		self.updateWatchedFiles()
+    def __init__(self, path, maxAge):
+        QtCore.QThread.__init__(self)
+        self.path = path
+        self.maxAge = maxAge
+        self.files = {}
+        self.qtfw = QtCore.QFileSystemWatcher()
+        self.qtfw.directoryChanged.connect(self.directoryChanged)
+        self.qtfw.addPath(path)
+        self.updateWatchedFiles()
 
-	def directoryChanged(self):
-		self.updateWatchedFiles()
+    def directoryChanged(self):
+        self.updateWatchedFiles()
 
-	def run(self):
-		while True:
-			for path, modified in self.files.items():
-				newModified = 0
-				try:
-					newModified = os.path.getsize(path)
-				except Exception as e:
-					print "filewatcher-thread error:", path, str(e)
-				if newModified > modified:
-					self.emit(SIGNAL("file_change"), path)
-					self.files[path] = newModified
-			time.sleep(1)
+    def run(self):
+        while True:
+            for path, modified in self.files.items():
+                newModified = 0
+                try:
+                    newModified = os.path.getsize(path)
+                except Exception as e:
+                    print "filewatcher-thread error:", path, str(e)
+                if newModified > modified:
+                    self.emit(SIGNAL("file_change"), path)
+                    self.files[path] = newModified
+            time.sleep(1)
 
-	def updateWatchedFiles(self):
-		# reeading all files from the directory
-		fullPath = None
-		now = time.time()
-		path = self.path
-		filesInDir = set()
-		for f in os.listdir(path):
-			if not os.path.isdir(f):
-				try:
-					add = True
-					fullPath = os.path.join(path, f)
-					if (self.maxAge and now - os.path.getmtime(fullPath) > self.maxAge):
-						add = False
-					if add:
-						filesInDir.add(fullPath)
-				except Exception as e:
-					print "file to filewatcher failed:", fullPath, str(e)
+    def updateWatchedFiles(self):
+        # reeading all files from the directory
+        fullPath = None
+        now = time.time()
+        path = self.path
+        filesInDir = set()
+        for f in os.listdir(path):
+            if not os.path.isdir(f):
+                try:
+                    add = True
+                    fullPath = os.path.join(path, f)
+                    if (self.maxAge and now - os.path.getmtime(fullPath) > self.maxAge):
+                        add = False
+                    if add:
+                        filesInDir.add(fullPath)
+                except Exception as e:
+                    print "file to filewatcher failed:", fullPath, str(e)
 
-		# Are there old file, that not longer exists?
-		filesToRemove = set()
-		for knownFile in self.files:
-			if knownFile not in filesInDir:
-				filesToRemove.add(knownFile)
-		for fileToRemove in filesToRemove:
-			del self.files[fileToRemove]
+        # Are there old file, that not longer exists?
+        filesToRemove = set()
+        for knownFile in self.files:
+            if knownFile not in filesInDir:
+                filesToRemove.add(knownFile)
+        for fileToRemove in filesToRemove:
+            del self.files[fileToRemove]
 
-		# Are there new files we must watch now?
-		for newFile in filesInDir:
-			if newFile not in self.files:
-				self.files[newFile] = os.path.getsize(newFile)
+        # Are there new files we must watch now?
+        for newFile in filesInDir:
+            if newFile not in self.files:
+                self.files[newFile] = os.path.getsize(newFile)
