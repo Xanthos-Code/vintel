@@ -159,8 +159,8 @@ class Map(object):
         for systemId, system in self.systemsById.items():
             coords = system.mapCoordinates
             text = "stats n/a"
-            style = "text-anchor:middle;font-size:7;font-family:Arial;"
-            svgtext = soup.new_tag("text", x=coords["center_x"], y=coords["y"] + coords["height"] + 7, fill="blue",
+            style = "text-anchor:middle;font-size:8;font-weight:normal;font-family:Arial;"
+            svgtext = soup.new_tag("text", x=coords["center_x"], y=coords["y"] + coords["height"] + 6, fill="blue",
                                    style=style, visibility="hidden", transform=system.transform)
             svgtext["id"] = "stats_" + str(systemId)
             svgtext["class"] = ["statistics", ]
@@ -440,7 +440,7 @@ class System(object):
         if statistics is None:
             text = "stats n/a"
         else:
-            text = "J:{jumps} | F:{factionkills} S:{shipkills} P:{podkills}".format(**statistics)
+            text = "j-{jumps} f-{factionkills} s-{shipkills} p-{podkills}".format(**statistics)
         svgtext = self.mapSoup.select("#stats_" + str(self.systemId))[0]
         svgtext.string = text
 
