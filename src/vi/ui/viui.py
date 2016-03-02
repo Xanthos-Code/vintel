@@ -298,8 +298,7 @@ class MainWindow(QtGui.QMainWindow):
         event.accept()
 
     def notifyNewerVersion(self, newestVersion):
-        self.trayIcon.showMessage("Newer Version",
-                                  ("An update is available for Vintel.\nhttps://github.com/Xanthos-Eve/vintel"), 1)
+        self.trayIcon.showMessage("Newer Version", ("An update is available for Vintel.\nhttps://github.com/Xanthos-Eve/vintel"), 1)
 
     def changeFloatingOverview(self, newValue=None):
         pass
@@ -655,18 +654,15 @@ class MainWindow(QtGui.QMainWindow):
             if message.status == states.LOCATION:
                 self.knownPlayerNames.add(message.user)
                 self.setLocation(message.user, message.systems[0])
-            # SOUND_TEST special
-            elif message.status == states.SOUND_TEST and message.user in self.knownPlayerNames:
-                words = message.message.split()
-                if len(words) > 1:
-                    SoundManager().playSound(words[1])
-            # KOS request
             elif message.status == states.KOS_STATUS_REQUEST:
-                text = message.message[4:]
-                text = text.replace("  ", ",")
-                parts = (name.strip() for name in text.split(","))
-                self.trayIcon.setIcon(self.taskbarIconWorking)
-                self.kosRequestThread.addRequest(parts, "xxx", False)
+                # Do not accept KOS requests from monitored intel channels
+                # as we don't want to encourage the use of xxx in those channels.
+                if not message.room in self.roomnames:
+                    text = message.message[4:]
+                    text = text.replace("  ", ",")
+                    parts = (name.strip() for name in text.split(","))
+                    self.trayIcon.setIcon(self.taskbarIconWorking)
+                    self.kosRequestThread.addRequest(parts, "xxx", False)
             # Otherwise consider it a 'normal' chat message
             elif (message.user not in ("EVE-System", "EVE System") and message.status != states.IGNORE):
                 self.addMessageToIntelChat(message)
@@ -676,8 +672,7 @@ class MainWindow(QtGui.QMainWindow):
                     for system in message.systems:
                         systemname = system.name
                         self.dotlan.systems[systemname].setStatus(message.status)
-                        if message.status in (
-                        states.REQUEST, states.ALARM) and message.user not in self.knownPlayerNames:
+                        if message.status in (states.REQUEST, states.ALARM) and message.user not in self.knownPlayerNames:
                             alarmDistance = self.alarmDistance if message.status == states.ALARM else 0
                             for nSystem, data in system.getNeighbours(alarmDistance).items():
                                 distance = data["distance"]

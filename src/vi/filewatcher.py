@@ -64,7 +64,7 @@ class FileWatcher(QtCore.QThread):
             time.sleep(1)
 
     def updateWatchedFiles(self):
-        # reeading all files from the directory
+        # Reading all files from the directory
         fullPath = None
         now = time.time()
         path = self.path
@@ -79,9 +79,9 @@ class FileWatcher(QtCore.QThread):
                     if add:
                         filesInDir.add(fullPath)
                 except Exception as e:
-                    print "file to filewatcher failed:", fullPath, str(e)
+                    print "Add file to filewatcher failed:", fullPath, str(e)
 
-        # Are there old file, that not longer exists?
+        # Are there old files that not longer exists?
         filesToRemove = set()
         for knownFile in self.files:
             if knownFile not in filesInDir:
