@@ -113,11 +113,11 @@ if __name__ == "__main__":
     # print "Vintel expects to find logs at: ", pathToLogs
     # print "Vintel writes data to: ", outputDir
 
-    trayicon = systemtray.TrayIcon(app)
-    trayicon.setContextMenu(systemtray.TrayContextMenu(trayicon))
-    trayicon.show()
+    trayIcon = systemtray.TrayIcon(app)
+    trayIcon.setContextMenu(systemtray.TrayContextMenu(trayIcon))
+    trayIcon.show()
 
-    mw = viui.MainWindow(pathToLogs, trayicon)
+    mw = viui.MainWindow(pathToLogs, trayIcon)
     mw.show()
     splash.finish(mw)
 

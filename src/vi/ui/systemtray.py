@@ -29,26 +29,26 @@ from vi.soundmanager import SoundManager
 class TrayContextMenu(QtGui.QMenu):
     instances = set()
 
-    def __init__(self, trayicon):
-        """ trayicon = the object with the methods to call
+    def __init__(self, trayIcon):
+        """ trayIcon = the object with the methods to call
         """
         QtGui.QMenu.__init__(self)
         TrayContextMenu.instances.add(self)
-        self.trayicon = trayicon
+        self.trayIcon = trayIcon
         self._buildMenu()
 
     def _buildMenu(self):
         self.framelessCheck = QtGui.QAction("Frameless Window", self, checkable=True)
-        self.connect(self.framelessCheck, QtCore.SIGNAL("triggered()"), self.trayicon.changeFrameless)
+        self.connect(self.framelessCheck, QtCore.SIGNAL("triggered()"), self.trayIcon.changeFrameless)
         self.addAction(self.framelessCheck)
         self.addSeparator()
         self.requestCheck = QtGui.QAction("Show status request notifications", self, checkable=True)
         self.requestCheck.setChecked(True)
         self.addAction(self.requestCheck)
-        self.connect(self.requestCheck, QtCore.SIGNAL("triggered()"), self.trayicon.switchRequest)
+        self.connect(self.requestCheck, QtCore.SIGNAL("triggered()"), self.trayIcon.switchRequest)
         self.alarmCheck = QtGui.QAction("Show alarm notifications", self, checkable=True)
         self.alarmCheck.setChecked(True)
-        self.connect(self.alarmCheck, QtCore.SIGNAL("triggered()"), self.trayicon.switchAlarm)
+        self.connect(self.alarmCheck, QtCore.SIGNAL("triggered()"), self.trayIcon.switchAlarm)
         self.addAction(self.alarmCheck)
         distanceMenu = self.addMenu("Alarm Distance")
         self.distanceGroup = QtGui.QActionGroup(self)
@@ -63,14 +63,14 @@ class TrayContextMenu(QtGui.QMenu):
         self.addMenu(distanceMenu)
         self.addSeparator()
         self.quitAction = QtGui.QAction("Quit", self)
-        self.connect(self.quitAction, Qt.SIGNAL("triggered()"), self.trayicon.quit)
+        self.connect(self.quitAction, Qt.SIGNAL("triggered()"), self.trayIcon.quit)
         self.addAction(self.quitAction)
 
     def changeAlarmDistance(self):
         for action in self.distanceGroup.actions():
             if action.isChecked():
-                self.trayicon.alarmDistance = action.alarmDistance
-                self.trayicon.changeAlarmDistance()
+                self.trayIcon.alarmDistance = action.alarmDistance
+                self.trayIcon.changeAlarmDistance()
 
 
 class TrayIcon(QtGui.QSystemTrayIcon):
@@ -121,17 +121,14 @@ class TrayIcon(QtGui.QSystemTrayIcon):
         text = None
         icon = None
         text = ""
-        if (message.status == states.ALARM and self.showAlarm and self.lastNotifications.get(states.ALARM,
-                                                                                             0) < time.time() - self.MIN_WAIT_NOTIFICATION):
+        if (message.status == states.ALARM and self.showAlarm and self.lastNotifications.get(states.ALARM, 0) < time.time() - self.MIN_WAIT_NOTIFICATION):
             title = "ALARM!"
-            textAbbreviated = (u"{0} alarmed in {1}, {2} jumps from {3}".format(system, room, distance, char))
-            text = textAbbreviated + (u"\nText: %s" % text)
             icon = 2
-            messageText = message.plainText
+            speechText = (u"{0} alarmed in {1}, {2} jumps from {3}".format(system, room, distance, char))
+            text = speechText + (u"\nText: %s" % text)
+            SoundManager().playSound("alarm", text, speechText)
             self.lastNotifications[states.ALARM] = time.time()
-            SoundManager().playSound("alarm", text, textAbbreviated)
-        elif (message.status == states.REQUEST and self.showRequest and self.lastNotifications.get(states.REQUEST,
-                                                                                                   0) < time.time() - self.MIN_WAIT_NOTIFICATION):
+        elif (message.status == states.REQUEST and self.showRequest and self.lastNotifications.get(states.REQUEST, 0) < time.time() - self.MIN_WAIT_NOTIFICATION):
             title = "Status request"
             icon = 1
             text = (u"Someone is requesting status of {0} in {1}.".format(system, room))
