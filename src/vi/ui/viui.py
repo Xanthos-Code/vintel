@@ -43,12 +43,12 @@ DEBUG = False
 # Timer intervals
 MESSAGE_EXPIRY_SECS = 20 * 60
 FILE_WATCHER_INTERVAL_SECS = 60 * 60 * 24
-STATISTICS_UPDATE_INTERVAL_MSECS = 5 * 60 * 1000
 MAP_UPDATE_INTERVAL_MSECS = 4 * 1000
 CLIPBOARD_CHECK_INTERVAL_MSECS = 4 * 1000
 
 
 class MainWindow(QtGui.QMainWindow):
+
     def __init__(self, pathToLogs, trayIcon):
         QtGui.QMainWindow.__init__(self)
         uic.loadUi(resourcePath('vi/ui/MainWindow.ui'), self)
@@ -57,20 +57,32 @@ class MainWindow(QtGui.QMainWindow):
         self.taskbarIconWorking = QtGui.QIcon(resourcePath("vi/ui/res/logo_small_green.png"))
         self.setWindowIcon(self.taskbarIconQuiescent)
 
+        # Initialize state and set up resources
         self.pathToLogs = pathToLogs
-        self.trayIcon = trayIcon
         self.cache = Cache()
-        self.clipboardTimer = None
+        self.initMapPosition = None
         self.mapTimer = QtCore.QTimer(self)
+        self.connect(self.mapTimer, QtCore.SIGNAL("timeout()"), self.updateMapView)
+        self.clipboardTimer = QtCore.QTimer(self)
+        self.oldClipboardContent = ""
+        self.trayIcon = trayIcon
+        self.trayIcon.activated.connect(self.systemTrayActivated)
+        self.clipboard = QtGui.QApplication.clipboard()
+        self.clipboard.clear(mode=self.clipboard.Clipboard)
+        self.alarmDistance = 0
+        self.lastStatisticsUpdate = 0
+        self.alreadyShowedSoundWarning = False
+        self.chatEntries = []
+        self.frameButton.setVisible(False)
 
-        # Load my toon names
+        # Load user's toon names
         self.knownPlayerNames = self.cache.getFromCache("known_player_names")
         if self.knownPlayerNames:
             self.knownPlayerNames = set(self.knownPlayerNames.split(","))
         else:
             self.knownPlayerNames = set()
 
-        # Set up my intel rooms
+        # Set up user's intel rooms
         roomnames = self.cache.getFromCache("room_names")
         if roomnames:
             roomnames = roomnames.split(",")
@@ -81,23 +93,12 @@ class MainWindow(QtGui.QMainWindow):
 
         # Disable the sound UI if sound is not available
         if not SoundManager().soundAvailable:
+            # todo - if sound is disabled tell them why if the use the menu
             self.changeSound(disable=True)
         else:
             self.changeSound()
 
-        # Initialize state
-        self.initMapPosition = None
-        self.oldClipboardContent = ""
-        self.alarmDistance = 0
-        self.lastStatisticsUpdate = 0
-        self.alreadyShowedSoundWarning = False
-        self.chatEntries = []
-        self.frameButton.setVisible(False)
-        self.trayIcon.activated.connect(self.systemTrayActivated)
-        self.clipboard = QtGui.QApplication.clipboard()
-        self.clipboard.clear(mode=self.clipboard.Clipboard)
-
-        # Fill in opacity values and connections
+        # Set up Transparency menu - fill in opacity values and make connections
         self.opacityGroup = QtGui.QActionGroup(self.menu)
         for i in (100, 80, 60, 40, 20):
             action = QtGui.QAction("Opacity {0}%".format(i), None, checkable=True)
@@ -108,8 +109,10 @@ class MainWindow(QtGui.QMainWindow):
             self.opacityGroup.addAction(action)
             self.menuTransparency.addAction(action)
 
+        #
         # Platform specific UI resizing - we size items in the resource files to look correct on the mac,
         # then resize other platforms as needed
+        #
         if sys.platform.startswith("win32") or sys.platform.startswith("cygwin"):
             font = self.statisticsButton.font()
             font.setPointSize(8)
@@ -118,7 +121,23 @@ class MainWindow(QtGui.QMainWindow):
         elif sys.platform.startswith("linux"):
             pass
 
-        # Wire up UI connections
+        self.wireUpUIConnections()
+        self.recallCachedSettings()
+        self.setupThreads()
+        self.setupMap(True)
+
+
+    def recallCachedSettings(self):
+        try:
+            self.cache.recallAndApplySettings(self, "settings")
+        except Exception as e:
+            print str(e)
+            # todo: add a button to delete the cache / DB
+            self.trayIcon.showMessage("Settings error", "Something went wrong loading saved state:\n {0}".format(str(e)), 1)
+
+
+    def wireUpUIConnections(self):
+        # Wire up general UI connections
         self.connect(self.clipboard, Qt.SIGNAL("changed(QClipboard::Mode)"), self.clipboardChanged)
         self.connect(self.kosClipboardActiveAction, Qt.SIGNAL("triggered()"), self.changeKosCheckClipboard)
         self.connect(self.zoomInButton, Qt.SIGNAL("clicked()"), self.zoomMapIn)
@@ -151,14 +170,8 @@ class MainWindow(QtGui.QMainWindow):
         self.connect(self.trayIcon, Qt.SIGNAL("quit"), self.close)
         self.connect(self.jumpbridgeDataAction, Qt.SIGNAL("triggered()"), self.showJumbridgeChooser)
 
-        # Recall cached user settings
-        try:
-            self.cache.recallAndApplySettings(self, "settings")
-        except Exception as e:
-            print str(e)
-            self.trayIcon.showMessage("Settings error",
-                                      "Something went wrong loading saved state:\n {0}".format(str(e)), 1)
 
+    def setupThreads(self):
         # Set up threads and their connections
         self.avatarFindThread = AvatarFindThread()
         self.connect(self.avatarFindThread, QtCore.SIGNAL("avatar_update"), self.updateAvatarOnChatEntry)
@@ -176,25 +189,10 @@ class MainWindow(QtGui.QMainWindow):
         self.versionCheckThread.connect(self.versionCheckThread, Qt.SIGNAL("newer_version"), self.notifyNewerVersion)
         self.versionCheckThread.start()
 
-        # Start a timer to refresh the map, then load up the map, either from cache or dotlan
-        self.connect(self.mapTimer, QtCore.SIGNAL("timeout()"), self.updateMapView)
-        self.setupMap(True)
+        self.statisticsThread = MapStatisticsThread()
+        self.connect(self.statisticsThread, Qt.SIGNAL("statistic_data_update"), self.updateStatisticsOnMap)
+        self.statisticsThread.start()
 
-    def setupAndStartClipboardTimer(self):
-        """
-            Start a timer to check the keyboard for changes and kos check them,
-            first initializing the content so we dont kos check from random content
-        """
-        self.stopAndShutdownClipboardTimer()
-        self.oldClipboardContent = tuple(unicode(self.clipboard.text()))
-        self.clipboardTimer = QtCore.QTimer(self)
-        self.connect(self.mapTimer, QtCore.SIGNAL("timeout()"), self.clipboardChanged)
-        self.clipboardTimer.start(CLIPBOARD_CHECK_INTERVAL_MSECS)
-
-    def stopAndShutdownClipboardTimer(self):
-        if self.clipboardTimer:
-            self.clipboardTimer.stop()
-        self.clipboardTimer = None
 
     def setupMap(self, initialize=False):
         self.mapTimer.stop()
@@ -217,8 +215,7 @@ class MainWindow(QtGui.QMainWindow):
         if self.dotlan.outdatedCacheError:
             e = self.dotlan.outdatedCacheError
             diagText = "Something went wrong getting map data. Proceeding with older cached data. " \
-                       "Check for a newer version and inform the maintainer.\n\nError: {0} {1}".format(type(e),
-                                                                                                       unicode(e))
+                       "Check for a newer version and inform the maintainer.\n\nError: {0} {1}".format(type(e), unicode(e))
             print str(e)
             QtGui.QMessageBox.warning(None, "Using map from cache", diagText, "Ok")
 
@@ -251,11 +248,30 @@ class MainWindow(QtGui.QMainWindow):
                 self.providenceRegionAction.setChecked(True)
             else:
                 self.chooseRegionAction.setChecked(True)
-
-        self.updateMapView(force=True)
-        self.mapTimer.start(MAP_UPDATE_INTERVAL_MSECS)
         self.jumpbridgesButton.setChecked(False)
         self.statisticsButton.setChecked(False)
+
+        # Update the new map view, then clear old statistics from the map and request new
+        self.updateMapView()
+        self.dotlan.addSystemStatistics(None)
+        self.statisticsThread.requestStatistics()
+        self.mapTimer.start(MAP_UPDATE_INTERVAL_MSECS)
+
+
+    def setupAndStartClipboardTimer(self):
+        """
+            Start a timer to check the keyboard for changes and kos check them,
+            first initializing the content so we dont kos check from random content
+        """
+        self.stopAndShutdownClipboardTimer()
+        self.oldClipboardContent = tuple(unicode(self.clipboard.text()))
+        self.connect(self.clipboardTimer, QtCore.SIGNAL("timeout()"), self.clipboardChanged)
+        self.clipboardTimer.start(CLIPBOARD_CHECK_INTERVAL_MSECS)
+
+    def stopAndShutdownClipboardTimer(self):
+        if self.clipboardTimer:
+            self.clipboardTimer.stop()
+
 
     def closeEvent(self, event):
         """
@@ -277,8 +293,8 @@ class MainWindow(QtGui.QMainWindow):
                     (None, "changeShowAvatars", self.showChatAvatarsAction.isChecked()),
                     (None, "changeAlarmDistance", self.alarmDistance),
                     (None, "changeSound", self.activateSoundAction.isChecked()),
-                    (None, "changeChatVisibility", self.showChatAction.isChecked()), (None, "setInitMapPosition", (
-        self.mapView.page().mainFrame().scrollPosition().x(), self.mapView.page().mainFrame().scrollPosition().y())),
+                    (None, "changeChatVisibility", self.showChatAction.isChecked()),
+                    (None, "setInitMapPosition", (self.mapView.page().mainFrame().scrollPosition().x(), self.mapView.page().mainFrame().scrollPosition().y())),
                     (None, "setSoundVolume", SoundManager().soundVolume),
                     (None, "changeFrameless", self.framelessWindowAction.isChecked()),
                     (None, "changeUseSpokenNotifications", self.useSpokenNotificationsAction.isChecked()),
@@ -291,8 +307,9 @@ class MainWindow(QtGui.QMainWindow):
         try:
             self.filewatcherThread.quit()
             self.kosRequestThread.quit()
-            SoundManager().quit()
+            self.self.statisticsThread.quit()
             self.versionCheckThread.quit()
+            SoundManager().quit()
         except Exception:
             pass
         event.accept()
@@ -626,19 +643,14 @@ class MainWindow(QtGui.QMainWindow):
         else:
             self.emit(Qt.SIGNAL("avatar_loaded"), chatEntry.message.user, avatarData)
 
-    def updateMapView(self, force=False):
-        def updateStatisticsOnMap(data):
-            if data["result"] == "ok":
-                self.dotlan.addSystemStatistics(data["statistics"])
-            elif data["result"] == "error":
-                text = data["text"]
-                self.trayIcon.showMessage("Loading statstics failed", text, 3)
+    def updateStatisticsOnMap(self, data):
+        if data["result"] == "ok":
+            self.dotlan.addSystemStatistics(data["statistics"])
+        elif data["result"] == "error":
+            text = data["text"]
+            self.trayIcon.showMessage("Loading statstics failed", text, 3)
 
-        if force or self.lastStatisticsUpdate < time.time() - STATISTICS_UPDATE_INTERVAL_MSECS:
-            self.lastStatisticsUpdate = time.time()
-            statisticsThread = MapStatisticsThread()
-            self.connect(statisticsThread, Qt.SIGNAL("statistic_data_update"), updateStatisticsOnMap)
-            statisticsThread.start()
+    def updateMapView(self):
         self.setMapContent(self.dotlan.svg)
 
     def zoomMapIn(self):
@@ -664,7 +676,7 @@ class MainWindow(QtGui.QMainWindow):
                     self.trayIcon.setIcon(self.taskbarIconWorking)
                     self.kosRequestThread.addRequest(parts, "xxx", False)
             # Otherwise consider it a 'normal' chat message
-            elif (message.user not in ("EVE-System", "EVE System") and message.status != states.IGNORE):
+            elif message.user not in ("EVE-System", "EVE System") and message.status != states.IGNORE:
                 self.addMessageToIntelChat(message)
                 # For each system that was mentioned in the message, check for alarm distance to the current system
                 # and alarm if within alarm distance.

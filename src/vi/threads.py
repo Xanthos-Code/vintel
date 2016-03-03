@@ -20,6 +20,8 @@
 import time
 from Queue import Queue
 
+from PyQt4 import QtCore
+
 from PyQt4.QtCore import QThread
 from PyQt4.QtCore import SIGNAL
 from vi import evegate
@@ -27,11 +29,14 @@ from vi import koschecker
 from vi.cache.cache import Cache
 from vi.resources import resourcePath
 
+STATISTICS_UPDATE_INTERVAL_MSECS = 5 * 60 * 1000
 
 class AvatarFindThread(QThread):
+
     def __init__(self):
         QThread.__init__(self)
         self.queue = Queue()
+
 
     def addChatEntry(self, chatEntry, clearCache=False):
         try:
@@ -43,6 +48,7 @@ class AvatarFindThread(QThread):
             self.queue.put(chatEntry)
         except Exception as e:
             print "An error in the AvatarFindThread: ", str(e)
+
 
     def run(self):
         cache = Cache()
@@ -74,10 +80,12 @@ class AvatarFindThread(QThread):
 
 
 class KOSCheckerThread(QThread):
+
     def __init__(self):
         QThread.__init__(self)
         self.queue = Queue()
         self.recentRequestNamesAndTimes = {}
+
 
     def addRequest(self, names, requestType, onlyKos=False):
         try:
@@ -93,6 +101,7 @@ class KOSCheckerThread(QThread):
             self.queue.put((names, requestType, onlyKos))
         except Exception as e:
             print "An error in the KOSCheckerThread: {0}".format(str(e))
+
 
     def run(self):
         while True:
@@ -115,20 +124,37 @@ class KOSCheckerThread(QThread):
                 continue
 
             print "KOSCheckerThread emitting kos_result for: state = {0}, text = {1}, requestType = {2}, hasKos = {3}".format(
-                "ok", text, requestType, hasKos)
+                    "ok", text, requestType, hasKos)
             self.emit(SIGNAL("kos_result"), "ok", text, requestType, hasKos)
 
 
 class MapStatisticsThread(QThread):
+
     def __init__(self):
         QThread.__init__(self)
+        self.queue = Queue()
+        self.lastStatisticsUpdate = time.time()
+        self.refreshTimer = QtCore.QTimer(self)
+        self.connect(self.refreshTimer, QtCore.SIGNAL("timeout()"), self.requestStatistics)
+        self.refreshTimer.start(STATISTICS_UPDATE_INTERVAL_MSECS)
+
+
+    def requestStatistics(self, force=False):
+        self.refreshTimer.stop()
+        self.queue.put(True)
+
 
     def run(self):
-        try:
-            statistics = evegate.getSystemStatistics()
-            time.sleep(2)  # sleeping to prevent a "need 2 arguments"-error
-            result = {"result": "ok", "statistics": statistics}
-        except Exception as e:
-            print "An error in the MapStatisticsThread: {0}".format(str(e))
-            result = {"result": "error", "text": unicode(e)}
-        self.emit(SIGNAL("statistic_data_update"), result)
+        while True:
+            # Block waiting for requestStatistics() to enqueue something - don't care what it is
+            self.queue.get()
+            try:
+                statistics = evegate.getSystemStatistics()
+                time.sleep(2)  # sleeping to prevent a "need 2 arguments"-error
+                result = {"result": "ok", "statistics": statistics}
+            except Exception as e:
+                print "An error in the MapStatisticsThread: {0}".format(str(e))
+                result = {"result": "error", "text": unicode(e)}
+            self.lastStatisticsUpdate = time.time()
+            self.refreshTimer.start(STATISTICS_UPDATE_INTERVAL_MSECS)
+            self.emit(SIGNAL("statistic_data_update"), result)
