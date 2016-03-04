@@ -327,7 +327,7 @@ class MainWindow(QtGui.QMainWindow):
     def changeChatVisibility(self, newValue=None):
         if newValue is None:
             newValue = self.showChatAction.isChecked()
-        self.showChatAction.setVisible(newValue)
+        self.showChatAction.setChecked(newValue)
         self.chatbox.setVisible(newValue)
 
     def changeKosCheckClipboard(self, newValue=None):
