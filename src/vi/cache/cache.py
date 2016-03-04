@@ -145,4 +145,9 @@ class Cache(object):
             for setting in settings:
                 obj = responder if not setting[0] else getattr(responder, setting[0])
                 # print "{0} | {1} | {2}".format(str(obj), setting[1], setting[2])
-                getattr(obj, setting[1])(setting[2])
+                try:
+                    getattr(obj, setting[1])(setting[2])
+                except Exception as e:
+                    print str(e)
+
+
