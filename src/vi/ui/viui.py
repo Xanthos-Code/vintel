@@ -71,7 +71,6 @@ class MainWindow(QtGui.QMainWindow):
         self.clipboard.clear(mode=self.clipboard.Clipboard)
         self.alarmDistance = 0
         self.lastStatisticsUpdate = 0
-        self.alreadyShowedSoundWarning = False
         self.chatEntries = []
         self.frameButton.setVisible(False)
         self.scanIntelForKosRequestsEnabled = True
@@ -301,7 +300,7 @@ class MainWindow(QtGui.QMainWindow):
                     (None, "changeFrameless", self.framelessWindowAction.isChecked()),
                     (None, "changeUseSpokenNotifications", self.useSpokenNotificationsAction.isChecked()),
                     (None, "changeKosCheckClipboard", self.kosClipboardActiveAction.isChecked()),
-                    (None, "changeScanIntelForKosRequestsEnabled", self.scanIntelForKosRequestsEnabled))
+                    (None, "changeAutoScanIntel", self.scanIntelForKosRequestsEnabled))
         self.cache.putIntoCache("settings", str(settings), 60 * 60 * 24 * 365)
 
         # Stop the threads
@@ -318,9 +317,6 @@ class MainWindow(QtGui.QMainWindow):
 
     def notifyNewerVersion(self, newestVersion):
         self.trayIcon.showMessage("Newer Version", ("An update is available for Vintel.\nhttps://github.com/Xanthos-Eve/vintel"), 1)
-
-    def changeScanIntelForKosRequestsEnabled(self, newValue):
-        self.scanIntelForKosRequestsEnabled = newValue
 
     def changeChatVisibility(self, newValue=None):
         if newValue is None:
@@ -341,10 +337,7 @@ class MainWindow(QtGui.QMainWindow):
         if newValue is None:
             newValue = self.autoScanIntelAction.isChecked()
         self.autoScanIntelAction.setChecked(newValue)
-        if newValue:
-            self.scanIntelForKosRequestsEnabled = True
-        else:
-            self.scanIntelForKosRequestsEnabled = False
+        self.scanIntelForKosRequestsEnabled = newValue
 
     def changeUseSpokenNotifications(self, newValue=None):
         if SoundManager().platformSupportsSpeech():
@@ -593,7 +586,7 @@ class MainWindow(QtGui.QMainWindow):
             if hasKos:
                 SoundManager().playSound("kos", text)
             if state == "ok":
-                if requestType == "xxx":  # a xxx request out of the chat
+                if requestType == "xxx":  # An xxx request out of the chat
                     self.trayIcon.showMessage("Player KOS-Check", text, 1)
                 elif requestType == "clipboard":  # request from clipboard-change
                     if len(text) <= 0:
