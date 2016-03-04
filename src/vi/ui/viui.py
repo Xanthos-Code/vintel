@@ -74,6 +74,7 @@ class MainWindow(QtGui.QMainWindow):
         self.alreadyShowedSoundWarning = False
         self.chatEntries = []
         self.frameButton.setVisible(False)
+        self.scanIntelForKosRequestsEnabled = True
 
         # Load user's toon names
         self.knownPlayerNames = self.cache.getFromCache("known_player_names")
@@ -139,6 +140,7 @@ class MainWindow(QtGui.QMainWindow):
     def wireUpUIConnections(self):
         # Wire up general UI connections
         self.connect(self.clipboard, Qt.SIGNAL("changed(QClipboard::Mode)"), self.clipboardChanged)
+        self.connect(self.autoScanIntelAction, Qt.SIGNAL("triggered()"), self.changeAutoScanIntel)
         self.connect(self.kosClipboardActiveAction, Qt.SIGNAL("triggered()"), self.changeKosCheckClipboard)
         self.connect(self.zoomInButton, Qt.SIGNAL("clicked()"), self.zoomMapIn)
         self.connect(self.zoomOutButton, Qt.SIGNAL("clicked()"), self.zoomMapOut)
@@ -161,7 +163,6 @@ class MainWindow(QtGui.QMainWindow):
         self.connect(self.soundSetupAction, Qt.SIGNAL("triggered()"), self.showSoundSetup)
         self.connect(self.activateSoundAction, Qt.SIGNAL("triggered()"), self.changeSound)
         self.connect(self.useSpokenNotificationsAction, Qt.SIGNAL("triggered()"), self.changeUseSpokenNotifications)
-        self.connect(self.floatingOverviewAction, Qt.SIGNAL("triggered()"), self.showFloatingOverview)
         self.connect(self.trayIcon, Qt.SIGNAL("alarm_distance"), self.changeAlarmDistance)
         self.connect(self.framelessWindowAction, Qt.SIGNAL("triggered()"), self.changeFrameless)
         self.connect(self.trayIcon, Qt.SIGNAL("change_frameless"), self.changeFrameless)
@@ -258,19 +259,20 @@ class MainWindow(QtGui.QMainWindow):
         self.mapTimer.start(MAP_UPDATE_INTERVAL_MSECS)
 
 
-    def setupAndStartClipboardTimer(self):
+    def startClipboardTimer(self):
         """
             Start a timer to check the keyboard for changes and kos check them,
             first initializing the content so we dont kos check from random content
         """
-        self.stopAndShutdownClipboardTimer()
         self.oldClipboardContent = tuple(unicode(self.clipboard.text()))
         self.connect(self.clipboardTimer, QtCore.SIGNAL("timeout()"), self.clipboardChanged)
         self.clipboardTimer.start(CLIPBOARD_CHECK_INTERVAL_MSECS)
 
-    def stopAndShutdownClipboardTimer(self):
+
+    def stopClipboardTimer(self):
         if self.clipboardTimer:
-            self.clipboardTimer.stop()
+           self.disconnect(self.clipboardTimer, QtCore.SIGNAL("timeout()"), self.clipboardChanged)
+           self.clipboardTimer.stop()
 
 
     def closeEvent(self, event):
@@ -299,8 +301,7 @@ class MainWindow(QtGui.QMainWindow):
                     (None, "changeFrameless", self.framelessWindowAction.isChecked()),
                     (None, "changeUseSpokenNotifications", self.useSpokenNotificationsAction.isChecked()),
                     (None, "changeKosCheckClipboard", self.kosClipboardActiveAction.isChecked()),
-                    (None, "changeFloatingOverview", self.floatingOverviewAction.isChecked()),
-                    (None, "changeAlreadyShowedSoundWarning", self.alreadyShowedSoundWarning))
+                    (None, "changeScanIntelForKosRequestsEnabled", self.scanIntelForKosRequestsEnabled))
         self.cache.putIntoCache("settings", str(settings), 60 * 60 * 24 * 365)
 
         # Stop the threads
@@ -314,15 +315,12 @@ class MainWindow(QtGui.QMainWindow):
             pass
         event.accept()
 
+
     def notifyNewerVersion(self, newestVersion):
         self.trayIcon.showMessage("Newer Version", ("An update is available for Vintel.\nhttps://github.com/Xanthos-Eve/vintel"), 1)
 
-    def changeFloatingOverview(self, newValue=None):
-        pass
-
-    def changeAlreadyShowedSoundWarning(self, newValue):
-        # Decided to always show the warning
-        self.alreadyShowedSoundWarning = False
+    def changeScanIntelForKosRequestsEnabled(self, newValue):
+        self.scanIntelForKosRequestsEnabled = newValue
 
     def changeChatVisibility(self, newValue=None):
         if newValue is None:
@@ -335,9 +333,18 @@ class MainWindow(QtGui.QMainWindow):
             newValue = self.kosClipboardActiveAction.isChecked()
         self.kosClipboardActiveAction.setChecked(newValue)
         if newValue:
-            self.setupAndStartClipboardTimer()
+            self.startClipboardTimer()
         else:
-            self.stopAndShutdownClipboardTimer()
+            self.stopClipboardTimer()
+
+    def changeAutoScanIntel(self, newValue=None):
+        if newValue is None:
+            newValue = self.autoScanIntelAction.isChecked()
+        self.autoScanIntelAction.setChecked(newValue)
+        if newValue:
+            self.scanIntelForKosRequestsEnabled = True
+        else:
+            self.scanIntelForKosRequestsEnabled = False
 
     def changeUseSpokenNotifications(self, newValue=None):
         if SoundManager().platformSupportsSpeech():
@@ -363,11 +370,9 @@ class MainWindow(QtGui.QMainWindow):
             self.activateSoundAction.setEnabled(False)
             self.soundSetupAction.setEnabled(False)
             self.soundButton.setEnabled(False)
-            if not self.alreadyShowedSoundWarning:
-                self.alreadyShowedSoundWarning = True
-                QtGui.QMessageBox.warning(None, "Sound disabled",
-                                          "The lib 'pyglet' which is used to play sounds cannot be found, ""so the soundsystem is disabled.\nIf you want sound, please install the 'pyglet' library. This warning will not be shown again.",
-                                          "OK")
+            QtGui.QMessageBox.warning(None, "Sound disabled",
+                                      "The lib 'pyglet' which is used to play sounds cannot be found, ""so the soundsystem is disabled.\nIf you want sound, please install the 'pyglet' library. This warning will not be shown again.",
+                                      "OK")
         else:
             if newValue is None:
                 newValue = self.activateSoundAction.isChecked()
@@ -582,6 +587,8 @@ class MainWindow(QtGui.QMainWindow):
             print e
 
     def showKosResult(self, state, text, requestType, hasKos):
+        if not self.scanIntelForKosRequestsEnabled:
+            return
         try:
             if hasKos:
                 SoundManager().playSound("kos", text)
@@ -613,9 +620,6 @@ class MainWindow(QtGui.QMainWindow):
         infoDialog.logoLabel.setPixmap(QtGui.QPixmap(resourcePath("vi/ui/res/logo.png")))
         infoDialog.connect(infoDialog.closeButton, Qt.SIGNAL("clicked()"), infoDialog.accept)
         infoDialog.show()
-
-    def showFloatingOverview(self):
-        pass
 
     def showSoundSetup(self):
         dialog = QtGui.QDialog(self)
@@ -692,12 +696,6 @@ class MainWindow(QtGui.QMainWindow):
                                 if len(chars) > 0 and message.user not in chars:
                                     self.trayIcon.showNotification(message, system.name, ", ".join(chars), distance)
                 self.setMapContent(self.dotlan.svg)
-
-
-class FloatingOverview(QtGui.QDockWidget):
-    def __init__(self):
-        QtGui.QDockWidget.__init__(self)
-        uic.loadUi(resourcePath('vi/ui/FloatingOverview.ui'), self)
 
 
 class ChatroomsChooser(QtGui.QDialog):

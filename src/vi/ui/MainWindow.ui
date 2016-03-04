@@ -343,9 +343,9 @@
    </property>
    <widget class="QMenu" name="menu">
     <property name="title">
-     <string>Menu</string>
+     <string>Kos</string>
     </property>
-    <addaction name="floatingOverviewAction"/>
+    <addaction name="autoScanIntelAction"/>
     <addaction name="kosClipboardActiveAction"/>
     <addaction name="separator"/>
     <addaction name="infoAction"/>
@@ -543,12 +543,21 @@
     <string>Spoken KOS results</string>
    </property>
   </action>
-  <action name="floatingOverviewAction">
+  <action name="autoScanIntelAction">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
    <property name="text">
-    <string>Show Mini Overview...</string>
+    <string>Scan Intel For Requests</string>
+   </property>
+   <property name="toolTip">
+    <string>When enabled, scans intel for xxx kos requests</string>
    </property>
    <property name="visible">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
    <property name="iconVisibleInMenu">
     <bool>false</bool>
