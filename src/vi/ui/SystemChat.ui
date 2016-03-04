@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>343</width>
-    <height>518</height>
+    <height>300</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -43,16 +43,6 @@
    </property>
    <item row="0" column="0">
     <layout class="QVBoxLayout" name="verticalLayout">
-     <item>
-      <widget class="QLabel" name="infoLabel">
-       <property name="text">
-        <string>Following messages known for the system:</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignCenter</set>
-       </property>
-      </widget>
-     </item>
      <item>
       <widget class="QListWidget" name="chat"/>
      </item>
