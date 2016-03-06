@@ -44,7 +44,11 @@
    <item row="0" column="0">
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
-      <widget class="QListWidget" name="chat"/>
+      <widget class="QListWidget" name="chat">
+       <property name="selectionMode">
+        <enum>QAbstractItemView::NoSelection</enum>
+       </property>
+      </widget>
      </item>
      <item>
       <widget class="QWidget" name="widget" native="true">
