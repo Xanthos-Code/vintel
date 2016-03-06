@@ -68,8 +68,7 @@ class ChatParser(object):
             content = content.decode("utf-16-le")
         except Exception as e:
             self.ignoredPaths.append(path)
-            QtGui.QMessageBox.warning(None, "Read a log file failed!", "File: {0} - problem: {1}".format(path, str(e)),
-                                      "OK")
+            QtGui.QMessageBox.warning(None, "Read a log file failed!", "File: {0} - problem: {1}".format(path, str(e)), "OK")
             return None
 
         lines = content.split("\n")
@@ -117,12 +116,12 @@ class ChatParser(object):
         if upperText.startswith("XXX "):
             return Message(roomname, text, timestamp, username, systems, upperText, status=states.KOS_STATUS_REQUEST)
         elif roomname.startswith("="):
-            return Message(roomname, "xxx " + text, timestamp, username, systems, "XXX " + upperText,
-                           status=states.KOS_STATUS_REQUEST)
+            return Message(roomname, "xxx " + text, timestamp, username, systems, "XXX " + upperText, status=states.KOS_STATUS_REQUEST)
         elif upperText.startswith("VINTELSOUND_TEST"):
             return Message(roomname, text, timestamp, username, systems, upperText, status=states.SOUND_TEST)
         if roomname not in self.rooms:
             return None
+
 
         message = Message(roomname, "", timestamp, username, systems, text, originalText)
         # May happen if someone plays > 1 account
@@ -130,18 +129,14 @@ class ChatParser(object):
             message.status = states.IGNORE
             return message
 
-        removeChars = ("*", "?", ",", "!")
-        for char in removeChars:
+        for char in ("*", "?", ",", "!"):
             text = text.replace(char, "")
-        run = True
-        while run:
-            run = parseShips(rtext)
-        run = True
-        while run:
-            run = parseUrls(rtext)
-        run = True
-        while run:
-            run = parseSystems(self.systems, rtext, systems)
+        while parseShips(rtext):
+            continue
+        while parseUrls(rtext):
+            continue
+        while parseSystems(self.systems, rtext, systems):
+            continue
         parsedStatus = parseStatus(rtext)
         status = parsedStatus if parsedStatus is not None else states.ALARM
 

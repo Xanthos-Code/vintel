@@ -29,7 +29,7 @@ from vi import koschecker
 from vi.cache.cache import Cache
 from vi.resources import resourcePath
 
-STATISTICS_UPDATE_INTERVAL_MSECS = 5 * 60 * 1000
+STATISTICS_UPDATE_INTERVAL_MSECS = 4 * 60 * 1000
 
 class AvatarFindThread(QThread):
 

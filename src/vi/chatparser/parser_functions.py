@@ -99,7 +99,7 @@ def parseSystems(systems, rtext, foundSystems):
     WORDS_TO_IGNORE = ("IN", "IS", "AS")
 
     def formatSystem(text, word, system):
-        newText = u"""<a style="color:#CC8800;font-weight:bold href="mark_system/{0}">{1}</a>"""
+        newText = u"""<a style="color:#CC8800;font-weight:bold" href="mark_system/{0}">{1}</a>"""
         text = text.replace(word, newText.format(system, word))
         return text
 
@@ -167,7 +167,7 @@ def parseUrls(rtext):
         return urls
 
     def formatUrl(text, url):
-        newText = u"""<a style="color:#28a5ed;font-weight:bold href="link/{0}">{0}</a>"""
+        newText = u"""<a style="color:#28a5ed;font-weight:bold" href="link/{0}">{0}</a>"""
         text = text.replace(url, newText.format(url))
         return text
 

@@ -848,9 +848,9 @@ class ChatEntryWidget(QtGui.QWidget):
     def linkClicked(self, link):
         link = unicode(link)
         function, parameter = link.split("/", 1)
-        if function == "mark_system" or function == "markSystem":
+        if function == "mark_system":
             self.emit(QtCore.SIGNAL("mark_system"), parameter)
-        if function == "link":
+        elif function == "link":
             webbrowser.open(parameter)
 
     def updateText(self):

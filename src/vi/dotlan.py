@@ -135,10 +135,15 @@ class Map(object):
         for line in soup.select("line"):
             line["class"] = "j"
 
-        # Current system marker
+        # Current system marker ellipse
         group = soup.new_tag("g", id="select_marker", opacity="0", activated="0", transform="translate(0, 0)")
         ellipse = soup.new_tag("ellipse", cx="0", cy="0", rx="56", ry="28", style="fill:#462CFF")
         group.append(ellipse)
+
+        # The giant cross-hairs
+        for coord in ((0, -10000), (-10000, 0), (10000, 0), (0, 10000)):
+            line = soup.new_tag("line", x1=coord[0], y1=coord[1], x2="0", y2="0", style="stroke:#462CFF")
+            group.append(line)
         svg.insert(0, group)
 
         # Create jumpbridge markers in a variety of colors
@@ -318,20 +323,19 @@ class System(object):
             element.decompose()
         coords = self.mapCoordinates
         offsetPoint = self.getTransformOffsetPoint()
+        x = coords["x"] - 3 + offsetPoint[0]
+        y = coords["y"] + offsetPoint[1]
         style = "fill:{0};stroke:{0};stroke-width:2;fill-opacity:0.4"
-        tag = self.mapSoup.new_tag("rect", x=coords["x"] - 3 + offsetPoint[0], y=coords["y"] + offsetPoint[1],
-                                   width=coords["width"] + 1.5, height=coords["height"], id=idName,
-                                   style=style.format(color), visibility="hidden")
+        tag = self.mapSoup.new_tag("rect", x=x, y=y, width=coords["width"] + 1.5, height=coords["height"], id=idName, style=style.format(color), visibility="hidden")
         tag["class"] = ["jumpbridge", ]
         jumps = self.mapSoup.select("#jumps")[0]
         jumps.insert(0, tag)
 
     def mark(self):
         marker = self.mapSoup.select("#select_marker")[0]
-        x = self.mapCoordinates["center_x"]
-        y = self.mapCoordinates["center_y"]
-        if self.transform:
-            marker["transform"] = self.transform
+        offsetPoint = self.getTransformOffsetPoint()
+        x = self.mapCoordinates["center_x"] + offsetPoint[0]
+        y = self.mapCoordinates["center_y"] + offsetPoint[1]
         marker["transform"] = "translate({x},{y})".format(x=x, y=y)
         marker["opacity"] = "1"
         marker["activated"] = time.time()
