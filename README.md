@@ -11,7 +11,7 @@ Vintel is written with Python 2.7, using PyQt4 for the application presentation 
 ### News
 _The current release version of Vintel is **1.0.0** and [can be found here](https://github.com/Xanthos-Eve/vintel/releases/tag/1.0.0)._
 
-Release 1.1.0 is currently being planned - if you have ideas, bugs or suggestions, [please contribute to the  issues here](https://github.com/Xanthos-Eve/vintel/issues).
+Release 1.1.0 is currently in development - keep up on progress, add ideas, bugs or suggestions [here](https://github.com/Xanthos-Eve/vintel/issues).
 
 ## Screenshot
 
@@ -124,11 +124,11 @@ The program looks for your logs on some default pathes. If those paths do not ex
 
 Examples:
 
-`> vintel-0.7.exe "d:\strange\path\EVE\logs\chatlogs"`
+`win> vintel-1.0.exe "d:\strange\path\EVE\logs\chatlogs"`
 
     – or –
 
-`> python vintel.py "/home/user/myverypecialpath/EVE/logs/chatlogs"`
+`mac> python vintel.py "/home/user/myverypecialpath/EVE/logs/chatlogs"`
 
 **Vintel does not start! What can I do?**
 
