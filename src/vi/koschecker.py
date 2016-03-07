@@ -20,6 +20,7 @@
 import json
 import urllib
 import urllib2
+from vi.logger import Logger
 
 from urllib2 import URLError
 
@@ -43,7 +44,7 @@ def check(parts):
         request = urllib2.urlopen(targetUrl)
         kosData = json.loads(request.read())
     except URLError as e:
-        print "Error on pilot KOS check request" + e.reason
+        Logger().error("Error on pilot KOS check request" + e.reason)
 
     for char in kosData["results"]:
         charname = char["label"]
@@ -105,7 +106,7 @@ def check(parts):
             try:
                 request = urllib2.urlopen(targetUrl)
             except URLError as e:
-                print "Error on corp KOS check request" + e.reason
+                Logger().error("Error on corp KOS check request" + e.reason)
 
             kosData = json.loads(request.read())
             kosResult = False

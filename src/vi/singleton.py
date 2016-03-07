@@ -1,4 +1,4 @@
-# Thread safe Singelton
+# Thread safe Singleton
 
 import threading
 

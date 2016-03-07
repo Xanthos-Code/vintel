@@ -19,7 +19,7 @@
 
 import json
 import urllib2
-import time
+from vi.logger import Logger
 
 from PyQt4 import Qt
 from PyQt4.QtCore import QThread
@@ -48,7 +48,7 @@ def getJumpbridgeData(region):
             cache.putIntoCache(cacheKey, json.dumps(data), 60 * 60 * 24)
         return data
     except Exception as e:
-        print("Getting Jumpbridgedata failed with: {0}".format(str(e)))
+        Logger().error("Getting Jumpbridgedata failed with: {0}".format(str(e)))
         return []
 
 
@@ -59,7 +59,7 @@ def getNewestVersion():
         newestVersion = request.read()
         return newestVersion
     except Exception as e:
-        print("Failed version-request: {0}".format(str(e)))
+        Logger().error("Failed version-request: {0}".format(str(e)))
         return "0.0"
 
 
@@ -77,4 +77,4 @@ class NotifyNewVersionThread(QThread):
                     self.emit(Qt.SIGNAL("newer_version"), newestVersion)
                     self.alerted = True
             except Exception as e:
-                print("Failed NotifyNewVersionThread: {0}".format(str(e)))
+                Logger().error("Failed NotifyNewVersionThread: {0}".format(str(e)))
