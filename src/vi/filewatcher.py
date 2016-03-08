@@ -47,12 +47,15 @@ class FileWatcher(QtCore.QThread):
         self.qtfw.directoryChanged.connect(self.directoryChanged)
         self.qtfw.addPath(path)
         self.updateWatchedFiles()
+        self.paused = True
 
     def directoryChanged(self):
         self.updateWatchedFiles()
 
     def run(self):
         while True:
+            if self.paused:
+                continue
             for path, modified in self.files.items():
                 newModified = 0
                 try:

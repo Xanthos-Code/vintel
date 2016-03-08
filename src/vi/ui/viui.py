@@ -200,6 +200,7 @@ class MainWindow(QtGui.QMainWindow):
 
     def setupMap(self, initialize=False):
         self.mapTimer.stop()
+        self.filewatcherThread.paused = True
 
         logging.info("Finding map file")
         regionName = self.cache.getFromCache("region_name")
@@ -268,6 +269,8 @@ class MainWindow(QtGui.QMainWindow):
         self.dotlan.addSystemStatistics(None)
         self.statisticsThread.requestStatistics()
         self.mapTimer.start(MAP_UPDATE_INTERVAL_MSECS)
+        # Allow the file watcher to run
+        self.filewatcherThread.paused = False
         logging.critical("Map setup complete")
 
 
