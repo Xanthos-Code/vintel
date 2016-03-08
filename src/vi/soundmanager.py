@@ -29,7 +29,7 @@ from PyQt4.QtCore import QThread
 from resources import resourcePath
 from Queue import Queue
 
-from vi.logger import Logger
+import logging
 from vi.singleton import Singleton
 
 global gPygletAvailable
@@ -122,7 +122,7 @@ class SoundManager:
                         message = abbreviatedMessage
                     if not self.speak(message):
                         self.playAudioFile(audioFile, False)
-                        Logger().error("SoundThread: sorry, speech not yet implemented on this platform")
+                        logging.error("SoundThread: sorry, speech not yet implemented on this platform")
                 elif audioFile is not None:
                     self.playAudioFile(audioFile, False)
 
@@ -154,13 +154,13 @@ class SoundManager:
                 elif self.isDarwin:
                     subprocess.call(["afplay -v {0} {1}".format(volume, filename)], shell=True)
             except Exception as e:
-                Logger().error("SoundThread.playAudioFile exception: %s" % str(e))
+                logging.error("SoundThread.playAudioFile exception: %s", str(e))
 
         def darwinSpeak(self, message):
             try:
                 os.system("say [[volm {0}]] '{1}'".format(float(self.volume) / 100.0, message))
             except Exception as e:
-                Logger().error("SoundThread.darwinSpeak exception: %s" % str(e))
+                logging.error("SoundThread.darwinSpeak exception: %s", str(e))
 
         #
         #  Experimental text-to-speech stuff below
@@ -175,7 +175,7 @@ class SoundManager:
                 self.playAudioFile(urllib2.urlopen(mp3url))
                 time.sleep(.5)
             except urllib2.URLError as e:
-                Logger().error('playTTS error: %s' % e)
+                logging.error('playTTS error: %s', str(e))
 
         # google_tts
 
@@ -210,7 +210,7 @@ class SoundManager:
                         args.output.write(response.read())
                         time.sleep(.5)
                     except urllib2.URLError as e:
-                        Logger().error('audioExtractToMp3 error: %s' % e)
+                        logging.error('audioExtractToMp3 error: %s', str(e))
             args.output.close()
             return args.output.name
 

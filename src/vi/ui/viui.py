@@ -25,7 +25,7 @@ import webbrowser
 
 import vi.version
 
-from vi.logger import Logger
+import logging
 from PyQt4 import Qt, QtGui, uic, QtCore
 from PyQt4.QtCore import QPoint
 from PyQt4.QtGui import QImage, QPixmap, QMessageBox
@@ -50,6 +50,10 @@ class MainWindow(QtGui.QMainWindow):
 
     def __init__(self, pathToLogs, trayIcon):
         QtGui.QMainWindow.__init__(self)
+
+        rootLogger = logging.getLogger()
+        savedLoggingLevel = rootLogger.level
+        rootLogger.setLevel(level=logging.ERROR)
 
         uic.loadUi(resourcePath('vi/ui/MainWindow.ui'), self)
         self.setWindowTitle("Vintel " + vi.version.VERSION + "{dev}".format(dev="-SNAPSHOT" if vi.version.SNAPSHOT else ""))
@@ -123,6 +127,7 @@ class MainWindow(QtGui.QMainWindow):
 
         self.recallCachedSettings()
         self.setupThreads()
+        rootLogger.setLevel(level=savedLoggingLevel)
         self.setupMap(True)
 
 
@@ -130,7 +135,7 @@ class MainWindow(QtGui.QMainWindow):
         try:
             self.cache.recallAndApplySettings(self, "settings")
         except Exception as e:
-            Logger().error(e)
+            logging.error(e)
             # todo: add a button to delete the cache / DB
             self.trayIcon.showMessage("Settings error", "Something went wrong loading saved state:\n {0}".format(str(e)), 1)
 
@@ -196,7 +201,7 @@ class MainWindow(QtGui.QMainWindow):
     def setupMap(self, initialize=False):
         self.mapTimer.stop()
 
-        Logger().critical("Finding map file")
+        logging.info("Finding map file")
         regionName = self.cache.getFromCache("region_name")
         if not regionName:
             regionName = "Providence"
@@ -210,7 +215,7 @@ class MainWindow(QtGui.QMainWindow):
         try:
             self.dotlan = dotlan.Map(regionName, svg)
         except dotlan.DotlanException as e:
-            Logger().error(e)
+            logging.error(e)
             QtGui.QMessageBox.critical(None, "Error getting map", unicode(e), "Quit")
             sys.exit(1)
 
@@ -218,20 +223,20 @@ class MainWindow(QtGui.QMainWindow):
             e = self.dotlan.outdatedCacheError
             diagText = "Something went wrong getting map data. Proceeding with older cached data. " \
                        "Check for a newer version and inform the maintainer.\n\nError: {0} {1}".format(type(e), unicode(e))
-            Logger().error(e)
+            logging.error(e)
             QtGui.QMessageBox.warning(None, "Using map from cache", diagText, "Ok")
 
         # Load the jumpbridges
-        Logger().critical("Load jump bridges")
+        logging.critical("Load jump bridges")
         self.setJumpbridges(self.cache.getFromCache("jumpbridge_url"))
         self.initMapPosition = None  # We read this after first rendering
         self.systems = self.dotlan.systems
-        Logger().critical("Creating chat parser")
+        logging.critical("Creating chat parser")
         self.chatparser = chatparser.ChatParser(self.pathToLogs, self.roomnames, self.systems)
 
         # Menus - only once
         if initialize:
-            Logger().critical("Initializing contextual menus")
+            logging.critical("Initializing contextual menus")
             # Add a contextual menu to the mapView
             def mapContextMenuEvent(event):
                 self.mapView.contextMenu.exec_(self.mapToGlobal(QPoint(event.x(), event.y())))
@@ -257,13 +262,13 @@ class MainWindow(QtGui.QMainWindow):
         self.statisticsButton.setChecked(False)
 
         # Update the new map view, then clear old statistics from the map and request new
-        Logger().critical("Updating the map")
+        logging.critical("Updating the map")
         self.updateMapView()
-        Logger().critical("Adding statistics")
+        logging.critical("Adding statistics")
         self.dotlan.addSystemStatistics(None)
         self.statisticsThread.requestStatistics()
         self.mapTimer.start(MAP_UPDATE_INTERVAL_MSECS)
-        Logger().critical("Map setup complete")
+        logging.critical("Map setup complete")
 
 
     def startClipboardTimer(self):
@@ -585,7 +590,7 @@ class MainWindow(QtGui.QMainWindow):
                 else:
                     break
         except Exception as e:
-            Logger().error(e)
+            logging.error(e)
 
     def showKosResult(self, state, text, requestType, hasKos):
         if not self.scanIntelForKosRequestsEnabled:
@@ -750,7 +755,7 @@ class RegionChooser(QtGui.QDialog):
                     with open(resourcePath("vi/ui/res/mapdata/{0}.svg".format(text))) as _:
                         correct = True
                 except Exception as e:
-                    Logger().error(e)
+                    logging.error(e)
                     correct = False
                 if not correct:
                     QMessageBox.warning(self, u"No such region!", u"I can't find a region called '{0}'".format(text))
@@ -758,7 +763,7 @@ class RegionChooser(QtGui.QDialog):
                 correct = True
         except Exception as e:
             QMessageBox.critical(self, u"Something went wrong!", u"Error while testing existing '{0}'".format(str(e)))
-            Logger().error(e)
+            logging.error(e)
             correct = False
         if correct:
             Cache().putIntoCache("region_name", text, 60 * 60 * 24 * 365)

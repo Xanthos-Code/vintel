@@ -20,13 +20,16 @@
 
 import sys
 import os
+import logging
+
+from logging.handlers import RotatingFileHandler
+from logging import StreamHandler
 
 from PyQt4 import QtGui
 from vi import version
 from vi.ui import viui, systemtray
 from vi.cache import cache
 from vi.resources import resourcePath
-from vi.logger import Logger
 
 
 def exceptHook(exceptionType, exceptionValue, tracebackObject):
@@ -36,10 +39,12 @@ def exceptHook(exceptionType, exceptionValue, tracebackObject):
     try:
         errorMsg = '{0}: \n{1}'.format(str(exceptionType), str(exceptionValue))
         msg = '\n'.join(errorMsg)
-        logger.exception(msg)
+        logging.exception(msg)
     except Exception:
         pass
 
+
+gLogLevel = logging.DEBUG
 
 sys.excepthook = exceptHook
 
@@ -51,46 +56,63 @@ if __name__ == "__main__":
     splash.show()
     app.processEvents()
 
-    pathToLogs = ""
+    chatLogDirectory = ""
     if len(sys.argv) > 1:
-        pathToLogs = sys.argv[1]
+        chatLogDirectory = sys.argv[1]
 
-    if not os.path.exists(pathToLogs):
+    if not os.path.exists(chatLogDirectory):
         if sys.platform.startswith("darwin"):
-            pathToLogs = os.path.join(os.path.expanduser("~"), "Library", "Application Support", "Eve Online",
+            chatLogDirectory = os.path.join(os.path.expanduser("~"), "Library", "Application Support", "Eve Online",
                                       "p_drive", "User", "My Documents", "EVE", "logs", "Chatlogs")
         elif sys.platform.startswith("linux"):
-            pathToLogs = os.path.join(os.path.expanduser("~"), "EVE", "logs", "Chatlogs")
+            chatLogDirectory = os.path.join(os.path.expanduser("~"), "EVE", "logs", "Chatlogs")
         elif sys.platform.startswith("win32") or sys.platform.startswith("cygwin"):
             import ctypes.wintypes
 
             buf = ctypes.create_unicode_buffer(ctypes.wintypes.MAX_PATH)
             ctypes.windll.shell32.SHGetFolderPathW(0, 5, 0, 0, buf)
             documentsPath = buf.value
-            pathToLogs = os.path.join(documentsPath, "EVE", "logs", "Chatlogs")
-    if not os.path.exists(pathToLogs):
+            chatLogDirectory = os.path.join(documentsPath, "EVE", "logs", "Chatlogs")
+    if not os.path.exists(chatLogDirectory):
         # None of the paths for logs exist, bailing out
-        QtGui.QMessageBox.critical(None, "No path to Logs", "No logs found at: " + pathToLogs, "Quit")
+        QtGui.QMessageBox.critical(None, "No path to Logs", "No logs found at: " + chatLogDirectory, "Quit")
         sys.exit(1)
 
-    # Setting local working directory for cache, etc.
-    outputDir = os.path.join(os.path.dirname(os.path.dirname(pathToLogs)), "vintel")
+    # Setting local directory for cache and logging
+    vintelDirectory = os.path.join(os.path.dirname(os.path.dirname(chatLogDirectory)), "vintel")
+    if not os.path.exists(vintelDirectory):
+        os.mkdir(vintelDirectory)
+    cache.Cache.PATH_TO_CACHE = os.path.join(vintelDirectory, "cache-2.sqlite3")
 
-    if not os.path.exists(outputDir):
-        os.mkdir(outputDir)
+    vintelLogDirectory = os.path.join(vintelDirectory, "logs")
+    if not os.path.exists(vintelLogDirectory):
+        os.mkdir(vintelLogDirectory)
 
-    cache.Cache.PATH_TO_CACHE = os.path.join(outputDir, "cache-2.sqlite3")
+    # Setup loggging for console and log files, which are rotated
+    logFilename = vintelLogDirectory + "/output.log"
+    formatter = logging.Formatter('%(asctime)s| %(message)s', datefmt='%m/%d %I:%M:%S %p')
+    rootLogger = logging.getLogger()
+    fileHandler = RotatingFileHandler(maxBytes=(1048576*5), backupCount=7, filename=logFilename, mode='a')
+    consoleHandler = StreamHandler()
 
-    logger = Logger(outputDir)
-    logger.critical("Vintel %s starting up." % version.VERSION)
-    logger.critical("Looking for chat logs at: %s" % pathToLogs)
-    logger.critical("Writing logs to: %s" % outputDir)
+    fileHandler.setFormatter(formatter)
+    consoleHandler.setFormatter(formatter)
+
+    rootLogger.addHandler(fileHandler)
+    rootLogger.addHandler(consoleHandler)
+    rootLogger.setLevel(level=gLogLevel)
+
+    logging.critical("")
+    logging.critical("-------------- Vintel %s starting up --------------", version.VERSION)
+    logging.critical("")
+    logging.critical("Looking for chat logs at: %s", chatLogDirectory)
+    logging.critical("Writing logs to: %s", vintelLogDirectory)
 
     trayIcon = systemtray.TrayIcon(app)
     trayIcon.setContextMenu(systemtray.TrayContextMenu(trayIcon))
     trayIcon.show()
 
-    mainWindow = viui.MainWindow(pathToLogs, trayIcon)
+    mainWindow = viui.MainWindow(chatLogDirectory, trayIcon)
     mainWindow.show()
     splash.finish(mainWindow)
 

@@ -24,7 +24,7 @@
 import math
 import time
 import urllib2
-from vi.logger import Logger
+import logging
 
 from bs4 import BeautifulSoup
 from vi import states
@@ -274,7 +274,7 @@ class Map(object):
                 svgFile.write(svgData)
                 svgFile.close()
         except Exception as e:
-            Logger().error(e)
+            logging.error(e)
 
 
 class System(object):
@@ -509,4 +509,4 @@ if __name__ == "__main__":
     map = Map("Providence", "Providence.svg")
     s = map.systems["I7S-1S"]
     s.setStatus(states.ALARM)
-    Logger().error(map.svg)
+    logging.error(map.svg)

@@ -21,7 +21,7 @@ import sqlite3
 import threading
 import time
 
-from vi.logger import Logger
+import logging
 from vi.cache.dbstructure import updateDatabase
 
 
@@ -149,6 +149,6 @@ class Cache(object):
                 try:
                     getattr(obj, setting[1])(setting[2])
                 except Exception as e:
-                    Logger().error(str(e))
+                    logging.error(str(e))
 
 

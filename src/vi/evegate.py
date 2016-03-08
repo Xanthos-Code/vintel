@@ -22,7 +22,7 @@ import json
 import urllib
 import urllib2
 
-from vi.logger import Logger
+import logging
 from bs4 import BeautifulSoup
 from vi.cache.cache import Cache
 
@@ -46,7 +46,7 @@ def charnameToId(name):
                 return int(row["characterid"])
 
     except Exception as e:
-        Logger().error("Exception turning charname to id via API: {0}".format(str(e)))
+        logging.error("Exception turning charname to id via API: %s", str(e))
         # fallback! if there is a problem with the API, we use evegate
         baseUrl = "https://gate.eveonline.com/Profile/"
         qcharname = urllib2.quote(name)
@@ -94,7 +94,7 @@ def namesToIds(names):
                 cacheKey = "_".join(("id", "name", name))
                 cache.putIntoCache(cacheKey, data[name], 60 * 60 * 24 * 365)
     except Exception as e:
-        Logger().error("Exception during namesToIds: {0}".format(str(e)))
+        logging.error("Exception during namesToIds: %s", str(e))
     return data
 
 
@@ -134,7 +134,7 @@ def idsToNames(ids):
                 cacheKey = u"_".join(("name", "id", unicode(id)))
                 cache.putIntoCache(cacheKey, data[id], 60 * 60 * 24 * 365)
     except Exception as e:
-        Logger().error("Exception during idsToNames: {0}".format(str(e)))
+        logging.error("Exception during idsToNames: %s", str(e))
 
     return data
 
@@ -151,7 +151,7 @@ def getAvatarForPlayer(charname):
             imageUrl = "http://image.eveonline.com/Character/{id}_{size}.jpg"
             avatar = urllib2.urlopen(imageUrl.format(id=charId, size=32)).read()
     except Exception as e:
-        Logger().error("Exception during getAvatarForPlayer: {0}".format(str(e)))
+        logging.error("Exception during getAvatarForPlayer: %s", str(e))
         avatar = None
     return avatar
 
@@ -172,7 +172,7 @@ def checkPlayername(charname):
         if ("404") in str(e):
             result = 0
     except Exception as e:
-        Logger().error("Exception on checkPlayername: {0}".format(str(e)))
+        logging.error("Exception on checkPlayername: %s", str(e))
     return result
 
 
@@ -207,7 +207,7 @@ def getCharinfoForCharId(charId):
         except urllib2.HTTPError as e:
             # We get a 400 when we pass non-pilot names for KOS check so fail silently for that one only
             if (e.code != 400):
-                Logger().error("Exception during getCharinfoForCharId: {0}".format(str(e)))
+                logging.error("Exception during getCharinfoForCharId: %s", str(e))
     return soup
 
 
@@ -273,7 +273,7 @@ def getSystemStatistics():
         else:
             systemData = json.loads(systemData)
     except Exception as e:
-        Logger().error("Exception during getSystemStatistics: : {0}".format(str(e)))
+        logging.error("Exception during getSystemStatistics: : %s", str(e))
     # We collected all data (or loaded them from cache) - now zip it together
     for i, v in jumpData.items():
         i = int(i)
