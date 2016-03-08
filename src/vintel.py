@@ -18,11 +18,12 @@
 #  along with this program.	 If not, see <http://www.gnu.org/licenses/>.  #
 ###########################################################################
 
-import cStringIO
 import sys
 import os
-import time
-import traceback
+import logging
+
+from logging.handlers import RotatingFileHandler
+from logging import StreamHandler
 
 from PyQt4 import QtGui
 from vi import version
@@ -30,48 +31,24 @@ from vi.ui import viui, systemtray
 from vi.cache import cache
 from vi.resources import resourcePath
 
-global gErrorFile
-global gDebugging
-
 
 def exceptHook(exceptionType, exceptionValue, tracebackObject):
-    """ Global function to catch unhandled exceptions.
     """
-    separator = '-' * 80
-    notice = "An unhandled exception occurred, please report the problem using via email to <{0}>.\nA log has been written to \"{1}\".\n\nError information: \n".format(
-        "xanthosx@gmail.com", gErrorFile)
-    versionInfo = version.VERSION
-    timeString = time.strftime("%Y-%m-%d, %H:%M:%S")
-    tracebackInfoFile = cStringIO.StringIO()
-    traceback.print_tb(tracebackObject, None, tracebackInfoFile)
-    tracebackInfoFile.seek(0)
-    tracebackInfo = tracebackInfoFile.read()
-    errorMsg = '{0}: \n{1}'.format(str(exceptionType), str(exceptionValue))
-    sections = [separator, timeString, separator, errorMsg, separator, tracebackInfo]
-    msg = '\n'.join(sections)
-
+        Global function to catch unhandled exceptions.
+    """
     try:
-        file = open(gErrorFile, "w")
-        file.write(msg)
-        file.write(versionInfo)
-        file.close()
-    except IOError:
+        errorMsg = '{0}: \n{1}'.format(str(exceptionType), str(exceptionValue))
+        msg = '\n'.join(errorMsg)
+        logging.exception(msg)
+    except Exception:
         pass
 
-    if not gDebugging:
-        errorBox = QtGui.QMessageBox()
-        errorBox.setText(str(notice) + str(msg) + str(versionInfo))
-        errorBox.exec_()
-    else:
-        print "Unhandled error caught by exceptHook: " + str(msg)
 
+gLogLevel = logging.DEBUG
 
 sys.excepthook = exceptHook
 
 if __name__ == "__main__":
-
-    gErrorFile = None
-    gDebugging = True
 
     app = QtGui.QApplication(sys.argv)
     splash = QtGui.QSplashScreen(QtGui.QPixmap(resourcePath("vi/ui/res/logo.png")))
@@ -79,46 +56,65 @@ if __name__ == "__main__":
     splash.show()
     app.processEvents()
 
-    pathToLogs = ""
+    chatLogDirectory = ""
     if len(sys.argv) > 1:
-        pathToLogs = sys.argv[1]
+        chatLogDirectory = sys.argv[1]
 
-    if not os.path.exists(pathToLogs):
+    if not os.path.exists(chatLogDirectory):
         if sys.platform.startswith("darwin"):
-            pathToLogs = os.path.join(os.path.expanduser("~"), "Library", "Application Support", "Eve Online",
+            chatLogDirectory = os.path.join(os.path.expanduser("~"), "Library", "Application Support", "Eve Online",
                                       "p_drive", "User", "My Documents", "EVE", "logs", "Chatlogs")
         elif sys.platform.startswith("linux"):
-            pathToLogs = os.path.join(os.path.expanduser("~"), "EVE", "logs", "Chatlogs")
+            chatLogDirectory = os.path.join(os.path.expanduser("~"), "EVE", "logs", "Chatlogs")
         elif sys.platform.startswith("win32") or sys.platform.startswith("cygwin"):
             import ctypes.wintypes
 
             buf = ctypes.create_unicode_buffer(ctypes.wintypes.MAX_PATH)
             ctypes.windll.shell32.SHGetFolderPathW(0, 5, 0, 0, buf)
             documentsPath = buf.value
-            pathToLogs = os.path.join(documentsPath, "EVE", "logs", "Chatlogs")
-    if not os.path.exists(pathToLogs):
+            chatLogDirectory = os.path.join(documentsPath, "EVE", "logs", "Chatlogs")
+    if not os.path.exists(chatLogDirectory):
         # None of the paths for logs exist, bailing out
-        QtGui.QMessageBox.critical(None, "No path to Logs", "No logs found at: " + pathToLogs, "Quit")
+        QtGui.QMessageBox.critical(None, "No path to Logs", "No logs found at: " + chatLogDirectory, "Quit")
         sys.exit(1)
 
-    # Setting local working directory for cache, etc.
-    outputDir = os.path.join(os.path.dirname(os.path.dirname(pathToLogs)), "vintel")
+    # Setting local directory for cache and logging
+    vintelDirectory = os.path.join(os.path.dirname(os.path.dirname(chatLogDirectory)), "vintel")
+    if not os.path.exists(vintelDirectory):
+        os.mkdir(vintelDirectory)
+    cache.Cache.PATH_TO_CACHE = os.path.join(vintelDirectory, "cache-2.sqlite3")
 
-    if not os.path.exists(outputDir):
-        os.mkdir(outputDir)
+    vintelLogDirectory = os.path.join(vintelDirectory, "logs")
+    if not os.path.exists(vintelLogDirectory):
+        os.mkdir(vintelLogDirectory)
 
-    cache.Cache.PATH_TO_CACHE = os.path.join(outputDir, "cache-2.sqlite3")
-    gErrorFile = os.path.join(outputDir, "error.log")
+    # Setup loggging for console and rotated log files
+    logFilename = vintelLogDirectory + "/output.log"
+    formatter = logging.Formatter('%(asctime)s| %(message)s', datefmt='%m/%d %I:%M:%S %p')
+    rootLogger = logging.getLogger()
+    fileHandler = RotatingFileHandler(maxBytes=(1048576*5), backupCount=7, filename=logFilename, mode='a')
+    consoleHandler = StreamHandler()
 
-    # print "Vintel expects to find logs at: ", pathToLogs
-    # print "Vintel writes data to: ", outputDir
+    fileHandler.setFormatter(formatter)
+    consoleHandler.setFormatter(formatter)
+
+    rootLogger.addHandler(fileHandler)
+    rootLogger.addHandler(consoleHandler)
+    rootLogger.setLevel(level=gLogLevel)
+
+    logging.critical("")
+    logging.critical("-------------- Vintel %s starting up --------------", version.VERSION)
+    logging.critical("")
+    logging.critical("Looking for chat logs at: %s", chatLogDirectory)
+    logging.critical("Cache maintained here: %s", cache.Cache.PATH_TO_CACHE)
+    logging.critical("Writing logs to: %s", vintelLogDirectory)
 
     trayIcon = systemtray.TrayIcon(app)
     trayIcon.setContextMenu(systemtray.TrayContextMenu(trayIcon))
     trayIcon.show()
 
-    mw = viui.MainWindow(pathToLogs, trayIcon)
-    mw.show()
-    splash.finish(mw)
+    mainWindow = viui.MainWindow(chatLogDirectory, trayIcon)
+    mainWindow.show()
+    splash.finish(mainWindow)
 
     sys.exit(app.exec_())

@@ -18,10 +18,10 @@
 ###########################################################################
 
 import time
+import logging
+
 from Queue import Queue
-
 from PyQt4 import QtCore
-
 from PyQt4.QtCore import QThread
 from PyQt4.QtCore import SIGNAL
 from vi import evegate
@@ -47,7 +47,7 @@ class AvatarFindThread(QThread):
             # Enqeue the data to be picked up in run()
             self.queue.put(chatEntry)
         except Exception as e:
-            print "An error in the AvatarFindThread: ", str(e)
+            logging.error("An error in the AvatarFindThread: %s", str(e))
 
 
     def run(self):
@@ -76,7 +76,7 @@ class AvatarFindThread(QThread):
                 if avatar:
                     self.emit(SIGNAL("avatar_update"), chatEntry, avatar)
             except Exception as e:
-                print "An error in the AvatarFindThread : {0}".format(str(e))
+                logging.error("An error in the AvatarFindThread : %s", str(e))
 
 
 class KOSCheckerThread(QThread):
@@ -100,7 +100,7 @@ class KOSCheckerThread(QThread):
             # Enqeue the data to be picked up in run()
             self.queue.put((names, requestType, onlyKos))
         except Exception as e:
-            print "An error in the KOSCheckerThread: {0}".format(str(e))
+            logging.error("An error in the KOSCheckerThread: %s", str(e))
 
 
     def run(self):
@@ -120,11 +120,11 @@ class KOSCheckerThread(QThread):
                         hasKos = True
                         break
             except Exception as e:
-                print "An error in the KOSCheckerThread : {0}".format(str(e))
+                logging.error("An error in the KOSCheckerThread : %s", str(e))
                 continue
 
-            print "KOSCheckerThread emitting kos_result for: state = {0}, text = {1}, requestType = {2}, hasKos = {3}".format(
-                    "ok", text, requestType, hasKos)
+            logging.error("KOSCheckerThread emitting kos_result for: state = {0}, text = {1}, requestType = {2}, hasKos = {3}".format(
+                    "ok", text, requestType, hasKos))
             self.emit(SIGNAL("kos_result"), "ok", text, requestType, hasKos)
 
 
@@ -153,7 +153,7 @@ class MapStatisticsThread(QThread):
                 time.sleep(2)  # sleeping to prevent a "need 2 arguments"-error
                 result = {"result": "ok", "statistics": statistics}
             except Exception as e:
-                print "An error in the MapStatisticsThread: {0}".format(str(e))
+                logging.error("An error in the MapStatisticsThread: %s", str(e))
                 result = {"result": "error", "text": unicode(e)}
             self.lastStatisticsUpdate = time.time()
             self.refreshTimer.start(STATISTICS_UPDATE_INTERVAL_MSECS)

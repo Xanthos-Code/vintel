@@ -19,6 +19,7 @@
 
 import os
 import time
+import logging
 
 from PyQt4 import QtCore
 from PyQt4.QtCore import SIGNAL
@@ -46,18 +47,21 @@ class FileWatcher(QtCore.QThread):
         self.qtfw.directoryChanged.connect(self.directoryChanged)
         self.qtfw.addPath(path)
         self.updateWatchedFiles()
+        self.paused = True
 
     def directoryChanged(self):
         self.updateWatchedFiles()
 
     def run(self):
         while True:
+            if self.paused:
+                continue
             for path, modified in self.files.items():
                 newModified = 0
                 try:
                     newModified = os.path.getsize(path)
                 except Exception as e:
-                    print "filewatcher-thread error:", path, str(e)
+                    logging.error("filewatcher-thread error: %s | %s", path, str(e))
                 if newModified > modified:
                     self.emit(SIGNAL("file_change"), path)
                     self.files[path] = newModified
@@ -79,7 +83,7 @@ class FileWatcher(QtCore.QThread):
                     if add:
                         filesInDir.add(fullPath)
                 except Exception as e:
-                    print "Add file to filewatcher failed:", fullPath, str(e)
+                    logging.error("Add file to filewatcher failed: %s | %s", fullPath, str(e))
 
         # Are there old files that not longer exists?
         filesToRemove = set()
