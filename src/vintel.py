@@ -88,7 +88,7 @@ if __name__ == "__main__":
     if not os.path.exists(vintelLogDirectory):
         os.mkdir(vintelLogDirectory)
 
-    # Setup loggging for console and log files, which are rotated
+    # Setup loggging for console and rotated log files
     logFilename = vintelLogDirectory + "/output.log"
     formatter = logging.Formatter('%(asctime)s| %(message)s', datefmt='%m/%d %I:%M:%S %p')
     rootLogger = logging.getLogger()
@@ -106,6 +106,7 @@ if __name__ == "__main__":
     logging.critical("-------------- Vintel %s starting up --------------", version.VERSION)
     logging.critical("")
     logging.critical("Looking for chat logs at: %s", chatLogDirectory)
+    logging.critical("Cache maintained here: %s", cache.Cache.PATH_TO_CACHE)
     logging.critical("Writing logs to: %s", vintelLogDirectory)
 
     trayIcon = systemtray.TrayIcon(app)
