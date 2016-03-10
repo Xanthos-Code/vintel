@@ -52,7 +52,6 @@ class MainWindow(QtGui.QMainWindow):
         QtGui.QMainWindow.__init__(self)
 
         rootLogger = logging.getLogger()
-        savedLoggingLevel = rootLogger.level
         rootLogger.setLevel(level=logging.ERROR)
 
         uic.loadUi(resourcePath('vi/ui/MainWindow.ui'), self)
@@ -127,8 +126,8 @@ class MainWindow(QtGui.QMainWindow):
 
         self.recallCachedSettings()
         self.setupThreads()
-        rootLogger.setLevel(level=savedLoggingLevel)
         self.setupMap(True)
+        self.statisticsThread.start()
 
 
     def recallCachedSettings(self):
@@ -195,7 +194,7 @@ class MainWindow(QtGui.QMainWindow):
 
         self.statisticsThread = MapStatisticsThread()
         self.connect(self.statisticsThread, Qt.SIGNAL("statistic_data_update"), self.updateStatisticsOnMap)
-        self.statisticsThread.start()
+        # Do not start the statistics thread until after the map is set up, to reduce startup time
 
 
     def setupMap(self, initialize=False):
@@ -224,7 +223,7 @@ class MainWindow(QtGui.QMainWindow):
             e = self.dotlan.outdatedCacheError
             diagText = "Something went wrong getting map data. Proceeding with older cached data. " \
                        "Check for a newer version and inform the maintainer.\n\nError: {0} {1}".format(type(e), unicode(e))
-            logging.error(e)
+            logging.warn(diagText)
             QtGui.QMessageBox.warning(None, "Using map from cache", diagText, "Ok")
 
         # Load the jumpbridges
@@ -265,9 +264,10 @@ class MainWindow(QtGui.QMainWindow):
         # Update the new map view, then clear old statistics from the map and request new
         logging.critical("Updating the map")
         self.updateMapView()
-        logging.critical("Adding statistics")
-        self.dotlan.addSystemStatistics(None)
-        self.statisticsThread.requestStatistics()
+        #logging.critical("Adding empty statistics")
+        #self.dotlan.addSystemStatistics(None)
+        #logging.critical("Requesting statistics")
+        #self.statisticsThread.requestStatistics()
         self.mapTimer.start(MAP_UPDATE_INTERVAL_MSECS)
         # Allow the file watcher to run
         self.filewatcherThread.paused = False
@@ -454,6 +454,7 @@ class MainWindow(QtGui.QMainWindow):
     def changeStatisticsVisibility(self):
         newValue = self.dotlan.changeStatisticsVisibility()
         self.statisticsButton.setChecked(newValue)
+        self.statisticsThread.setPollRateFast(newValue)
         self.updateMapView()
 
     def clipboardChanged(self, mode=0):

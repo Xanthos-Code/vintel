@@ -29,7 +29,8 @@ from vi import koschecker
 from vi.cache.cache import Cache
 from vi.resources import resourcePath
 
-STATISTICS_UPDATE_INTERVAL_MSECS = 4 * 60 * 1000
+STATISTICS_UPDATE_FAST_INTERVAL_MSECS = 10 * 1000
+STATISTICS_UPDATE_SLOW_INTERVAL_MSECS = 1 * 60 * 1000
 
 class AvatarFindThread(QThread):
 
@@ -136,12 +137,28 @@ class MapStatisticsThread(QThread):
         self.lastStatisticsUpdate = time.time()
         self.refreshTimer = QtCore.QTimer(self)
         self.connect(self.refreshTimer, QtCore.SIGNAL("timeout()"), self.requestStatistics)
-        self.refreshTimer.start(STATISTICS_UPDATE_INTERVAL_MSECS)
+        self.pollRate = STATISTICS_UPDATE_SLOW_INTERVAL_MSECS
+        self.requestData = None
+
+
+    def start(self, QThread_Priority_priority=None):
+        QtCore.QThread.start(self)
+        self.refreshTimer.start(self.pollRate)
+        self.queue.put(True)
+
+
+    def setPollRateFast(self, fast):
+        if fast:
+            self.pollRate = STATISTICS_UPDATE_FAST_INTERVAL_MSECS
+        else:
+            self.pollRate = STATISTICS_UPDATE_SLOW_INTERVAL_MSECS
 
 
     def requestStatistics(self, force=False):
         self.refreshTimer.stop()
         self.queue.put(True)
+        # Supply the data we have until the request returns
+        self.emit(SIGNAL("statistic_data_update"), self.requestData)
 
 
     def run(self):
@@ -151,10 +168,10 @@ class MapStatisticsThread(QThread):
             try:
                 statistics = evegate.getSystemStatistics()
                 time.sleep(2)  # sleeping to prevent a "need 2 arguments"-error
-                result = {"result": "ok", "statistics": statistics}
+                self.requestData = {"result": "ok", "statistics": statistics}
             except Exception as e:
                 logging.error("An error in the MapStatisticsThread: %s", str(e))
-                result = {"result": "error", "text": unicode(e)}
+                self.requestData = {"result": "error", "text": unicode(e)}
             self.lastStatisticsUpdate = time.time()
-            self.refreshTimer.start(STATISTICS_UPDATE_INTERVAL_MSECS)
-            self.emit(SIGNAL("statistic_data_update"), result)
+            self.refreshTimer.start(self.pollRate)
+            self.emit(SIGNAL("statistic_data_update"), self.requestData)

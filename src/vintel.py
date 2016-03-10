@@ -44,7 +44,7 @@ def exceptHook(exceptionType, exceptionValue, tracebackObject):
         pass
 
 
-gLogLevel = logging.DEBUG
+gLogLevel = logging.WARNING
 
 sys.excepthook = exceptHook
 
@@ -90,7 +90,7 @@ if __name__ == "__main__":
 
     # Setup loggging for console and rotated log files
     logFilename = vintelLogDirectory + "/output.log"
-    formatter = logging.Formatter('%(asctime)s| %(message)s', datefmt='%m/%d %I:%M:%S %p')
+    formatter = logging.Formatter('%(asctime)s| %(message)s', datefmt='%m/%d %I:%M:%S')
     rootLogger = logging.getLogger()
     fileHandler = RotatingFileHandler(maxBytes=(1048576*5), backupCount=7, filename=logFilename, mode='a')
     consoleHandler = StreamHandler()
