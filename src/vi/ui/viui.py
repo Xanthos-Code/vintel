@@ -241,7 +241,6 @@ class MainWindow(QtGui.QMainWindow):
             def mapContextMenuEvent(event):
                 self.mapView.contextMenu.exec_(self.mapToGlobal(QPoint(event.x(), event.y())))
 
-            self.setMapContent(self.dotlan.svg)
             self.mapView.contextMenu = TrayContextMenu(self.trayIcon)
             self.mapView.contextMenuEvent = mapContextMenuEvent
             self.mapView.connect(self.mapView, Qt.SIGNAL("linkClicked(const QUrl&)"), self.mapLinkClicked)
@@ -264,12 +263,8 @@ class MainWindow(QtGui.QMainWindow):
         # Update the new map view, then clear old statistics from the map and request new
         logging.critical("Updating the map")
         self.updateMapView()
-        #logging.critical("Adding empty statistics")
-        #self.dotlan.addSystemStatistics(None)
-        #logging.critical("Requesting statistics")
-        #self.statisticsThread.requestStatistics()
         self.mapTimer.start(MAP_UPDATE_INTERVAL_MSECS)
-        # Allow the file watcher to run
+        # Allow the file watcher to run now that all else is set up
         self.filewatcherThread.paused = False
         logging.critical("Map setup complete")
 
@@ -321,6 +316,7 @@ class MainWindow(QtGui.QMainWindow):
 
         # Stop the threads
         try:
+            self.avatarFindThread.quit()
             self.filewatcherThread.quit()
             self.kosRequestThread.quit()
             self.self.statisticsThread.quit()
