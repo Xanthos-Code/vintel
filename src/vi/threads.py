@@ -139,14 +139,12 @@ class MapStatisticsThread(QThread):
         QThread.__init__(self)
         self.queue = Queue(maxsize=1)
         self.lastStatisticsUpdate = time.time()
-        self.refreshTimer = None
+        self.refreshTimer = QtCore.QTimer(self)
+        self.connect(self.refreshTimer, QtCore.SIGNAL("timeout()"), self.requestStatistics)
         self.pollRate = STATISTICS_UPDATE_INTERVAL_MSECS
 
 
     def requestStatistics(self):
-        if not self.refreshTimer:
-            self.refreshTimer = QtCore.QTimer(self)
-            self.connect(self.refreshTimer, QtCore.SIGNAL("timeout()"), self.requestStatistics)
         self.refreshTimer.stop()
         self.queue.put(1)
 
@@ -158,7 +156,7 @@ class MapStatisticsThread(QThread):
             logging.debug("MapStatisticsThread requesting statistics")
             try:
                 statistics = evegate.getSystemStatistics()
-                time.sleep(2)  # sleeping to prevent a "need 2 arguments"-error
+                #time.sleep(2)  # sleeping to prevent a "need 2 arguments"-error
                 requestData = {"result": "ok", "statistics": statistics}
             except Exception as e:
                 logging.error("Error in MapStatisticsThread: %s", str(e))
@@ -166,6 +164,4 @@ class MapStatisticsThread(QThread):
             self.lastStatisticsUpdate = time.time()
             self.refreshTimer.start(self.pollRate)
             self.emit(SIGNAL("statistic_data_update"), requestData)
-            while not self.queue.empty():
-                self.queue.get(block=False)
             logging.debug("MapStatisticsThread emitted statistic_data_update")
