@@ -128,7 +128,7 @@ def parseSystems(systems, rtext, foundSystems):
                         textReplace(text, formattedText)
                         return True
             elif "-" in upperWord and len(upperWord) > 2:  # - short with - (minus)
-                upperWordParts = upperWord.split("-")  # (I-I will bis I43-IF3)
+                upperWordParts = upperWord.split("-")  # (I-I will match I43-IF3)
                 for system in systemNames:
                     systemParts = system.split("-")
                     if (len(upperWordParts) == 2 and len(systemParts) == 2 and len(upperWordParts[0]) > 1 and len(

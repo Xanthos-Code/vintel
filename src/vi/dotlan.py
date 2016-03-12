@@ -196,6 +196,7 @@ class Map(object):
         return content
 
     def addSystemStatistics(self, statistics):
+        logging.info("addSystemStatistics start")
         if statistics is not None:
             for systemId, system in self.systemsById.items():
                 if systemId in statistics:
@@ -203,6 +204,8 @@ class Map(object):
         else:
             for system in self.systemsById.values():
                 system.setStatistics(None)
+        logging.info("addSystemStatistics complete")
+
 
     def setJumpbridges(self, jumpbridgesData):
         """
@@ -440,7 +443,7 @@ class System(object):
             # second line in the rects is reserved for the clock
             self.secondLine.string = "?"
             self.secondLine["style"] = "fill: #000000;"
-        if newStatus not in (states.NOT_CHANGE, states.REQUEST):  # unknon not affect system status
+        if newStatus not in (states.NOT_CHANGE, states.REQUEST):  # unknown not affect system status
             self.status = newStatus
 
     def setStatistics(self, statistics):
