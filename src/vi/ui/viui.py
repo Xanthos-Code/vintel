@@ -49,10 +49,8 @@ CLIPBOARD_CHECK_INTERVAL_MSECS = 4 * 1000
 class MainWindow(QtGui.QMainWindow):
 
     def __init__(self, pathToLogs, trayIcon):
-        QtGui.QMainWindow.__init__(self)
 
-        rootLogger = logging.getLogger()
-        rootLogger.setLevel(level=logging.ERROR)
+        QtGui.QMainWindow.__init__(self)
 
         uic.loadUi(resourcePath('vi/ui/MainWindow.ui'), self)
         self.setWindowTitle("Vintel " + vi.version.VERSION + "{dev}".format(dev="-SNAPSHOT" if vi.version.SNAPSHOT else ""))
@@ -62,7 +60,6 @@ class MainWindow(QtGui.QMainWindow):
 
         self.pathToLogs = pathToLogs
         self.cache = Cache()
-        self.initMapPosition = None
         self.mapTimer = QtCore.QTimer(self)
         self.connect(self.mapTimer, QtCore.SIGNAL("timeout()"), self.updateMapView)
         self.clipboardTimer = QtCore.QTimer(self)
@@ -127,8 +124,6 @@ class MainWindow(QtGui.QMainWindow):
         self.recallCachedSettings()
         self.setupThreads()
         self.setupMap(True)
-        self.statisticsThread.start()
-
 
     def recallCachedSettings(self):
         try:
@@ -194,12 +189,14 @@ class MainWindow(QtGui.QMainWindow):
 
         self.statisticsThread = MapStatisticsThread()
         self.connect(self.statisticsThread, Qt.SIGNAL("statistic_data_update"), self.updateStatisticsOnMap)
-        # Do not start the statistics thread until after the map is set up, to reduce startup time
+        self.statisticsThread.start()
+        # statisticsThread is blocked until first call of requestStatistics
 
 
     def setupMap(self, initialize=False):
         self.mapTimer.stop()
         self.filewatcherThread.paused = True
+        self.initMapPosition = None
 
         logging.info("Finding map file")
         regionName = self.cache.getFromCache("region_name")
@@ -450,8 +447,9 @@ class MainWindow(QtGui.QMainWindow):
     def changeStatisticsVisibility(self):
         newValue = self.dotlan.changeStatisticsVisibility()
         self.statisticsButton.setChecked(newValue)
-        self.statisticsThread.setPollRateFast(newValue)
         self.updateMapView()
+        if newValue:
+            self.statisticsThread.requestStatistics()
 
     def clipboardChanged(self, mode=0):
         if not (mode == 0 and self.kosClipboardActiveAction.isChecked() and self.clipboard.mimeData().hasText()):
@@ -654,14 +652,19 @@ class MainWindow(QtGui.QMainWindow):
             self.emit(Qt.SIGNAL("avatar_loaded"), chatEntry.message.user, avatarData)
 
     def updateStatisticsOnMap(self, data):
+        if not self.statisticsButton.isChecked():
+            return
         if data["result"] == "ok":
             self.dotlan.addSystemStatistics(data["statistics"])
         elif data["result"] == "error":
             text = data["text"]
             self.trayIcon.showMessage("Loading statstics failed", text, 3)
+            logging.error("updateStatisticsOnMap, error: %s" % text)
 
     def updateMapView(self):
+        logging.debug("Updating map start")
         self.setMapContent(self.dotlan.svg)
+        logging.debug("Updating map complete")
 
     def zoomMapIn(self):
         self.mapView.setZoomFactor(self.mapView.zoomFactor() + 0.1)

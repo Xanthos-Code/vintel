@@ -44,7 +44,7 @@ def exceptHook(exceptionType, exceptionValue, tracebackObject):
         pass
 
 
-gLogLevel = logging.WARNING
+gLogLevel = logging.INFO
 
 sys.excepthook = exceptHook
 
@@ -88,26 +88,26 @@ if __name__ == "__main__":
     if not os.path.exists(vintelLogDirectory):
         os.mkdir(vintelLogDirectory)
 
-    # Setup loggging for console and rotated log files
-    logFilename = vintelLogDirectory + "/output.log"
+    # Setup logging for console and rotated log files
     formatter = logging.Formatter('%(asctime)s| %(message)s', datefmt='%m/%d %I:%M:%S')
     rootLogger = logging.getLogger()
-    fileHandler = RotatingFileHandler(maxBytes=(1048576*5), backupCount=7, filename=logFilename, mode='a')
-    consoleHandler = StreamHandler()
-
-    fileHandler.setFormatter(formatter)
-    consoleHandler.setFormatter(formatter)
-
-    rootLogger.addHandler(fileHandler)
-    rootLogger.addHandler(consoleHandler)
     rootLogger.setLevel(level=gLogLevel)
+
+    logFilename = vintelLogDirectory + "/output.log"
+    fileHandler = RotatingFileHandler(maxBytes=(1048576*5), backupCount=7, filename=logFilename, mode='a')
+    fileHandler.setFormatter(formatter)
+    rootLogger.addHandler(fileHandler)
+
+    consoleHandler = StreamHandler()
+    consoleHandler.setFormatter(formatter)
+    rootLogger.addHandler(consoleHandler)
 
     logging.critical("")
     logging.critical("-------------- Vintel %s starting up --------------", version.VERSION)
     logging.critical("")
-    logging.critical("Looking for chat logs at: %s", chatLogDirectory)
-    logging.critical("Cache maintained here: %s", cache.Cache.PATH_TO_CACHE)
-    logging.critical("Writing logs to: %s", vintelLogDirectory)
+    logging.debug("Looking for chat logs at: %s", chatLogDirectory)
+    logging.debug("Cache maintained here: %s", cache.Cache.PATH_TO_CACHE)
+    logging.debug("Writing logs to: %s", vintelLogDirectory)
 
     trayIcon = systemtray.TrayIcon(app)
     trayIcon.setContextMenu(systemtray.TrayContextMenu(trayIcon))
