@@ -37,9 +37,10 @@ def exceptHook(exceptionType, exceptionValue, tracebackObject):
         Global function to catch unhandled exceptions.
     """
     try:
-        errorMsg = '{0}: \n{1}'.format(str(exceptionType), str(exceptionValue))
-        msg = '\n'.join(errorMsg)
-        logging.exception(msg)
+        logging.error("-- Unhandled Exception --")
+        errorMsg = "%s: \n%s" % (str(exceptionType), str(exceptionValue))
+        logging.exception(errorMsg)
+        logging.error("-- ------------------- --")
     except Exception:
         pass
 
@@ -53,6 +54,7 @@ if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
     splash = QtGui.QSplashScreen(QtGui.QPixmap(resourcePath("vi/ui/res/logo.png")))
 
+    app.setStyleSheet("background-color: #c6d9ec;")
     splash.show()
     app.processEvents()
 
@@ -103,7 +105,7 @@ if __name__ == "__main__":
     rootLogger.addHandler(consoleHandler)
 
     logging.critical("")
-    logging.critical("-------------- Vintel %s starting up --------------", version.VERSION)
+    logging.critical("------------------- Vintel %s starting up -------------------", version.VERSION)
     logging.critical("")
     logging.debug("Looking for chat logs at: %s", chatLogDirectory)
     logging.debug("Cache maintained here: %s", cache.Cache.PATH_TO_CACHE)

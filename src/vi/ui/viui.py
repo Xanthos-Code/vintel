@@ -26,6 +26,7 @@ import webbrowser
 import vi.version
 
 import logging
+from PyQt4.QtGui import *
 from PyQt4 import Qt, QtGui, uic, QtCore
 from PyQt4.QtCore import QPoint
 from PyQt4.QtGui import QImage, QPixmap, QMessageBox
@@ -124,6 +125,14 @@ class MainWindow(QtGui.QMainWindow):
         self.recallCachedSettings()
         self.setupThreads()
         self.setupMap(True)
+
+
+    def paintEvent(self, event):
+        opt = QStyleOption()
+        opt.initFrom(self)
+        painter = QPainter(self)
+        self.style().drawPrimitive(QStyle.PE_Widget, opt,  painter, self)
+
 
     def recallCachedSettings(self):
         try:
