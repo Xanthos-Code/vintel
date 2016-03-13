@@ -620,7 +620,7 @@ class MainWindow(QtGui.QMainWindow):
     def showInfo(self):
         infoDialog = QtGui.QDialog(self)
         uic.loadUi(resourcePath("vi/ui/Info.ui"), infoDialog)
-        infoDialog.versionLabel.setText(u"Version: {0}".format(VERSION))
+        infoDialog.versionLabel.setText(u"Version: {0}".format(vi.version.VERSION))
         infoDialog.logoLabel.setPixmap(QtGui.QPixmap(resourcePath("vi/ui/res/logo.png")))
         infoDialog.connect(infoDialog.closeButton, Qt.SIGNAL("clicked()"), infoDialog.accept)
         infoDialog.show()
