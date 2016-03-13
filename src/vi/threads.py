@@ -145,7 +145,6 @@ class MapStatisticsThread(QThread):
 
 
     def requestStatistics(self):
-        self.refreshTimer.stop()
         self.queue.put(1)
 
 
@@ -153,6 +152,7 @@ class MapStatisticsThread(QThread):
         while True:
             # Block waiting for requestStatistics() to enqueue a token
             self.queue.get()
+            self.refreshTimer.stop()
             logging.debug("MapStatisticsThread requesting statistics")
             try:
                 statistics = evegate.getSystemStatistics()
