@@ -139,16 +139,15 @@ class MapStatisticsThread(QThread):
         QThread.__init__(self)
         self.queue = Queue(maxsize=1)
         self.lastStatisticsUpdate = time.time()
-        self.refreshTimer = QtCore.QTimer(self)
-        self.connect(self.refreshTimer, QtCore.SIGNAL("timeout()"), self.requestStatistics)
         self.pollRate = STATISTICS_UPDATE_INTERVAL_MSECS
-
+        self.refreshTimer = None
 
     def requestStatistics(self):
         self.queue.put(1)
 
-
     def run(self):
+        self.refreshTimer = QtCore.QTimer()
+        self.connect(self.refreshTimer, QtCore.SIGNAL("timeout()"), self.requestStatistics)
         while True:
             # Block waiting for requestStatistics() to enqueue a token
             self.queue.get()
