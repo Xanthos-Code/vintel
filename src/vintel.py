@@ -21,6 +21,7 @@
 import sys
 import os
 import logging
+import traceback
 
 from logging.handlers import RotatingFileHandler
 from logging import StreamHandler
@@ -30,6 +31,7 @@ from vi import version
 from vi.ui import viui, systemtray
 from vi.cache import cache
 from vi.resources import resourcePath
+from vi.cache.cache import Cache
 
 
 def exceptHook(exceptionType, exceptionValue, tracebackObject):
@@ -37,25 +39,20 @@ def exceptHook(exceptionType, exceptionValue, tracebackObject):
         Global function to catch unhandled exceptions.
     """
     try:
-        errorMsg = '{0}: \n{1}'.format(str(exceptionType), str(exceptionValue))
-        msg = '\n'.join(errorMsg)
-        logging.exception(msg)
+        logging.critical("-- Unhandled Exception --")
+        logging.critical(''.join(traceback.format_tb(tracebackObject)))
+        logging.critical('{0}: {1}'.format(exceptionType, exceptionValue))
+        logging.critical("-- ------------------- --")
     except Exception:
         pass
 
 
-gLogLevel = logging.INFO
-
 sys.excepthook = exceptHook
+backGroundColor = "#c6d9ec"
 
 if __name__ == "__main__":
 
-    app = QtGui.QApplication(sys.argv)
-    splash = QtGui.QSplashScreen(QtGui.QPixmap(resourcePath("vi/ui/res/logo.png")))
-
-    splash.show()
-    app.processEvents()
-
+    # Set up paths
     chatLogDirectory = ""
     if len(sys.argv) > 1:
         chatLogDirectory = sys.argv[1]
@@ -68,7 +65,6 @@ if __name__ == "__main__":
             chatLogDirectory = os.path.join(os.path.expanduser("~"), "EVE", "logs", "Chatlogs")
         elif sys.platform.startswith("win32") or sys.platform.startswith("cygwin"):
             import ctypes.wintypes
-
             buf = ctypes.create_unicode_buffer(ctypes.wintypes.MAX_PATH)
             ctypes.windll.shell32.SHGetFolderPathW(0, 5, 0, 0, buf)
             documentsPath = buf.value
@@ -88,10 +84,25 @@ if __name__ == "__main__":
     if not os.path.exists(vintelLogDirectory):
         os.mkdir(vintelLogDirectory)
 
+    # Setup the application object, display splash screen
+    app = QtGui.QApplication(sys.argv)
+    splash = QtGui.QSplashScreen(QtGui.QPixmap(resourcePath("vi/ui/res/logo.png")))
+
+    vintelCache = Cache()
+    logLevel = vintelCache.getFromCache("logging_level")
+    if not logLevel:
+        logLevel = logging.WARN
+    backGroundColor = vintelCache.getFromCache("background_color")
+    if backGroundColor:
+        app.setStyleSheet("QWidget { background-color: %s; }" % backGroundColor)
+
+    splash.show()
+    app.processEvents()
+
     # Setup logging for console and rotated log files
     formatter = logging.Formatter('%(asctime)s| %(message)s', datefmt='%m/%d %I:%M:%S')
     rootLogger = logging.getLogger()
-    rootLogger.setLevel(level=gLogLevel)
+    rootLogger.setLevel(level=logLevel)
 
     logFilename = vintelLogDirectory + "/output.log"
     fileHandler = RotatingFileHandler(maxBytes=(1048576*5), backupCount=7, filename=logFilename, mode='a')
@@ -103,7 +114,7 @@ if __name__ == "__main__":
     rootLogger.addHandler(consoleHandler)
 
     logging.critical("")
-    logging.critical("-------------- Vintel %s starting up --------------", version.VERSION)
+    logging.critical("------------------- Vintel %s starting up -------------------", version.VERSION)
     logging.critical("")
     logging.debug("Looking for chat logs at: %s", chatLogDirectory)
     logging.debug("Cache maintained here: %s", cache.Cache.PATH_TO_CACHE)
@@ -113,7 +124,7 @@ if __name__ == "__main__":
     trayIcon.setContextMenu(systemtray.TrayContextMenu(trayIcon))
     trayIcon.show()
 
-    mainWindow = viui.MainWindow(chatLogDirectory, trayIcon)
+    mainWindow = viui.MainWindow(chatLogDirectory, trayIcon, backGroundColor)
     mainWindow.show()
     splash.finish(mainWindow)
 

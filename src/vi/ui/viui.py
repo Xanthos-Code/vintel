@@ -26,6 +26,7 @@ import webbrowser
 import vi.version
 
 import logging
+from PyQt4.QtGui import *
 from PyQt4 import Qt, QtGui, uic, QtCore
 from PyQt4.QtCore import QPoint
 from PyQt4.QtGui import QImage, QPixmap, QMessageBox
@@ -48,10 +49,14 @@ CLIPBOARD_CHECK_INTERVAL_MSECS = 4 * 1000
 
 class MainWindow(QtGui.QMainWindow):
 
-    def __init__(self, pathToLogs, trayIcon):
+
+    def __init__(self, pathToLogs, trayIcon, backGroundColor):
 
         QtGui.QMainWindow.__init__(self)
+        self.cache = Cache()
 
+        if backGroundColor:
+            self.setStyleSheet("QWidget { background-color: %s; }" % backGroundColor)
         uic.loadUi(resourcePath('vi/ui/MainWindow.ui'), self)
         self.setWindowTitle("Vintel " + vi.version.VERSION + "{dev}".format(dev="-SNAPSHOT" if vi.version.SNAPSHOT else ""))
         self.taskbarIconQuiescent = QtGui.QIcon(resourcePath("vi/ui/res/logo_small.png"))
@@ -59,7 +64,6 @@ class MainWindow(QtGui.QMainWindow):
         self.setWindowIcon(self.taskbarIconQuiescent)
 
         self.pathToLogs = pathToLogs
-        self.cache = Cache()
         self.mapTimer = QtCore.QTimer(self)
         self.connect(self.mapTimer, QtCore.SIGNAL("timeout()"), self.updateMapView)
         self.clipboardTimer = QtCore.QTimer(self)
@@ -80,6 +84,8 @@ class MainWindow(QtGui.QMainWindow):
             self.knownPlayerNames = set(self.knownPlayerNames.split(","))
         else:
             self.knownPlayerNames = set()
+            diagText = "Vintel scans EVE system logs and remembers your characters as they change systems.\n\nSome features (clipboard KOS checking, alarms, etc.) may not work until your character(s) have been registered. Change systems, with each character you want to monitor, while Vintel is running to remedy this."
+            QtGui.QMessageBox.warning(None, "Known Characters not Found", diagText, "Ok")
 
         # Set up user's intel rooms
         roomnames = self.cache.getFromCache("room_names")
@@ -124,6 +130,14 @@ class MainWindow(QtGui.QMainWindow):
         self.recallCachedSettings()
         self.setupThreads()
         self.setupMap(True)
+
+
+    def paintEvent(self, event):
+        opt = QStyleOption()
+        opt.initFrom(self)
+        painter = QPainter(self)
+        self.style().drawPrimitive(QStyle.PE_Widget, opt,  painter, self)
+
 
     def recallCachedSettings(self):
         try:
@@ -459,9 +473,11 @@ class MainWindow(QtGui.QMainWindow):
         # Limit redundant kos checks
         if contentTuple != self.oldClipboardContent:
             parts = tuple(content.split("\n"))
+            knownPlayers = self.knownPlayerNames
             for part in parts:
-                # Make sure user is in the content (this is a check of the local system in Eve)
-                if part in self.knownPlayerNames:
+                # Make sure user is in the content (this is a check of the local system in Eve).
+                # also, special case for when you have no knonwnPlayers (initial use)
+                if not knownPlayers or part in knownPlayers:
                     self.trayIcon.setIcon(self.taskbarIconWorking)
                     self.kosRequestThread.addRequest(parts, "clipboard", True)
                     break
