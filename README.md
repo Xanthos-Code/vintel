@@ -6,7 +6,7 @@
 
 Visual intel chat analysis, planning and notification application for [EVE Online](http://www.eveonline.com). Gathers status through in-game intelligence channels on all known hostiles and presents all the data on a [dotlan](http://evemaps.dotlan.net/map/Cache#npc24) generated regional map.
 
-Vintel is written with Python 2.7, using PyQt4 for the application presentation layer, BeautifulSoup4 for html parsing, and Pyglet for audio playback.
+Vintel is written with Python 2.7, using PyQt4 for the application presentation layer, BeautifulSoup4 for SVG parsing, and Pyglet for audio playback.
 
 ### News
 _The current release version of Vintel is **1.1.2** and [can be found here](https://github.com/Xanthos-Eve/vintel/releases/tag/1.1.2). Both Mac and Windows distributions are now available for download with this release._
