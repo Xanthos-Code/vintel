@@ -47,7 +47,7 @@ class AvatarFindThread(QThread):
             # Enqeue the data to be picked up in run()
             self.queue.put(chatEntry)
         except Exception as e:
-            logging.error("Error in AvatarFindThread: %s", str(e))
+            logging.error("Error in AvatarFindThread: %s", e)
 
 
     def run(self):
@@ -80,7 +80,7 @@ class AvatarFindThread(QThread):
                     logging.debug("AvatarFindThread emit avatar_update for %s" % charname)
                     self.emit(SIGNAL("avatar_update"), chatEntry, avatar)
             except Exception as e:
-                logging.error("Error in AvatarFindThread : %s", str(e))
+                logging.error("Error in AvatarFindThread : %s", e)
 
 
 class KOSCheckerThread(QThread):
@@ -104,7 +104,7 @@ class KOSCheckerThread(QThread):
             # Enqeue the data to be picked up in run()
             self.queue.put((names, requestType, onlyKos))
         except Exception as e:
-            logging.error("Error in KOSCheckerThread: %s", str(e))
+            logging.error("Error in KOSCheckerThread: %s", e)
 
 
     def run(self):
@@ -112,7 +112,7 @@ class KOSCheckerThread(QThread):
             # Block waiting for addRequest() to enqueue something
             names, requestType, onlyKos = self.queue.get()
             try:
-                logging.info("KOSCheckerThread kos checking %s" %  names)
+                #logging.info("KOSCheckerThread kos checking %s" %  str(names))
                 hasKos = False
                 if not names:
                     continue
@@ -125,7 +125,7 @@ class KOSCheckerThread(QThread):
                         hasKos = True
                         break
             except Exception as e:
-                logging.error("Error in KOSCheckerThread: %s", str(e))
+                logging.error("Error in KOSCheckerThread: %s", e)
                 continue
 
             logging.info("KOSCheckerThread emitting kos_result for: state = {0}, text = {1}, requestType = {2}, hasKos = {3}".format(
@@ -158,7 +158,7 @@ class MapStatisticsThread(QThread):
                 #time.sleep(2)  # sleeping to prevent a "need 2 arguments"-error
                 requestData = {"result": "ok", "statistics": statistics}
             except Exception as e:
-                logging.error("Error in MapStatisticsThread: %s", str(e))
+                logging.error("Error in MapStatisticsThread: %s", e)
                 requestData = {"result": "error", "text": unicode(e)}
             self.lastStatisticsUpdate = time.time()
             self.refreshTimer.start(self.pollRate)

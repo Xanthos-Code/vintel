@@ -61,7 +61,7 @@ class FileWatcher(QtCore.QThread):
                 try:
                     newModified = os.path.getsize(path)
                 except Exception as e:
-                    logging.error("filewatcher-thread error: %s | %s", path, str(e))
+                    logging.error("filewatcher-thread error: %s | %s", path, e)
                 if newModified > modified:
                     self.emit(SIGNAL("file_change"), path)
                     self.files[path] = newModified
@@ -83,7 +83,7 @@ class FileWatcher(QtCore.QThread):
                     if add:
                         filesInDir.add(fullPath)
                 except Exception as e:
-                    logging.error("Add file to filewatcher failed: %s | %s", fullPath, str(e))
+                    logging.error("Add file to filewatcher failed: %s | %s", fullPath, e)
 
         # Are there old files that not longer exists?
         filesToRemove = set()

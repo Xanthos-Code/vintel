@@ -1,3 +1,3 @@
 
-VERSION = "1.1.1"
-SNAPSHOT = False # set to false when releasing
+VERSION = "1.1.2"
+SNAPSHOT = True # set to false when releasing

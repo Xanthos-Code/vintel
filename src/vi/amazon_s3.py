@@ -48,7 +48,7 @@ def getJumpbridgeData(region):
             cache.putIntoCache(cacheKey, json.dumps(data), 60 * 60 * 24)
         return data
     except Exception as e:
-        logging.error("Getting Jumpbridgedata failed with: %s", str(e))
+        logging.error("Getting Jumpbridgedata failed with: %s", e)
         return []
 
 
@@ -59,7 +59,7 @@ def getNewestVersion():
         newestVersion = request.read()
         return newestVersion
     except Exception as e:
-        logging.error("Failed version-request: %s", str(e))
+        logging.error("Failed version-request: %s", e)
         return "0.0"
 
 
@@ -77,4 +77,4 @@ class NotifyNewVersionThread(QThread):
                     self.emit(Qt.SIGNAL("newer_version"), newestVersion)
                     self.alerted = True
             except Exception as e:
-                logging.error("Failed NotifyNewVersionThread: %s", str(e))
+                logging.error("Failed NotifyNewVersionThread: %s", e)

@@ -154,13 +154,13 @@ class SoundManager:
                 elif self.isDarwin:
                     subprocess.call(["afplay -v {0} {1}".format(volume, filename)], shell=True)
             except Exception as e:
-                logging.error("SoundThread.playAudioFile exception: %s", str(e))
+                logging.error("SoundThread.playAudioFile exception: %s", e)
 
         def darwinSpeak(self, message):
             try:
                 os.system("say [[volm {0}]] '{1}'".format(float(self.volume) / 100.0, message))
             except Exception as e:
-                logging.error("SoundThread.darwinSpeak exception: %s", str(e))
+                logging.error("SoundThread.darwinSpeak exception: %s", e)
 
         #
         #  Experimental text-to-speech stuff below
@@ -188,8 +188,7 @@ class SoundManager:
             if args is None:
                 args = audioArgs(language='en', output=open('output.mp3', 'w'))
             if type(args) is dict:
-                args = audioArgs(language=args.get('language', 'en'),
-                                 output=open(args.get('output', 'output.mp3'), 'w'))
+                args = audioArgs(language=args.get('language', 'en'), output=open(args.get('output', 'output.mp3'), 'w'))
             # Process inputText into chunks
             # Google TTS only accepts up to (and including) 100 characters long texts.
             # Split the text in segments of maximum 100 characters long.
@@ -199,8 +198,7 @@ class SoundManager:
             for idx, val in enumerate(combinedText):
                 mp3url = "http://translate.google.com/translate_tts?tl=%s&q=%s&total=%s&idx=%s&ie=UTF-8&client=t&key=%s" % (
                 args.language, urllib.quote(val), len(combinedText), idx, self.GOOGLE_TTS_API_KEY)
-                headers = {"Host": "translate.google.com",
-                           "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1)"}
+                headers = {"Host": "translate.google.com", "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1)"}
                 request = urllib2.Request(mp3url, '', headers)
                 sys.stdout.write('.')
                 sys.stdout.flush()
@@ -210,7 +208,7 @@ class SoundManager:
                         args.output.write(response.read())
                         time.sleep(.5)
                     except urllib2.URLError as e:
-                        logging.error('audioExtractToMp3 error: %s', str(e))
+                        logging.error('audioExtractToMp3 error: %s', e)
             args.output.close()
             return args.output.name
 

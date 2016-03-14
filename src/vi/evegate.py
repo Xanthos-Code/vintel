@@ -46,7 +46,7 @@ def charnameToId(name):
                 return int(row["characterid"])
 
     except Exception as e:
-        logging.error("Exception turning charname to id via API: %s", str(e))
+        logging.error("Exception turning charname to id via API: %s", e)
         # fallback! if there is a problem with the API, we use evegate
         baseUrl = "https://gate.eveonline.com/Profile/"
         qcharname = urllib2.quote(name)
@@ -94,7 +94,7 @@ def namesToIds(names):
                 cacheKey = "_".join(("id", "name", name))
                 cache.putIntoCache(cacheKey, data[name], 60 * 60 * 24 * 365)
     except Exception as e:
-        logging.error("Exception during namesToIds: %s", str(e))
+        logging.error("Exception during namesToIds: %s", e)
     return data
 
 
@@ -134,7 +134,7 @@ def idsToNames(ids):
                 cacheKey = u"_".join(("name", "id", unicode(id)))
                 cache.putIntoCache(cacheKey, data[id], 60 * 60 * 24 * 365)
     except Exception as e:
-        logging.error("Exception during idsToNames: %s", str(e))
+        logging.error("Exception during idsToNames: %s", e)
 
     return data
 
@@ -151,7 +151,7 @@ def getAvatarForPlayer(charname):
             imageUrl = "http://image.eveonline.com/Character/{id}_{size}.jpg"
             avatar = urllib2.urlopen(imageUrl.format(id=charId, size=32)).read()
     except Exception as e:
-        logging.error("Exception during getAvatarForPlayer: %s", str(e))
+        logging.error("Exception during getAvatarForPlayer: %s", e)
         avatar = None
     return avatar
 
@@ -172,7 +172,7 @@ def checkPlayername(charname):
         if ("404") in str(e):
             result = 0
     except Exception as e:
-        logging.error("Exception on checkPlayername: %s", str(e))
+        logging.error("Exception on checkPlayername: %s", e)
     return result
 
 
@@ -273,7 +273,7 @@ def getSystemStatistics():
         else:
             systemData = json.loads(systemData)
     except Exception as e:
-        logging.error("Exception during getSystemStatistics: : %s", str(e))
+        logging.error("Exception during getSystemStatistics: : %s", e)
     # We collected all data (or loaded them from cache) - now zip it together
     for i, v in jumpData.items():
         i = int(i)

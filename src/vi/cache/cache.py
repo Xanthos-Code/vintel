@@ -149,6 +149,6 @@ class Cache(object):
                 try:
                     getattr(obj, setting[1])(setting[2])
                 except Exception as e:
-                    logging.error(str(e))
+                    logging.error(e)
 
 

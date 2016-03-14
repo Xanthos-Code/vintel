@@ -68,7 +68,7 @@ class ChatParser(object):
             content = content.decode("utf-16-le")
         except Exception as e:
             self.ignoredPaths.append(path)
-            QtGui.QMessageBox.warning(None, "Read a log file failed!", "File: {0} - problem: {1}".format(path, str(e)), "OK")
+            QtGui.QMessageBox.warning(None, "Read a log file failed!", "File: {0} - problem: {1}".format(path, unicode(e)), "OK")
             return None
 
         lines = content.split("\n")
