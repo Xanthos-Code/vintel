@@ -4,7 +4,7 @@
 </p>
 # Welcome To Vintel
 
-Visual intel chat analysis, planning and notification application for [EVE Online](http://www.eveonline.com). Gathers status through in-game intelligence channels on all known hostiles and presents all the data on a [dotlan](http://evemaps.dotlan.net/map/Cache#npc24) generated regional map.
+Visual intel chat analysis, planning and notification application for [EVE Online](http://www.eveonline.com). Gathers status through in-game intelligence channels on all known hostiles and presents all the data on a [dotlan](http://evemaps.dotlan.net/map/Cache#npc24) generated regional map. The map is annotated in real-time as players report intel in monitored chat channels.
 
 Vintel is written with Python 2.7, using PyQt4 for the application presentation layer, BeautifulSoup4 for SVG parsing, and Pyglet for audio playback.
 
@@ -104,9 +104,9 @@ Vintel works great on Mac! Install the dependencies listed above and the source 
 
 **What file system permissions does Vintel need?**
 
-It reads your EVE chatlogs
-It creates and writes to PathToYourChatlogs/../../vintel/.
-It needs to connect the internet (dotlan.evemaps.net, eveonline.com, cva-eve.org, and eve gate).
+- It reads your EVE chatlogs
+- It creates and writes to **path-to-your-chatlogs**/../../vintel/.
+- It needs to connect the internet (dotlan.evemaps.net, eveonline.com, cva-eve.org, and eve gate).
 
 **Vintel calls home?**
 
@@ -131,7 +131,7 @@ Please try to delete Vintel's Cache. It is located in the EVE-directory where th
 
 **Vintel takes many seconds to start up; what are some of the causes and what can I do about it?**
 
-Vintel asks the OS to notifiy when a change has been made to the ChatLogs directory - this will happen when a new log is created or an existing one is updated. If you have a lot of chat logs this can make Vintel slow. Try moving all the chatlogs out of the ChatLogs directory (zip them up and save them somewhere else if you think you may need them some day).
+Vintel asks the operating system to notifiy when a change has been made to the ChatLogs directory - this will happen when a new log is created or an existing one is updated. In response to this notification, Vintel examines all of the files in the directory to analysze the changes. If you have a lot of chat logs this can make Vintel slow to scan for file changes. Try perodically moving all the chatlogs out of the ChatLogs directory (zip them up and save them somewhere else if you think you may need them some day).
 
 **How can I resolve the "empty certificate data" error?**
 
@@ -148,4 +148,3 @@ If you are technically inclined and have a solid grasp of Python, [contact the p
 **I'm not a coder, how can I help?**
 
 Your feedback is needed! Use the program for a while, then come back [here and create issues](https://github.com/Xanthos-Eve/vintel/issues). Record anything you think about Vintel - bugs, frustrations, and ideas to make Vintel better.
-Encourage continued development with motivational contributions of EVE ISK. Send donations in-game to the project maintainer [Xanthos](http://image.eveonline.com/Character/183452271_256.jpg).
