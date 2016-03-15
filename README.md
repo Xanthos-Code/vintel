@@ -58,16 +58,16 @@ To use this feature: click on a pilot in the local pilot list and then type the 
 To run or build from the source you need the following packages installed on your machine. Most, if not all, can be installed from the command line using package management software such as "pip". Mac and Linux both come with pip installed, Windows users may need to install [cygwin](https://www.cygwin.com) to get pip. Of course all the requirements also have downoad links.
 
 The packages required are:
-> - Python 2.7.x
+- Python 2.7.x
 https://www.python.org/downloads/
 Vintel is not compatible with Python 3!
-> - PyQt4x
+- PyQt4x
 http://www.riverbankcomputing.com/software/pyqt/download
 Please use the PyQt Binary Package for Py2.7
 Vintel is not compatible with PyQt5!
-> - BeautifulSoup 4
+- BeautifulSoup 4
 https://pypi.python.org/pypi/beautifulsoup4
-> - Pyglet 1.2.4 (for python 2.7)
+- Pyglet 1.2.4 (for python 2.7)
 https://bitbucket.org/pyglet/pyglet/wiki/Download
 pyglet is used to play the sound – If it is not available the sound option will be disabled.
 
@@ -94,13 +94,9 @@ The .exe ships with the complete environment and needed libs. You could save som
 
 There are no plans to bring the GUI to HTML/JS. But you can set the Vintel window always on top with a menu option.
 
-**I'm using Linux, will Vintel work for me?**
+**What platforms are supported?**
 
-Vintel works great on Linux! Install the dependencies listed above and the source repository and run from there. The dependencies are available through your software repositories.
-
-**I'm using Mac (OSX), will Vintel work for me?**
-
-Vintel works great on Mac! Install the dependencies listed above and the source repository and run from there or use Automator to wrap the command line into an app.
+Vintel runs on Mac (OS X), Windows and Linux. Mac and Windows standalone packages are provided with each release. Linux users are advised to install all the requirements listed above then download and run from source.
 
 **What file system permissions does Vintel need?**
 
