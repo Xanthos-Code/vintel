@@ -86,10 +86,6 @@ Vintel is licensed under the [GPLv3](http://www.gnu.org/licenses/gpl-3.0.html).
 
 The most likely cause of this is that pyglet is not installed.
 
-**Vintel does not show any chat. What can I do?**
-
-Vintel looks for your chat logs in ~\EVE\logs\chatlogs and ~\DOCUMENTS\EVE\logs\chatlogs. Logging must be enabled in the EVE client options. Go to the settings, use the register "chat" and activate "log chat to file".
-
 **A litte bit to big for such a little tool.**
 
 The .exe ships with the complete environment and needed libs. You could save some space using the the source code instead.
@@ -117,9 +113,9 @@ It needs to connect the internet (dotlan.evemaps.net, eveonline.com, cva-eve.org
 Yes it does. If you don't want to this, use a firewall to forbid it.
 Vintel looks for a new version at startup and loads dynamic infomation (i.e., jump bridge routes) from home. It will run without this connection but some functionality will be limited.
 
-**Vintel does not find my chatlogs. What can I do?**
+**Vintel does not find my chatlogs or is not showing changes to chat when it should. What can I do?**
 
-The program looks for your logs on some default pathes. If those paths do not exist, Vintel will fail with an error at startup. You can set this path on your own by giving it to Vintel at startup. For this you have to start it on the command line and call the program with the path to the logs.
+Vintel looks for your chat logs in ~\EVE\logs\chatlogs and ~\DOCUMENTS\EVE\logs\chatlogs. Logging must be enabled in the EVE client options. You can set this path on your own by giving it to Vintel at startup. For this you have to start it on the command line and call the program with the path to the logs.
 
 Examples:
 
@@ -133,9 +129,17 @@ Examples:
 
 Please try to delete Vintel's Cache. It is located in the EVE-directory where the chatlogs are in. If your chatlogs are in \Documents\EVE\logs\chatlogs Vintel writes the cachte to \Documents\EVE\vintel
 
+**Vintel takes many seconds to start up; what are some of the causes and what can I do about it?**
+
+Vintel asks the OS to notifiy when a change has been made to the ChatLogs directory - this will happen when a new log is created or an existing one is updated. If you have a lot of chat logs this can make Vintel slow. Try moving all the chatlogs out of the ChatLogs directory (zip them up and save them somewhere else if you think you may need them some day).
+
 **How can I resolve the "empty certificate data" error?**
 
 Do not use the standalone EXE, install the environment and use the sourcecode directly. There are missing certificates that must be provided by the environment. This error was discovered when running the standalone EXE on Linux using wine.
+
+**Vintel is misbehaving and I dont know why - how can I easily help diagnose problems with Vintel**
+
+Vintel writes its own set of logs to the \Documents\EVE\vintel\vintel directory. A new log is created as the old one fills up to its maximum size setting. Each entry inside the log file is time-stamped. These logs are emitted in real-time so you can watch the changes to the file as you use the app.
 
 **I love Vintel - how can I help?**
 
