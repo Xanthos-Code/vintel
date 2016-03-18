@@ -169,6 +169,8 @@ class MainWindow(QtGui.QMainWindow):
                      lambda item=self.providenceRegionAction: self.handleRegionMenuItemSelected(item))
         self.connect(self.providenceCatchRegionAction, Qt.SIGNAL("triggered()"),
                      lambda item=self.providenceCatchRegionAction: self.handleRegionMenuItemSelected(item))
+        self.connect(self.providenceCatchCompactRegionAction, Qt.SIGNAL("triggered()"),
+                     lambda item=self.providenceCatchCompactRegionAction: self.handleRegionMenuItemSelected(item))
         self.connect(self.chooseRegionAction, Qt.SIGNAL("triggered()"), self.showRegionChooser)
         self.connect(self.showChatAction, Qt.SIGNAL("triggered()"), self.changeChatVisibility)
         self.connect(self.soundSetupAction, Qt.SIGNAL("triggered()"), self.showSoundSetup)
@@ -552,6 +554,7 @@ class MainWindow(QtGui.QMainWindow):
         self.catchRegionAction.setChecked(False)
         self.providenceRegionAction.setChecked(False)
         self.providenceCatchRegionAction.setChecked(False)
+        self.providenceCatchCompactRegionAction.setChecked(False)
         self.chooseRegionAction.setChecked(False)
         if menuAction:
             menuAction.setChecked(True)

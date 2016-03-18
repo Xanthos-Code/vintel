@@ -379,6 +379,7 @@
     <addaction name="providenceRegionAction"/>
     <addaction name="catchRegionAction"/>
     <addaction name="providenceCatchRegionAction"/>
+    <addaction name="providenceCatchCompactRegionAction"/>
     <addaction name="chooseRegionAction"/>
     <addaction name="separator"/>
     <addaction name="jumpbridgeDataAction"/>
@@ -612,6 +613,17 @@
    </property>
    <property name="regionName" stdset="0">
     <string>providencecatch</string>
+   </property>
+  </action>
+  <action name="providenceCatchCompactRegionAction">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Provi / Catch (compact)</string>
+   </property>
+   <property name="regionName" stdset="0">
+    <string>Providence-catch</string>
    </property>
   </action>
  </widget>
