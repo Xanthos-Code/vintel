@@ -43,7 +43,6 @@ from vi.ui.systemtray import TrayContextMenu
 
 # Timer intervals
 MESSAGE_EXPIRY_SECS = 20 * 60
-FILE_WATCHER_INTERVAL_SECS = 60 * 60 * 24
 MAP_UPDATE_INTERVAL_MSECS = 4 * 1000
 CLIPBOARD_CHECK_INTERVAL_MSECS = 4 * 1000
 
@@ -194,7 +193,7 @@ class MainWindow(QtGui.QMainWindow):
         self.connect(self.kosRequestThread, Qt.SIGNAL("kos_result"), self.showKosResult)
         self.kosRequestThread.start()
 
-        self.filewatcherThread = filewatcher.FileWatcher(self.pathToLogs, FILE_WATCHER_INTERVAL_SECS)
+        self.filewatcherThread = filewatcher.FileWatcher(self.pathToLogs)
         self.connect(self.filewatcherThread, QtCore.SIGNAL("file_change"), self.logFileChanged)
         self.filewatcherThread.start()
 
