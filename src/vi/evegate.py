@@ -106,12 +106,12 @@ def idsToNames(ids):
 
     # something allready in the cache?
     for id in ids:
-        cacheKey = u"_".join(("name", "id", unicode(id)))
+        cacheKey = u"_".join(("name", "id", six.text_type(id)))
         name = cache.getFromCache(cacheKey)
         if name:
             data[id] = name
         else:
-            apiCheckIds.add(id)
+            apiCheckIds.add(six.text_type(id))
 
     try:
         # call the EVE-Api for those entries we didn't have in the cache
@@ -126,7 +126,7 @@ def idsToNames(ids):
                 data[row["characterid"]] = row["name"]
             # and writing into cache
             for id in apiCheckIds:
-                cacheKey = u"_".join(("name", "id", unicode(id)))
+                cacheKey = u"_".join(("name", "id", six.text_type(id)))
                 cache.putIntoCache(cacheKey, data[id], 60 * 60 * 24 * 365)
     except Exception as e:
         logging.error("Exception during idsToNames: %s", e)
@@ -184,7 +184,7 @@ def eveEpoch():
 
 
 def getCharinfoForCharId(charId):
-    cacheKey = u"_".join(("playerinfo_id_", unicode(charId)))
+    cacheKey = u"_".join(("playerinfo_id_", six.text_type(charId)))
     cache = Cache()
     soup = cache.getFromCache(cacheKey)
     if soup is not None:

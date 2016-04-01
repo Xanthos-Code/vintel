@@ -35,6 +35,8 @@
 		the tree and so the original generator is not longer stable.
 """
 
+import six
+
 import vi.evegate as evegate
 from bs4 import BeautifulSoup
 from bs4.element import NavigableString
@@ -50,7 +52,7 @@ def textReplace(element, newText):
         newElements.append(newPart)
     for newElement in newElements:
         element.insert_before(newElement)
-    element.replace_with(unicode(""))
+    element.replace_with(six.text_type(""))
 
 
 def parseStatus(rtext):

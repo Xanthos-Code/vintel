@@ -23,6 +23,7 @@
 
 import math
 import time
+import six
 import requests
 import logging
 
@@ -87,7 +88,7 @@ class Map(object):
                         "temporary problem (like dotlan is not reachable), or " \
                         "everythig went to hell. Sorry. This makes no sense " \
                         "without the map.\n\nRemember the site for possible " \
-                        "updates: https://github.com/Xanthos-Eve/vintel".format(type(e), unicode(e))
+                        "updates: https://github.com/Xanthos-Eve/vintel".format(type(e), six.text_type(e))
                     raise DotlanException(t)
         # Create soup from the svg
         self.soup = BeautifulSoup(svg, 'html.parser')

@@ -20,6 +20,7 @@
 import datetime
 import sys
 import time
+import six
 import requests
 import webbrowser
 
@@ -227,13 +228,13 @@ class MainWindow(QtGui.QMainWindow):
             self.dotlan = dotlan.Map(regionName, svg)
         except dotlan.DotlanException as e:
             logging.error(e)
-            QtGui.QMessageBox.critical(None, "Error getting map", unicode(e), "Quit")
+            QtGui.QMessageBox.critical(None, "Error getting map", six.text_type(e), "Quit")
             sys.exit(1)
 
         if self.dotlan.outdatedCacheError:
             e = self.dotlan.outdatedCacheError
             diagText = "Something went wrong getting map data. Proceeding with older cached data. " \
-                       "Check for a newer version and inform the maintainer.\n\nError: {0} {1}".format(type(e), unicode(e))
+                       "Check for a newer version and inform the maintainer.\n\nError: {0} {1}".format(type(e), six.text_type(e))
             logging.warn(diagText)
             QtGui.QMessageBox.warning(None, "Using map from cache", diagText, "Ok")
 
@@ -285,7 +286,7 @@ class MainWindow(QtGui.QMainWindow):
             Start a timer to check the keyboard for changes and kos check them,
             first initializing the content so we dont kos check from random content
         """
-        self.oldClipboardContent = tuple(unicode(self.clipboard.text()))
+        self.oldClipboardContent = tuple(six.text_type(self.clipboard.text()))
         self.connect(self.clipboardTimer, QtCore.SIGNAL("timeout()"), self.clipboardChanged)
         self.clipboardTimer.start(CLIPBOARD_CHECK_INTERVAL_MSECS)
 
@@ -468,7 +469,7 @@ class MainWindow(QtGui.QMainWindow):
     def clipboardChanged(self, mode=0):
         if not (mode == 0 and self.kosClipboardActiveAction.isChecked() and self.clipboard.mimeData().hasText()):
             return
-        content = unicode(self.clipboard.text())
+        content = six.text_type(self.clipboard.text())
         contentTuple = tuple(content)
         # Limit redundant kos checks
         if contentTuple != self.oldClipboardContent:
@@ -484,7 +485,7 @@ class MainWindow(QtGui.QMainWindow):
             self.oldClipboardContent = contentTuple
 
     def mapLinkClicked(self, url):
-        systemName = unicode(url.path().split("/")[-1]).upper()
+        systemName = six.text_type(url.path().split("/")[-1]).upper()
         system = self.systems[str(systemName)]
         sc = SystemChat(self, SystemChat.SYSTEM, system, self.chatEntries, self.knownPlayerNames)
         sc.connect(self, Qt.SIGNAL("chat_message_added"), sc.addChatEntry)
@@ -493,7 +494,7 @@ class MainWindow(QtGui.QMainWindow):
         sc.show()
 
     def markSystemOnMap(self, systemname):
-        self.systems[unicode(systemname)].mark()
+        self.systems[six.text_type(systemname)].mark()
         self.updateMapView()
 
     def setLocation(self, char, newSystem):
@@ -546,7 +547,7 @@ class MainWindow(QtGui.QMainWindow):
             self.dotlan.setJumpbridges(data)
             self.cache.putIntoCache("jumpbridge_url", url, 60 * 60 * 24 * 365 * 8)
         except Exception as e:
-            QtGui.QMessageBox.warning(None, "Loading jumpbridges failed!", "Error: {0}".format(unicode(e)), "OK")
+            QtGui.QMessageBox.warning(None, "Loading jumpbridges failed!", "Error: {0}".format(six.text_type(e)), "OK")
 
     def handleRegionMenuItemSelected(self, menuAction=None):
         self.catchRegionAction.setChecked(False)
@@ -555,7 +556,7 @@ class MainWindow(QtGui.QMainWindow):
         self.chooseRegionAction.setChecked(False)
         if menuAction:
             menuAction.setChecked(True)
-            regionName = unicode(menuAction.property("regionName").toString())
+            regionName = six.text_type(menuAction.property("regionName").toString())
             regionName = dotlan.convertRegionName(regionName)
             Cache().putIntoCache("region_name", regionName, 60 * 60 * 24 * 365)
             self.setupMap()
@@ -737,8 +738,8 @@ class ChatroomsChooser(QtGui.QDialog):
         self.roomnamesField.setPlainText(roomnames)
 
     def saveClicked(self):
-        text = unicode(self.roomnamesField.toPlainText())
-        rooms = [unicode(name.strip()) for name in text.split(",")]
+        text = six.text_type(self.roomnamesField.toPlainText())
+        rooms = [six.text_type(name.strip()) for name in text.split(",")]
         self.accept()
         self.emit(Qt.SIGNAL("rooms_changed"), rooms)
 
@@ -759,7 +760,7 @@ class RegionChooser(QtGui.QDialog):
         self.regionNameField.setPlainText(regionName)
 
     def saveClicked(self):
-        text = unicode(self.regionNameField.toPlainText())
+        text = six.text_type(self.regionNameField.toPlainText())
         text = dotlan.convertRegionName(text)
         self.regionNameField.setPlainText(text)
         correct = False
@@ -836,7 +837,7 @@ class SystemChat(QtGui.QDialog):
                 self._addMessageToChat(message, avatarPixmap)
 
     def locationSet(self):
-        char = unicode(self.playerNamesBox.currentText())
+        char = six.text_type(self.playerNamesBox.currentText())
         self.emit(Qt.SIGNAL("location_set"), char, self.system.name)
 
     def newAvatarAvailable(self, charname, avatarData):
@@ -877,7 +878,7 @@ class ChatEntryWidget(QtGui.QWidget):
             self.avatarLabel.setVisible(False)
 
     def linkClicked(self, link):
-        link = unicode(link)
+        link = six.text_type(link)
         function, parameter = link.split("/", 1)
         if function == "mark_system":
             self.emit(QtCore.SIGNAL("mark_system"), parameter)
@@ -920,10 +921,10 @@ class JumpbridgeChooser(QtGui.QDialog):
 
     def savePath(self):
         try:
-            url = unicode(self.urlField.text())
+            url = six.text_type(self.urlField.text())
             if url != "":
                 requests.get(url).text
             self.emit(QtCore.SIGNAL("set_jumpbridge_url"), url)
             self.accept()
         except Exception as e:
-            QtGui.QMessageBox.critical(None, "Finding Jumpbridgedata failed", "Error: {0}".format(unicode(e)), "OK")
+            QtGui.QMessageBox.critical(None, "Finding Jumpbridgedata failed", "Error: {0}".format(six.text_type(e)), "OK")

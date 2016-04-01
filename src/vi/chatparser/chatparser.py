@@ -70,7 +70,7 @@ class ChatParser(object):
                 content = f.read()
         except Exception as e:
             self.ignoredPaths.append(path)
-            QtGui.QMessageBox.warning(None, "Read a log file failed!", "File: {0} - problem: {1}".format(path, unicode(e)), "OK")
+            QtGui.QMessageBox.warning(None, "Read a log file failed!", "File: {0} - problem: {1}".format(path, six.text_type(e)), "OK")
             return None
 
         lines = content.split("\n")
@@ -153,7 +153,7 @@ class ChatParser(object):
                     break
                 if count > maxSearch:
                     break
-        message.message = unicode(rtext)
+        message.message = six.text_type(rtext)
         message.status = status
         self.knownMessages.append(message)
         if systems:
