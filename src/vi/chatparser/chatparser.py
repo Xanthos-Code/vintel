@@ -20,6 +20,9 @@
 import datetime
 import os
 import time
+import six
+if six.PY2:
+    from io import open
 
 from PyQt4 import QtGui
 from bs4 import BeautifulSoup
@@ -62,10 +65,9 @@ class ChatParser(object):
         content = ""
         filename = os.path.basename(path)
         roomname = filename[:-20]
-        with open(path, "r") as f:
-            content = f.read()
         try:
-            content = content.decode("utf-16-le")
+            with open(path, "r", encoding='utf-16-le') as f:
+                content = f.read()
         except Exception as e:
             self.ignoredPaths.append(path)
             QtGui.QMessageBox.warning(None, "Read a log file failed!", "File: {0} - problem: {1}".format(path, unicode(e)), "OK")

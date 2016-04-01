@@ -1,11 +1,14 @@
 import sys
+import six
+if six.PY2:
+    from io import open
 
 PATH = "/home/sparrow/EVE/logs/Chatlogs/TheCitadel_20401229_065150.txt"
 
 def main():
     line = ""
-    with open(PATH, "r") as f:
-        content = f.read().decode("utf-16")
+    with open(PATH, "r", encoding="utf-16") as f:
+        content = f.read()
         lines = content.split("\n")
         line = lines[-2].strip()
         line = line[:line.find(">")+1]
