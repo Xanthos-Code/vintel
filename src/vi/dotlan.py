@@ -23,7 +23,7 @@
 
 import math
 import time
-import urllib2
+import requests
 import logging
 
 from bs4 import BeautifulSoup
@@ -191,8 +191,7 @@ class Map(object):
 
     def _getSvgFromDotlan(self, region):
         url = self.DOTLAN_BASIC_URL.format(region)
-        request = urllib2.Request(url)
-        content = urllib2.urlopen(request).read()
+        content = requests.get(url).text
         return content
 
     def addSystemStatistics(self, statistics):

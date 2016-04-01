@@ -18,11 +18,8 @@
 ###########################################################################
 
 import json
-import urllib
-import urllib2
 import logging
-
-from urllib2 import URLError
+import requests
 
 from vi import evegate
 
@@ -30,20 +27,21 @@ UNKNOWN = "No Result"
 NOT_KOS = 'Not Kos'
 KOS = "KOS"
 RED_BY_LAST = "Red by last"
+CVA_KOS_URL = "http://kos.cva-eve.org/api/"
 
 
 def check(parts):
     data = {}
-    baseUrl = "http://kos.cva-eve.org/api/?c=json&type=multi&q="
-    names = [name.strip() for name in parts]
     checkBylastChars = []
-    quotedNames = urllib.quote_plus(",".join(names))
     targetUrl = "".join((baseUrl, quotedNames))
 
     try:
-        request = urllib2.urlopen(targetUrl)
-        kosData = json.loads(request.read())
-    except URLError as e:
+        kosData = requests.get(CVA_KOS_URL, params = {
+            'c': 'json',
+            'type': 'multi',
+            'q': ','.join([name.strip() for name in parts]),
+        }).json()
+    except requests.exceptions.RequestException as e:
         logging.error("Error on pilot KOS check request %s", str(e))
 
     for char in kosData["results"]:
@@ -100,15 +98,15 @@ def check(parts):
         baseUrl = "http://kos.cva-eve.org/api/?c=json&type=unit&q="
 
         for corp in corpsToCheck:
-            quotedName = urllib.quote_plus(corp)
-            targetUrl = "".join((baseUrl, quotedName))
-
             try:
-                request = urllib2.urlopen(targetUrl)
-            except URLError as e:
+                kosData = requests.get(CVA_KOS_URL, params={
+                    'c': 'json',
+                    'type': 'unit',
+                    'q': corp,
+                }).json()
+            except requests.exceptions.RequestException as e:
                 logging.error("Error on corp KOS check request: %s", str(e))
 
-            kosData = json.loads(request.read())
             kosResult = False
 
             for result in kosData["results"]:

@@ -20,7 +20,7 @@
 import datetime
 import sys
 import time
-import urllib2
+import requests
 import webbrowser
 
 import vi.version
@@ -765,8 +765,7 @@ class RegionChooser(QtGui.QDialog):
         correct = False
         try:
             url = dotlan.Map.DOTLAN_BASIC_URL.format(text)
-            request = urllib2.urlopen(url)
-            content = request.read()
+            content = requests.get(url).text
             if u"not found" in content:
                 correct = False
                 # Fallback -> ships vintel with this map?
@@ -923,7 +922,7 @@ class JumpbridgeChooser(QtGui.QDialog):
         try:
             url = unicode(self.urlField.text())
             if url != "":
-                urllib2.urlopen(url)
+                requests.get(url).text
             self.emit(QtCore.SIGNAL("set_jumpbridge_url"), url)
             self.accept()
         except Exception as e:
