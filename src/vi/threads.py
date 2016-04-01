@@ -20,7 +20,7 @@
 import time
 import logging
 
-from Queue import Queue
+from six.moves import queue
 from PyQt4 import QtCore
 from PyQt4.QtCore import QThread
 from PyQt4.QtCore import SIGNAL
@@ -35,7 +35,7 @@ class AvatarFindThread(QThread):
 
     def __init__(self):
         QThread.__init__(self)
-        self.queue = Queue()
+        self.queue = queue.Queue()
 
 
     def addChatEntry(self, chatEntry, clearCache=False):
@@ -87,7 +87,7 @@ class KOSCheckerThread(QThread):
 
     def __init__(self):
         QThread.__init__(self)
-        self.queue = Queue()
+        self.queue = queue.Queue()
         self.recentRequestNamesAndTimes = {}
 
 
@@ -137,7 +137,7 @@ class MapStatisticsThread(QThread):
 
     def __init__(self):
         QThread.__init__(self)
-        self.queue = Queue(maxsize=1)
+        self.queue = queue.Queue(maxsize=1)
         self.lastStatisticsUpdate = time.time()
         self.pollRate = STATISTICS_UPDATE_INTERVAL_MSECS
         self.refreshTimer = None

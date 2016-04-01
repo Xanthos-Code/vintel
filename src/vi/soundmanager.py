@@ -27,7 +27,7 @@ import time
 from collections import namedtuple
 from PyQt4.QtCore import QThread
 from .resources import resourcePath
-from Queue import Queue
+from six.moves import queue
 
 import logging
 from vi.singleton import Singleton
@@ -108,7 +108,7 @@ class SoundManager:
 
         def __init__(self):
             QThread.__init__(self)
-            self.queue = Queue()
+            self.queue = queue.Queue()
 
         def setVolume(self, volume):
             self.volume = volume
