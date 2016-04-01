@@ -70,6 +70,8 @@ https://pypi.python.org/pypi/beautifulsoup4
 - Pyglet 1.2.4 (for python 2.7)
 https://bitbucket.org/pyglet/pyglet/wiki/Download
 pyglet is used to play the sound – If it is not available the sound option will be disabled.
+- Requests 2
+https://pypi.python.org/pypi/requests
 
 ## Building the Vintel Standalone Package
 
