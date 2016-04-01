@@ -95,7 +95,7 @@ class KOSCheckerThread(QThread):
         try:
             # Spam control for multi-client users
             now = time.time()
-            if self.recentRequestNamesAndTimes.has_key(names):
+            if names in self.recentRequestNamesAndTimes:
                 lastRequestTime = self.recentRequestNamesAndTimes[names]
                 if now - lastRequestTime < 10:
                     return
