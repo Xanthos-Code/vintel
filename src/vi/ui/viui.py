@@ -336,6 +336,7 @@ class MainWindow(QtGui.QMainWindow):
             SoundManager().quit()
         except Exception:
             pass
+        self.trayIcon.hide()
         event.accept()
 
 
