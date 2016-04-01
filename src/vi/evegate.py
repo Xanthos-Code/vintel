@@ -142,7 +142,7 @@ def getAvatarForPlayer(charname):
         charId = charnameToId(charname)
         if charId:
             imageUrl = "http://image.eveonline.com/Character/{id}_{size}.jpg"
-            avatar = requests.get(imageUrl.format(id=charId, size=32)).text
+            avatar = requests.get(imageUrl.format(id=charId, size=32)).content
     except Exception as e:
         logging.error("Exception during getAvatarForPlayer: %s", e)
         avatar = None
