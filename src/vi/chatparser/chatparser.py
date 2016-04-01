@@ -28,8 +28,8 @@ from PyQt4 import QtGui
 from bs4 import BeautifulSoup
 from vi import states
 
-from parser_functions import parseStatus
-from parser_functions import parseUrls, parseShips, parseSystems
+from .parser_functions import parseStatus
+from .parser_functions import parseUrls, parseShips, parseSystems
 
 # Names the local chatlogs could start with (depends on l10n of the client)
 LOCAL_NAMES = ("Lokal", "Local")

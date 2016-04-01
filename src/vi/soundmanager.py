@@ -26,7 +26,7 @@ import time
 
 from collections import namedtuple
 from PyQt4.QtCore import QThread
-from resources import resourcePath
+from .resources import resourcePath
 from Queue import Queue
 
 import logging

@@ -30,7 +30,7 @@ from bs4 import BeautifulSoup
 from vi import states
 from vi.cache.cache import Cache
 
-import evegate
+from . import evegate
 
 JB_COLORS = ("800000", "808000", "BC8F8F", "ff00ff", "c83737", "FF6347", "917c6f", "ffcc00",
              "88aa00" "FFE4E1", "008080", "00BFFF", "4682B4", "00FF7F", "7FFF00", "ff6600",
