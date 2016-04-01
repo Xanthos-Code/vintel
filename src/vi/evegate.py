@@ -117,9 +117,7 @@ def idsToNames(ids):
         # call the EVE-Api for those entries we didn't have in the cache
         url = "https://api.eveonline.com/eve/CharacterName.xml.aspx"
         if len(apiCheckIds) > 0:
-            requestData = urllib.urlencode({"ids": ",".join(apiCheckIds)})
-            request = urllib2.urlopen(url=url, data=requestData)
-            content = request.read()
+            content = requests.get(url, params={'ids': ','.join(apiCheckIds)}).text
             soup = BeautifulSoup(content, 'html.parser')
             rowSet = soup.select("rowset")[0]
             for row in rowSet.select("row"):
@@ -155,6 +153,7 @@ def checkPlayername(charname):
     """ Checking on evegate for an exiting playername
         returns 1 if exists, 0 if not and -1 if an error occured
     """
+    from six.moves import urllib
     baseUrl = "https://gate.eveonline.com/Profile/"
     queryCharname = urllib.utils.quote(charname)
     url = baseUrl + queryCharname

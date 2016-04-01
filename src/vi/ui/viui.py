@@ -537,8 +537,8 @@ class MainWindow(QtGui.QMainWindow):
         try:
             data = []
             if url != "":
-                content = urllib2.urlopen(url).read()
-                for line in content.split("\n"):
+                resp = requests.get(url)
+                for line in resp.iter_lines(decode_unicode=True):
                     parts = line.strip().split()
                     if len(parts) == 3:
                         data.append(parts)
