@@ -45,7 +45,7 @@ def getJumpbridgeData(region):
                 splits = line.strip().split()
                 if len(splits) == 3:
                     data.append(splits)
-            cache.putIntoCache(cacheKey, json.dumps(data), 60 * 60 * 24)
+            cache.putIntoCache(cacheKey, json.dumps(data), 60 * 60 * 12)
         return data
     except Exception as e:
         logging.error("Getting Jumpbridgedata failed with: %s", e)
