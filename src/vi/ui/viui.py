@@ -20,7 +20,8 @@
 import datetime
 import sys
 import time
-import urllib2
+import six
+import requests
 import webbrowser
 
 import vi.version
@@ -42,7 +43,6 @@ from vi.ui.systemtray import TrayContextMenu
 
 # Timer intervals
 MESSAGE_EXPIRY_SECS = 20 * 60
-FILE_WATCHER_INTERVAL_SECS = 60 * 60 * 24
 MAP_UPDATE_INTERVAL_MSECS = 4 * 1000
 CLIPBOARD_CHECK_INTERVAL_MSECS = 4 * 1000
 
@@ -195,7 +195,7 @@ class MainWindow(QtGui.QMainWindow):
         self.connect(self.kosRequestThread, Qt.SIGNAL("kos_result"), self.showKosResult)
         self.kosRequestThread.start()
 
-        self.filewatcherThread = filewatcher.FileWatcher(self.pathToLogs, FILE_WATCHER_INTERVAL_SECS)
+        self.filewatcherThread = filewatcher.FileWatcher(self.pathToLogs)
         self.connect(self.filewatcherThread, QtCore.SIGNAL("file_change"), self.logFileChanged)
         self.filewatcherThread.start()
 
@@ -229,13 +229,13 @@ class MainWindow(QtGui.QMainWindow):
             self.dotlan = dotlan.Map(regionName, svg)
         except dotlan.DotlanException as e:
             logging.error(e)
-            QtGui.QMessageBox.critical(None, "Error getting map", unicode(e), "Quit")
+            QtGui.QMessageBox.critical(None, "Error getting map", six.text_type(e), "Quit")
             sys.exit(1)
 
         if self.dotlan.outdatedCacheError:
             e = self.dotlan.outdatedCacheError
             diagText = "Something went wrong getting map data. Proceeding with older cached data. " \
-                       "Check for a newer version and inform the maintainer.\n\nError: {0} {1}".format(type(e), unicode(e))
+                       "Check for a newer version and inform the maintainer.\n\nError: {0} {1}".format(type(e), six.text_type(e))
             logging.warn(diagText)
             QtGui.QMessageBox.warning(None, "Using map from cache", diagText, "Ok")
 
@@ -287,7 +287,7 @@ class MainWindow(QtGui.QMainWindow):
             Start a timer to check the keyboard for changes and kos check them,
             first initializing the content so we dont kos check from random content
         """
-        self.oldClipboardContent = tuple(unicode(self.clipboard.text()))
+        self.oldClipboardContent = tuple(six.text_type(self.clipboard.text()))
         self.connect(self.clipboardTimer, QtCore.SIGNAL("timeout()"), self.clipboardChanged)
         self.clipboardTimer.start(CLIPBOARD_CHECK_INTERVAL_MSECS)
 
@@ -337,6 +337,7 @@ class MainWindow(QtGui.QMainWindow):
             SoundManager().quit()
         except Exception:
             pass
+        self.trayIcon.hide()
         event.accept()
 
 
@@ -387,7 +388,7 @@ class MainWindow(QtGui.QMainWindow):
             self.activateSoundAction.setChecked(False)
             self.activateSoundAction.setEnabled(False)
             self.soundSetupAction.setEnabled(False)
-            self.soundButton.setEnabled(False)
+            #self.soundButton.setEnabled(False)
             QtGui.QMessageBox.warning(None, "Sound disabled",
                                       "The lib 'pyglet' which is used to play sounds cannot be found, ""so the soundsystem is disabled.\nIf you want sound, please install the 'pyglet' library. This warning will not be shown again.",
                                       "OK")
@@ -470,7 +471,7 @@ class MainWindow(QtGui.QMainWindow):
     def clipboardChanged(self, mode=0):
         if not (mode == 0 and self.kosClipboardActiveAction.isChecked() and self.clipboard.mimeData().hasText()):
             return
-        content = unicode(self.clipboard.text())
+        content = six.text_type(self.clipboard.text())
         contentTuple = tuple(content)
         # Limit redundant kos checks
         if contentTuple != self.oldClipboardContent:
@@ -486,7 +487,7 @@ class MainWindow(QtGui.QMainWindow):
             self.oldClipboardContent = contentTuple
 
     def mapLinkClicked(self, url):
-        systemName = unicode(url.path().split("/")[-1]).upper()
+        systemName = six.text_type(url.path().split("/")[-1]).upper()
         system = self.systems[str(systemName)]
         sc = SystemChat(self, SystemChat.SYSTEM, system, self.chatEntries, self.knownPlayerNames)
         sc.connect(self, Qt.SIGNAL("chat_message_added"), sc.addChatEntry)
@@ -495,7 +496,7 @@ class MainWindow(QtGui.QMainWindow):
         sc.show()
 
     def markSystemOnMap(self, systemname):
-        self.systems[unicode(systemname)].mark()
+        self.systems[six.text_type(systemname)].mark()
         self.updateMapView()
 
     def setLocation(self, char, newSystem):
@@ -538,8 +539,8 @@ class MainWindow(QtGui.QMainWindow):
         try:
             data = []
             if url != "":
-                content = urllib2.urlopen(url).read()
-                for line in content.split("\n"):
+                resp = requests.get(url)
+                for line in resp.iter_lines(decode_unicode=True):
                     parts = line.strip().split()
                     if len(parts) == 3:
                         data.append(parts)
@@ -548,7 +549,7 @@ class MainWindow(QtGui.QMainWindow):
             self.dotlan.setJumpbridges(data)
             self.cache.putIntoCache("jumpbridge_url", url, 60 * 60 * 24 * 365 * 8)
         except Exception as e:
-            QtGui.QMessageBox.warning(None, "Loading jumpbridges failed!", "Error: {0}".format(unicode(e)), "OK")
+            QtGui.QMessageBox.warning(None, "Loading jumpbridges failed!", "Error: {0}".format(six.text_type(e)), "OK")
 
     def handleRegionMenuItemSelected(self, menuAction=None):
         self.catchRegionAction.setChecked(False)
@@ -558,7 +559,7 @@ class MainWindow(QtGui.QMainWindow):
         self.chooseRegionAction.setChecked(False)
         if menuAction:
             menuAction.setChecked(True)
-            regionName = unicode(menuAction.property("regionName").toString())
+            regionName = six.text_type(menuAction.property("regionName").toString())
             regionName = dotlan.convertRegionName(regionName)
             Cache().putIntoCache("region_name", regionName, 60 * 60 * 24 * 365)
             self.setupMap()
@@ -740,8 +741,8 @@ class ChatroomsChooser(QtGui.QDialog):
         self.roomnamesField.setPlainText(roomnames)
 
     def saveClicked(self):
-        text = unicode(self.roomnamesField.toPlainText())
-        rooms = [unicode(name.strip()) for name in text.split(",")]
+        text = six.text_type(self.roomnamesField.toPlainText())
+        rooms = [six.text_type(name.strip()) for name in text.split(",")]
         self.accept()
         self.emit(Qt.SIGNAL("rooms_changed"), rooms)
 
@@ -762,14 +763,13 @@ class RegionChooser(QtGui.QDialog):
         self.regionNameField.setPlainText(regionName)
 
     def saveClicked(self):
-        text = unicode(self.regionNameField.toPlainText())
+        text = six.text_type(self.regionNameField.toPlainText())
         text = dotlan.convertRegionName(text)
         self.regionNameField.setPlainText(text)
         correct = False
         try:
             url = dotlan.Map.DOTLAN_BASIC_URL.format(text)
-            request = urllib2.urlopen(url)
-            content = request.read()
+            content = requests.get(url).text
             if u"not found" in content:
                 correct = False
                 # Fallback -> ships vintel with this map?
@@ -840,7 +840,7 @@ class SystemChat(QtGui.QDialog):
                 self._addMessageToChat(message, avatarPixmap)
 
     def locationSet(self):
-        char = unicode(self.playerNamesBox.currentText())
+        char = six.text_type(self.playerNamesBox.currentText())
         self.emit(Qt.SIGNAL("location_set"), char, self.system.name)
 
     def newAvatarAvailable(self, charname, avatarData):
@@ -881,7 +881,7 @@ class ChatEntryWidget(QtGui.QWidget):
             self.avatarLabel.setVisible(False)
 
     def linkClicked(self, link):
-        link = unicode(link)
+        link = six.text_type(link)
         function, parameter = link.split("/", 1)
         if function == "mark_system":
             self.emit(QtCore.SIGNAL("mark_system"), parameter)
@@ -924,10 +924,10 @@ class JumpbridgeChooser(QtGui.QDialog):
 
     def savePath(self):
         try:
-            url = unicode(self.urlField.text())
+            url = six.text_type(self.urlField.text())
             if url != "":
-                urllib2.urlopen(url)
+                requests.get(url).text
             self.emit(QtCore.SIGNAL("set_jumpbridge_url"), url)
             self.accept()
         except Exception as e:
-            QtGui.QMessageBox.critical(None, "Finding Jumpbridgedata failed", "Error: {0}".format(unicode(e)), "OK")
+            QtGui.QMessageBox.critical(None, "Finding Jumpbridgedata failed", "Error: {0}".format(six.text_type(e)), "OK")

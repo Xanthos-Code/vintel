@@ -18,7 +18,7 @@
 ###########################################################################
 
 import json
-import urllib2
+import requests
 import logging
 
 from PyQt4 import Qt
@@ -39,9 +39,8 @@ def getJumpbridgeData(region):
         else:
             data = []
             url = "https://s3.amazonaws.com/vintel-resources/{region}_jb.txt"
-            request = urllib2.urlopen(url.format(region=region))
-            content = request.read()
-            for line in content.split("\n"):
+            resp = requests.get(url.format(region=region))
+            for line in resp.iter_lines(decode_unicode=True):
                 splits = line.strip().split()
                 if len(splits) == 3:
                     data.append(splits)
@@ -55,8 +54,7 @@ def getJumpbridgeData(region):
 def getNewestVersion():
     try:
         url = "https://s3.amazonaws.com/vintel-resources/current-version.txt"
-        request = urllib2.urlopen(url)
-        newestVersion = request.read()
+        newestVersion = requests.get(url).text
         return newestVersion
     except Exception as e:
         logging.error("Failed version-request: %s", e)

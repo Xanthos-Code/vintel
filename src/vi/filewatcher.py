@@ -18,6 +18,7 @@
 ###########################################################################
 
 import os
+import stat
 import time
 import logging
 
@@ -36,17 +37,18 @@ We use here also a QFileWatcher, only to the directory. It will notify it
 if a new file was created. We watch only the newest (last 24h), not all!
 """
 
+DEFAULT_MAX_AGE = 60 * 60 * 24
 
 class FileWatcher(QtCore.QThread):
-    def __init__(self, path, maxAge):
+    def __init__(self, path, maxAge=DEFAULT_MAX_AGE):
         QtCore.QThread.__init__(self)
         self.path = path
         self.maxAge = maxAge
         self.files = {}
+        self.updateWatchedFiles()
         self.qtfw = QtCore.QFileSystemWatcher()
         self.qtfw.directoryChanged.connect(self.directoryChanged)
         self.qtfw.addPath(path)
-        self.updateWatchedFiles()
         self.paused = True
 
     def directoryChanged(self):
@@ -54,46 +56,30 @@ class FileWatcher(QtCore.QThread):
 
     def run(self):
         while True:
+            time.sleep(0.5)
             if self.paused:
                 continue
             for path, modified in self.files.items():
-                newModified = 0
-                try:
-                    newModified = os.path.getsize(path)
-                except Exception as e:
-                    logging.error("filewatcher-thread error: %s | %s", path, e)
-                if newModified > modified:
+                pathStat = os.stat(path)
+                if not stat.S_ISREG(pathStat.st_mode):
+                    continue
+                if modified < pathStat.st_size:
                     self.emit(SIGNAL("file_change"), path)
-                    self.files[path] = newModified
-            time.sleep(1)
+                self.files[path] = pathStat.st_size
 
     def updateWatchedFiles(self):
         # Reading all files from the directory
         fullPath = None
         now = time.time()
         path = self.path
-        filesInDir = set()
+        filesInDir = {}
         for f in os.listdir(path):
-            if not os.path.isdir(f):
-                try:
-                    add = True
-                    fullPath = os.path.join(path, f)
-                    if (self.maxAge and now - os.path.getmtime(fullPath) > self.maxAge):
-                        add = False
-                    if add:
-                        filesInDir.add(fullPath)
-                except Exception as e:
-                    logging.error("Add file to filewatcher failed: %s | %s", fullPath, e)
-
-        # Are there old files that not longer exists?
-        filesToRemove = set()
-        for knownFile in self.files:
-            if knownFile not in filesInDir:
-                filesToRemove.add(knownFile)
-        for fileToRemove in filesToRemove:
-            del self.files[fileToRemove]
-
-        # Are there new files we must watch now?
-        for newFile in filesInDir:
-            if newFile not in self.files:
-                self.files[newFile] = os.path.getsize(newFile)
+            fullPath = os.path.join(path, f)
+            pathStat = os.stat(fullPath)
+            if not stat.S_ISREG(pathStat.st_mode):
+                continue
+            if self.maxAge and ((now - pathStat.st_mtime) > self.maxAge):
+                continue
+            filesInDir[fullPath] = self.files.get(fullPath, 0)
+        
+        self.files = filesInDir

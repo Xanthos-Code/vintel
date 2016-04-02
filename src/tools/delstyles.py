@@ -49,7 +49,7 @@ def deleteStylesFromSvg(soup):
 
 
 def main():
-    if len(sys.argv) <> 2:
+    if len(sys.argv) != 2:
         errout("Wrong number of arguments. Please use it like this:")
         errout("{0} mapfile".format(sys.argv[0]))
         errout("Where mapfile is the path to a evemap SVG")

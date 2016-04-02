@@ -20,6 +20,17 @@
 import sqlite3
 import threading
 import time
+import six
+if six.PY2:
+    def to_blob(x):
+        return buffer(str(x))
+    def from_blob(x):
+        return str(x[0][0])
+else:
+    def to_blob(x):
+        return x
+    def from_blob(x):
+        return x
 
 import logging
 from vi.cache.dbstructure import updateDatabase
@@ -112,7 +123,7 @@ class Cache(object):
         """
         with Cache.SQLITE_WRITE_LOCK:
             # data is a blob, so we have to change it to buffer
-            data = buffer(str(data))
+            data = to_blob(data)
             query = "DELETE FROM avatars WHERE charname = ?"
             self.con.execute(query, (name,))
             query = "INSERT INTO avatars (charname, data, modified) VALUES (?, ?, ?)"
@@ -128,7 +139,7 @@ class Cache(object):
             return None
         else:
             # dats is buffer, we convert it back to str
-            data = str(founds[0][0])
+            data = from_blob(founds[0][0])
             return data
 
     def removeAvatar(self, name):

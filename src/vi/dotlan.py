@@ -23,14 +23,15 @@
 
 import math
 import time
-import urllib2
+import six
+import requests
 import logging
 
 from bs4 import BeautifulSoup
 from vi import states
 from vi.cache.cache import Cache
 
-import evegate
+from . import evegate
 
 JB_COLORS = ("800000", "808000", "BC8F8F", "ff00ff", "c83737", "FF6347", "917c6f", "ffcc00",
              "88aa00" "FFE4E1", "008080", "00BFFF", "4682B4", "00FF7F", "7FFF00", "ff6600",
@@ -87,7 +88,7 @@ class Map(object):
                         "temporary problem (like dotlan is not reachable), or " \
                         "everythig went to hell. Sorry. This makes no sense " \
                         "without the map.\n\nRemember the site for possible " \
-                        "updates: https://github.com/Xanthos-Eve/vintel".format(type(e), unicode(e))
+                        "updates: https://github.com/Xanthos-Eve/vintel".format(type(e), six.text_type(e))
                     raise DotlanException(t)
         # Create soup from the svg
         self.soup = BeautifulSoup(svg, 'html.parser')
@@ -191,8 +192,7 @@ class Map(object):
 
     def _getSvgFromDotlan(self, region):
         url = self.DOTLAN_BASIC_URL.format(region)
-        request = urllib2.Request(url)
-        content = urllib2.urlopen(request).read()
+        content = requests.get(url).text
         return content
 
     def addSystemStatistics(self, statistics):

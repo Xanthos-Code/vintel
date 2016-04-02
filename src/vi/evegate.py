@@ -19,8 +19,8 @@
 
 import datetime
 import json
-import urllib
-import urllib2
+import six
+import requests
 
 import logging
 from bs4 import BeautifulSoup
@@ -36,9 +36,7 @@ def charnameToId(name):
     """
     try:
         url = "https://api.eveonline.com/eve/CharacterID.xml.aspx"
-        data = urllib.urlencode({"names": name})
-        request = urllib2.urlopen(url=url, data=data)
-        content = request.read()
+        content = requests.get(url, params={'names': name}).text
         soup = BeautifulSoup(content, 'html.parser')
         rowSet = soup.select("rowset")[0]
         for row in rowSet.select("row"):
@@ -49,9 +47,8 @@ def charnameToId(name):
         logging.error("Exception turning charname to id via API: %s", e)
         # fallback! if there is a problem with the API, we use evegate
         baseUrl = "https://gate.eveonline.com/Profile/"
-        qcharname = urllib2.quote(name)
-        url = baseUrl + qcharname
-        content = urllib2.urlopen(url).read()
+
+        content = requests.get("{}{}".format(baseUrl, requests.utils.quote(name))).text
         soup = BeautifulSoup(content, 'html.parser')
         img = soup.select("#imgActiveCharacter")
         imageUrl = soup.select("#imgActiveCharacter")[0]["src"]
@@ -82,9 +79,7 @@ def namesToIds(names):
         # not in cache? asking the EVE API
         if len(apiCheckNames) > 0:
             url = "https://api.eveonline.com/eve/CharacterID.xml.aspx"
-            requestData = urllib.urlencode({"names": u",".join(apiCheckNames)})
-            request = urllib2.urlopen(url=url, data=requestData)
-            content = request.read()
+            content = requests.get(url, params={'names': ','.join(apiCheckNames)}).text
             soup = BeautifulSoup(content, 'html.parser')
             rowSet = soup.select("rowset")[0]
             for row in rowSet.select("row"):
@@ -111,27 +106,25 @@ def idsToNames(ids):
 
     # something allready in the cache?
     for id in ids:
-        cacheKey = u"_".join(("name", "id", unicode(id)))
+        cacheKey = u"_".join(("name", "id", six.text_type(id)))
         name = cache.getFromCache(cacheKey)
         if name:
             data[id] = name
         else:
-            apiCheckIds.add(id)
+            apiCheckIds.add(six.text_type(id))
 
     try:
         # call the EVE-Api for those entries we didn't have in the cache
         url = "https://api.eveonline.com/eve/CharacterName.xml.aspx"
         if len(apiCheckIds) > 0:
-            requestData = urllib.urlencode({"ids": ",".join(apiCheckIds)})
-            request = urllib2.urlopen(url=url, data=requestData)
-            content = request.read()
+            content = requests.get(url, params={'ids': ','.join(apiCheckIds)}).text
             soup = BeautifulSoup(content, 'html.parser')
             rowSet = soup.select("rowset")[0]
             for row in rowSet.select("row"):
                 data[row["characterid"]] = row["name"]
             # and writing into cache
             for id in apiCheckIds:
-                cacheKey = u"_".join(("name", "id", unicode(id)))
+                cacheKey = u"_".join(("name", "id", six.text_type(id)))
                 cache.putIntoCache(cacheKey, data[id], 60 * 60 * 24 * 365)
     except Exception as e:
         logging.error("Exception during idsToNames: %s", e)
@@ -149,7 +142,7 @@ def getAvatarForPlayer(charname):
         charId = charnameToId(charname)
         if charId:
             imageUrl = "http://image.eveonline.com/Character/{id}_{size}.jpg"
-            avatar = urllib2.urlopen(imageUrl.format(id=charId, size=32)).read()
+            avatar = requests.get(imageUrl.format(id=charId, size=32)).content
     except Exception as e:
         logging.error("Exception during getAvatarForPlayer: %s", e)
         avatar = None
@@ -160,15 +153,16 @@ def checkPlayername(charname):
     """ Checking on evegate for an exiting playername
         returns 1 if exists, 0 if not and -1 if an error occured
     """
+    from six.moves import urllib
     baseUrl = "https://gate.eveonline.com/Profile/"
-    queryCharname = urllib2.quote(charname)
+    queryCharname = urllib.utils.quote(charname)
     url = baseUrl + queryCharname
     result = -1
 
     try:
-        urllib2.urlopen(url)
+        urllib.request.urlopen(url)
         result = 1
-    except urllib2.HTTPError as e:
+    except urllib.error.HTTPError as e:
         if ("404") in str(e):
             result = 0
     except Exception as e:
@@ -189,7 +183,7 @@ def eveEpoch():
 
 
 def getCharinfoForCharId(charId):
-    cacheKey = u"_".join(("playerinfo_id_", unicode(charId)))
+    cacheKey = u"_".join(("playerinfo_id_", six.text_type(charId)))
     cache = Cache()
     soup = cache.getFromCache(cacheKey)
     if soup is not None:
@@ -198,15 +192,14 @@ def getCharinfoForCharId(charId):
         try:
             charId = int(charId)
             url = "https://api.eveonline.com/eve/CharacterInfo.xml.aspx"
-            data = urllib.urlencode({"characterID": charId})
-            content = urllib2.urlopen(url=url, data=data).read()
+            content = requests.get(url, params={'characterID': charId}).text
             soup = BeautifulSoup(content, 'html.parser')
             cacheUntil = datetime.datetime.strptime(soup.select("cacheduntil")[0].text, "%Y-%m-%d %H:%M:%S")
             diff = cacheUntil - currentEveTime()
             cache.putIntoCache(cacheKey, str(soup), diff.seconds)
-        except urllib2.HTTPError as e:
+        except requests.exceptions.RequestException as e:
             # We get a 400 when we pass non-pilot names for KOS check so fail silently for that one only
-            if (e.code != 400):
+            if (e.response.status_code != 400):
                 logging.error("Exception during getCharinfoForCharId: %s", str(e))
     return soup
 
@@ -238,7 +231,7 @@ def getSystemStatistics():
         if jumpData is None:
             jumpData = {}
             url = "https://api.eveonline.com/map/Jumps.xml.aspx"
-            content = urllib2.urlopen(url=url).read()
+            content = requests.get(url).text
             soup = BeautifulSoup(content, 'html.parser')
 
             for result in soup.select("result"):
@@ -258,7 +251,7 @@ def getSystemStatistics():
         if systemData is None:
             systemData = {}
             url = "https://api.eveonline.com/map/Kills.xml.aspx"
-            content = urllib2.urlopen(url=url).read()
+            content = requests.get(url).text
             soup = BeautifulSoup(content, 'html.parser')
 
             for result in soup.select("result"):
