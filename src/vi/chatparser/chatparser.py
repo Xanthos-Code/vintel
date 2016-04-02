@@ -20,13 +20,16 @@
 import datetime
 import os
 import time
+import six
+if six.PY2:
+    from io import open
 
 from PyQt4 import QtGui
 from bs4 import BeautifulSoup
 from vi import states
 
-from parser_functions import parseStatus
-from parser_functions import parseUrls, parseShips, parseSystems
+from .parser_functions import parseStatus
+from .parser_functions import parseUrls, parseShips, parseSystems
 
 # Names the local chatlogs could start with (depends on l10n of the client)
 LOCAL_NAMES = ("Lokal", "Local")
@@ -62,13 +65,12 @@ class ChatParser(object):
         content = ""
         filename = os.path.basename(path)
         roomname = filename[:-20]
-        with open(path, "r") as f:
-            content = f.read()
         try:
-            content = content.decode("utf-16-le")
+            with open(path, "r", encoding='utf-16-le') as f:
+                content = f.read()
         except Exception as e:
             self.ignoredPaths.append(path)
-            QtGui.QMessageBox.warning(None, "Read a log file failed!", "File: {0} - problem: {1}".format(path, unicode(e)), "OK")
+            QtGui.QMessageBox.warning(None, "Read a log file failed!", "File: {0} - problem: {1}".format(path, six.text_type(e)), "OK")
             return None
 
         lines = content.split("\n")
@@ -151,7 +153,7 @@ class ChatParser(object):
                     break
                 if count > maxSearch:
                     break
-        message.message = unicode(rtext)
+        message.message = six.text_type(rtext)
         message.status = status
         self.knownMessages.append(message)
         if systems:

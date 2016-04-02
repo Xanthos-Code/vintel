@@ -21,13 +21,13 @@ import os
 import subprocess
 import sys
 import re
-import urllib, urllib2
+import requests
 import time
 
 from collections import namedtuple
 from PyQt4.QtCore import QThread
-from resources import resourcePath
-from Queue import Queue
+from .resources import resourcePath
+from six.moves import queue
 
 import logging
 from vi.singleton import Singleton
@@ -108,7 +108,7 @@ class SoundManager:
 
         def __init__(self):
             QThread.__init__(self)
-            self.queue = Queue()
+            self.queue = queue.Queue()
 
         def setVolume(self, volume):
             self.volume = volume
@@ -171,10 +171,10 @@ class SoundManager:
         def playTTS(self, inputText=''):
             try:
                 mp3url = 'http://api.voicerss.org/?c=WAV&key={self.VOICE_RSS_API_KEY}&src={inputText}&hl=en-us'.format(
-                    **vars())
-                self.playAudioFile(urllib2.urlopen(mp3url))
+                    **locals())
+                self.playAudioFile(requests.get(mp3url, stream=True).raw)
                 time.sleep(.5)
-            except urllib2.URLError as e:
+            except requests.exceptions.RequestException as e:
                 logging.error('playTTS error: %s', str(e))
 
         # google_tts
@@ -197,17 +197,15 @@ class SoundManager:
             # Download chunks and write them to the output file
             for idx, val in enumerate(combinedText):
                 mp3url = "http://translate.google.com/translate_tts?tl=%s&q=%s&total=%s&idx=%s&ie=UTF-8&client=t&key=%s" % (
-                args.language, urllib.quote(val), len(combinedText), idx, self.GOOGLE_TTS_API_KEY)
+                args.language, requests.utils.quote(val), len(combinedText), idx, self.GOOGLE_TTS_API_KEY)
                 headers = {"Host": "translate.google.com", "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1)"}
-                request = urllib2.Request(mp3url, '', headers)
                 sys.stdout.write('.')
                 sys.stdout.flush()
                 if len(val) > 0:
                     try:
-                        response = urllib2.urlopen(request)
-                        args.output.write(response.read())
+                        args.timeout.write(requests.get(mp3url, headers=headers).content)
                         time.sleep(.5)
-                    except urllib2.URLError as e:
+                    except requests.exceptions.RequestException as e:
                         logging.error('audioExtractToMp3 error: %s', e)
             args.output.close()
             return args.output.name

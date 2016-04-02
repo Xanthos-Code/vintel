@@ -19,6 +19,7 @@
 
 import time
 
+from six.moves import range
 from PyQt4 import QtGui, QtCore, Qt
 
 from vi.resources import resourcePath
@@ -52,7 +53,7 @@ class TrayContextMenu(QtGui.QMenu):
         self.addAction(self.alarmCheck)
         distanceMenu = self.addMenu("Alarm Distance")
         self.distanceGroup = QtGui.QActionGroup(self)
-        for i in xrange(0, 6):
+        for i in range(0, 6):
             action = QtGui.QAction("{0} Jumps".format(i), None, checkable=True)
             if i == 0:
                 action.setChecked(True)
