@@ -19,10 +19,12 @@
 
 import datetime
 import json
+import time
 import six
 import requests
-
 import logging
+
+from six.moves import urllib
 from bs4 import BeautifulSoup
 from vi.cache.cache import Cache
 
@@ -153,9 +155,9 @@ def checkPlayername(charname):
     """ Checking on evegate for an exiting playername
         returns 1 if exists, 0 if not and -1 if an error occured
     """
-    from six.moves import urllib
     baseUrl = "https://gate.eveonline.com/Profile/"
-    queryCharname = urllib.utils.quote(charname)
+
+    queryCharname = utils.quote(charname)
     url = baseUrl + queryCharname
     result = -1
 
@@ -222,6 +224,7 @@ def getSystemStatistics():
             systemid: "jumps", "shipkills", "factionkills", "podkills"
     """
     data = {}
+    systemData = {}
     cache = Cache()
     # first the data for the jumps
     cacheKey = "jumpstatistic"
@@ -267,6 +270,7 @@ def getSystemStatistics():
             systemData = json.loads(systemData)
     except Exception as e:
         logging.error("Exception during getSystemStatistics: : %s", e)
+
     # We collected all data (or loaded them from cache) - now zip it together
     for i, v in jumpData.items():
         i = int(i)

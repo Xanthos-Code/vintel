@@ -104,7 +104,7 @@ class KOSCheckerThread(QThread):
             # Enqeue the data to be picked up in run()
             self.queue.put((names, requestType, onlyKos))
         except Exception as e:
-            logging.error("Error in KOSCheckerThread: %s", e)
+            logging.error("Error in KOSCheckerThread.addRequest: %s", e)
 
 
     def run(self):
@@ -125,7 +125,7 @@ class KOSCheckerThread(QThread):
                         hasKos = True
                         break
             except Exception as e:
-                logging.error("Error in KOSCheckerThread: %s", e)
+                logging.error("Error in KOSCheckerThread.run: %s", e)
                 continue
 
             logging.info("KOSCheckerThread emitting kos_result for: state = {0}, text = {1}, requestType = {2}, hasKos = {3}".format(

@@ -33,15 +33,13 @@ CVA_KOS_URL = "http://kos.cva-eve.org/api/"
 def check(parts):
     data = {}
     checkBylastChars = []
-    targetUrl = "".join((baseUrl, quotedNames))
+    namesAsIds = {}
+    names = [name.strip() for name in parts]
 
     try:
-        kosData = requests.get(CVA_KOS_URL, params = {
-            'c': 'json',
-            'type': 'multi',
-            'q': ','.join([name.strip() for name in parts]),
-        }).json()
+        kosData = requests.get(CVA_KOS_URL, params = {'c': 'json', 'type': 'multi', 'q': ','.join(names)}).json()
     except requests.exceptions.RequestException as e:
+        kosData = None
         logging.error("Error on pilot KOS check request %s", str(e))
 
     for char in kosData["results"]:
@@ -92,18 +90,12 @@ def check(parts):
                     nameData["corp_to_check"] = corpname
                     break
 
-        corpsToCheck = set(
-                [nameData["corp_to_check"] for nameData in corpCheckData.values() if nameData["need_check"] == True])
+        corpsToCheck = set([nameData["corp_to_check"] for nameData in corpCheckData.values() if nameData["need_check"] == True])
         corpsResult = {}
-        baseUrl = "http://kos.cva-eve.org/api/?c=json&type=unit&q="
 
         for corp in corpsToCheck:
             try:
-                kosData = requests.get(CVA_KOS_URL, params={
-                    'c': 'json',
-                    'type': 'unit',
-                    'q': corp,
-                }).json()
+                kosData = requests.get(CVA_KOS_URL, params = { 'c': 'json', 'type': 'unit', 'q': corp }).json()
             except requests.exceptions.RequestException as e:
                 logging.error("Error on corp KOS check request: %s", str(e))
 
