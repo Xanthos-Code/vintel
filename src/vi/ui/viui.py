@@ -925,8 +925,8 @@ class JumpbridgeChooser(QtGui.QDialog):
     def savePath(self):
         try:
             url = six.text_type(self.urlField.text())
-            # if url != "":
-            #     requests.get(url).text
+            if url != "":
+                requests.get(url).text
             self.emit(QtCore.SIGNAL("set_jumpbridge_url"), url)
             self.accept()
         except Exception as e:
