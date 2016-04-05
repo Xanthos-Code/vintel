@@ -65,7 +65,6 @@ class SoundManager(six.with_metaclass(Singleton)):
             self._soundThread.start()
 
     def platformSupportsAudio(self):
-        print("%r, %r" % (self.platformSupportsSpeech(), gPygletAvailable))
         return self.platformSupportsSpeech() or gPygletAvailable
 
     def platformSupportsSpeech(self):
@@ -86,7 +85,7 @@ class SoundManager(six.with_metaclass(Singleton)):
     def playSound(self, name="alarm", message="", abbreviatedMessage=""):
         """ Schedules the work, which is picked up by SoundThread.run()
         """
-        if self.soundActive:
+        if self.soundActive and self.soundAvailable:
             if self.useSpokenNotifications:
                 audioFile = None
             else:
@@ -94,8 +93,9 @@ class SoundManager(six.with_metaclass(Singleton)):
             self._soundThread.queue.put((audioFile, message, abbreviatedMessage))
 
     def quit(self):
-        self._soundThread.queue.task_done()
-        self._soundThread.quit()
+        if self.soundAvailable:
+            self._soundThread.queue.task_done()
+            self._soundThread.quit()
 
     #
     #  Inner class handle audio playback without blocking the UI
