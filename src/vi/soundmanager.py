@@ -23,6 +23,7 @@ import sys
 import re
 import requests
 import time
+import six
 
 from collections import namedtuple
 from PyQt4.QtCore import QThread
@@ -43,9 +44,7 @@ except ImportError:
     gPygletAvailable = False
 
 
-class SoundManager:
-    __metaclass__ = Singleton
-
+class SoundManager(six.with_metaclass(Singleton)):
     SOUNDS = {"alarm": "178032__zimbot__redalert-klaxon-sttos-recreated.wav",
               "kos": "178031__zimbot__transporterstartbeep0-sttos-recreated.wav",
               "request": "178028__zimbot__bosun-whistle-sttos-recreated.wav"}
@@ -59,10 +58,15 @@ class SoundManager:
 
     def __init__(self):
         self._soundThread = self.SoundThread()
-        self._soundThread.start()
-        self.soundAvailable = True
+        self.soundAvailable = self.platformSupportsAudio()
         if not self.platformSupportsSpeech():
             self.useSpokenNotifications = False
+        if self.soundAvailable:
+            self._soundThread.start()
+
+    def platformSupportsAudio(self):
+        print("%r, %r" % (self.platformSupportsSpeech(), gPygletAvailable))
+        return self.platformSupportsSpeech() or gPygletAvailable
 
     def platformSupportsSpeech(self):
         if self._soundThread.isDarwin:
