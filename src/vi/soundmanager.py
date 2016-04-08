@@ -23,6 +23,7 @@ import sys
 import re
 import requests
 import time
+import six
 
 from collections import namedtuple
 from PyQt4.QtCore import QThread
@@ -43,9 +44,7 @@ except ImportError:
     gPygletAvailable = False
 
 
-class SoundManager:
-    __metaclass__ = Singleton
-
+class SoundManager(six.with_metaclass(Singleton)):
     SOUNDS = {"alarm": "178032__zimbot__redalert-klaxon-sttos-recreated.wav",
               "kos": "178031__zimbot__transporterstartbeep0-sttos-recreated.wav",
               "request": "178028__zimbot__bosun-whistle-sttos-recreated.wav"}
@@ -59,10 +58,14 @@ class SoundManager:
 
     def __init__(self):
         self._soundThread = self.SoundThread()
-        self._soundThread.start()
-        self.soundAvailable = True
+        self.soundAvailable = self.platformSupportsAudio()
         if not self.platformSupportsSpeech():
             self.useSpokenNotifications = False
+        if self.soundAvailable:
+            self._soundThread.start()
+
+    def platformSupportsAudio(self):
+        return self.platformSupportsSpeech() or gPygletAvailable
 
     def platformSupportsSpeech(self):
         if self._soundThread.isDarwin:
@@ -82,7 +85,7 @@ class SoundManager:
     def playSound(self, name="alarm", message="", abbreviatedMessage=""):
         """ Schedules the work, which is picked up by SoundThread.run()
         """
-        if self.soundActive:
+        if self.soundActive and self.soundAvailable:
             if self.useSpokenNotifications:
                 audioFile = None
             else:
@@ -90,8 +93,9 @@ class SoundManager:
             self._soundThread.queue.put((audioFile, message, abbreviatedMessage))
 
     def quit(self):
-        self._soundThread.queue.task_done()
-        self._soundThread.quit()
+        if self.soundAvailable:
+            self._soundThread.queue.task_done()
+            self._soundThread.quit()
 
     #
     #  Inner class handle audio playback without blocking the UI
