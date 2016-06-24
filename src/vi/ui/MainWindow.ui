@@ -376,8 +376,10 @@
     <property name="title">
      <string>Region</string>
     </property>
-    <addaction name="providenceRegionAction"/>
     <addaction name="catchRegionAction"/>
+    <addaction name="providenceRegionAction"/>
+    <addaction name="queriousRegionAction"/>
+    <addaction name="separator"/>
     <addaction name="providenceCatchRegionAction"/>
     <addaction name="providenceCatchCompactRegionAction"/>
     <addaction name="chooseRegionAction"/>
@@ -624,6 +626,17 @@
    </property>
    <property name="regionName" stdset="0">
     <string>Providence-catch</string>
+   </property>
+  </action>
+  <action name="queriousRegionAction">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Querious</string>
+   </property>
+   <property name="regionName" stdset="0">
+    <string>querious</string>
    </property>
   </action>
  </widget>

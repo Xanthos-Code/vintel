@@ -92,7 +92,7 @@ class MainWindow(QtGui.QMainWindow):
         if roomnames:
             roomnames = roomnames.split(",")
         else:
-            roomnames = (u"TheCitadel", u"North Provi Intel", u"North Catch Intel")
+            roomnames = (u"TheCitadel", u"North Provi Intel", u"North Catch Intel", "North Querious Intel")
             self.cache.putIntoCache("room_names", u",".join(roomnames), 60 * 60 * 24 * 365 * 5)
         self.roomnames = roomnames
 
@@ -167,6 +167,8 @@ class MainWindow(QtGui.QMainWindow):
                      lambda item=self.catchRegionAction: self.handleRegionMenuItemSelected(item))
         self.connect(self.providenceRegionAction, Qt.SIGNAL("triggered()"),
                      lambda item=self.providenceRegionAction: self.handleRegionMenuItemSelected(item))
+        self.connect(self.queriousRegionAction, Qt.SIGNAL("triggered()"),
+                     lambda item=self.queriousRegionAction: self.handleRegionMenuItemSelected(item))
         self.connect(self.providenceCatchRegionAction, Qt.SIGNAL("triggered()"),
                      lambda item=self.providenceCatchRegionAction: self.handleRegionMenuItemSelected(item))
         self.connect(self.providenceCatchCompactRegionAction, Qt.SIGNAL("triggered()"),
@@ -261,13 +263,15 @@ class MainWindow(QtGui.QMainWindow):
             # Also set up our app menus
             regionName = self.cache.getFromCache("region_name")
             if not regionName:
-                self.providenceRegionAction.setChecked(True)
+                self.providenceCatchRegionAction.setChecked(True)
             elif regionName.startswith("Providencecatch"):
                 self.providenceCatchRegionAction.setChecked(True)
             elif regionName.startswith("Catch"):
                 self.catchRegionAction.setChecked(True)
             elif regionName.startswith("Providence"):
                 self.providenceRegionAction.setChecked(True)
+            elif regionName.startswith("Querious"):
+                self.queriousRegionAction.setChecked(True)
             else:
                 self.chooseRegionAction.setChecked(True)
         self.jumpbridgesButton.setChecked(False)
@@ -554,6 +558,7 @@ class MainWindow(QtGui.QMainWindow):
     def handleRegionMenuItemSelected(self, menuAction=None):
         self.catchRegionAction.setChecked(False)
         self.providenceRegionAction.setChecked(False)
+        self.queriousRegionAction.setChecked(False)
         self.providenceCatchRegionAction.setChecked(False)
         self.providenceCatchCompactRegionAction.setChecked(False)
         self.chooseRegionAction.setChecked(False)
@@ -737,7 +742,7 @@ class ChatroomsChooser(QtGui.QDialog):
         cache = Cache()
         roomnames = cache.getFromCache("room_names")
         if not roomnames:
-            roomnames = u"TheCitadel,North Provi Intel,North Catch Intel"
+            roomnames = u"TheCitadel,North Provi Intel,North Catch Intel,North Querious Intel"
         self.roomnamesField.setPlainText(roomnames)
 
     def saveClicked(self):
@@ -747,7 +752,7 @@ class ChatroomsChooser(QtGui.QDialog):
         self.emit(Qt.SIGNAL("rooms_changed"), rooms)
 
     def setDefaults(self):
-        self.roomnamesField.setPlainText(u"TheCitadel,North Provi Intel,North Catch Intel")
+        self.roomnamesField.setPlainText(u"TheCitadel,North Provi Intel,North Catch Intel,North Querious Intel")
 
 
 class RegionChooser(QtGui.QDialog):
