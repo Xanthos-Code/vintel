@@ -1,20 +1,14 @@
 # -*- mode: python -*-
-
-block_cipher = None
-
+import sys
 
 a = Analysis(['vintel.py'],
-             pathex=['z:\\mark\\code\\vintel\\src'],
+             pathex=['z:\\mark\\code\\vintel\\src' if sys.platform == 'win32' else '/Users/mark/code/vintel/src'],
              hiddenimports=[],
              hookspath=None,
              runtime_hooks=None,
-             excludes=None,
-             cipher=block_cipher)
+             excludes=None)
 
-for d in a.datas:
-    if 'pyconfig' in d[0]:
-        a.datas.remove(d)
-        break
+pyz = PYZ(a.pure)
 
 a.datas += [('vi/ui/MainWindow.ui', 'vi/ui/MainWindow.ui', 'DATA'),
             ('vi/ui/SystemChat.ui', 'vi/ui/SystemChat.ui', 'DATA'),
@@ -23,35 +17,36 @@ a.datas += [('vi/ui/MainWindow.ui', 'vi/ui/MainWindow.ui', 'DATA'),
             ('vi/ui/ChatroomsChooser.ui', 'vi/ui/ChatroomsChooser.ui', 'DATA'),
             ('vi/ui/RegionChooser.ui', 'vi/ui/RegionChooser.ui', 'DATA'),
             ('vi/ui/SoundSetup.ui', 'vi/ui/SoundSetup.ui', 'DATA'),
+            ('vi/ui/JumpbridgeChooser.ui', 'vi/ui/JumpbridgeChooser.ui', 'DATA'),
             ('vi/ui/res/qmark.png', 'vi/ui/res/qmark.png', 'DATA'),
             ('vi/ui/res/logo.png', 'vi/ui/res/logo.png', 'DATA'),
             ('vi/ui/res/logo_small.png', 'vi/ui/res/logo_small.png', 'DATA'),
             ('vi/ui/res/logo_small_green.png', 'vi/ui/res/logo_small_green.png', 'DATA'),
             ('vi/ui/res/178028__zimbot__bosun-whistle-sttos-recreated.wav',
-             'vi/ui/res/178028__zimbot__bosun-whistle-sttos-recreated.wav', 'DATA'
-            ),
+             'vi/ui/res/178028__zimbot__bosun-whistle-sttos-recreated.wav', 'DATA'),
             ('vi/ui/res/178031__zimbot__transporterstartbeep0-sttos-recreated.wav',
-             'vi/ui/res/178031__zimbot__transporterstartbeep0-sttos-recreated.wav', 'DATA'
-            ),
+             'vi/ui/res/178031__zimbot__transporterstartbeep0-sttos-recreated.wav', 'DATA'),
             ('vi/ui/res/178032__zimbot__redalert-klaxon-sttos-recreated.wav',
-             'vi/ui/res/178032__zimbot__redalert-klaxon-sttos-recreated.wav', 'DATA'
-            ),
+             'vi/ui/res/178032__zimbot__redalert-klaxon-sttos-recreated.wav', 'DATA'),
             ('vi/ui/res/mapdata/Providencecatch.svg',
              'vi/ui/res/mapdata/Providencecatch.svg', 'DATA'),
             ('docs/jumpbridgeformat.txt', 'docs/jumpbridgeformat.txt', 'DATA'),
-            ('vi/ui/JumpbridgeChooser.ui', 'vi/ui/JumpbridgeChooser.ui', 'DATA'),
             ]
-
-pyz = PYZ(a.pure, cipher=block_cipher)
 
 exe = EXE(pyz,
           a.scripts,
           a.binaries,
           a.zipfiles,
           a.datas,
-          name='vintel-1.1.3.exe',
+          name=os.path.join('dist', 'vintel-1.1.3' + ('.exe' if sys.platform == 'win32' else '')),
           debug=False,
           strip=None,
           upx=True,
           icon="icon.ico",
-          console=False )
+          console=False)
+
+# Build a .app if on OS X
+if sys.platform == 'darwin':
+   app = BUNDLE(exe,
+                name='vintel-1.1.3.app',
+                icon="icon.ico")
