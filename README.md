@@ -121,7 +121,7 @@ Examples:
 
     – or –
 
-`mac> python vintel.py "/home/user/myverypecialpath/EVE/logs/chatlogs"`
+`linux and mac> python vintel.py "/home/user/myverypecialpath/EVE/logs/chatlogs"`
 
 **Vintel does not start! What can I do?**
 
