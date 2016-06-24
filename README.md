@@ -72,6 +72,7 @@ https://bitbucket.org/pyglet/pyglet/wiki/Download
 pyglet is used to play the sound – If it is not available the sound option will be disabled.
 - Requests 2
 https://pypi.python.org/pypi/requests
+- Six for python 3 compatibility https://pypi.python.org/pypi/six
 
 ## Building the Vintel Standalone Package
 
