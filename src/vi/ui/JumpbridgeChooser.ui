@@ -28,9 +28,7 @@
            <item row="1" column="0">
             <widget class="QLabel" name="label2">
              <property name="text">
-              <string>(for example:
-http://example.org/jumpbridge_data.txt
-You can also use local data. Something like file://d:/jumpbridge_data.txt)</string>
+              <string>For example: http://example.org/jumpbridge_data.txt</string>
              </property>
             </widget>
            </item>
