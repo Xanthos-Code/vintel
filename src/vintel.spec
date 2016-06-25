@@ -1,6 +1,8 @@
 # -*- mode: python -*-
 import sys
 
+app_version = 'vintel-1.2.1'
+
 a = Analysis(['vintel.py'],
              pathex=['z:\\mark\\code\\vintel\\src' if sys.platform == 'win32' else '/Users/mark/code/vintel/src'],
              hiddenimports=[],
@@ -38,7 +40,7 @@ exe = EXE(pyz,
           a.binaries,
           a.zipfiles,
           a.datas,
-          name=os.path.join('dist', 'vintel-1.1.3' + ('.exe' if sys.platform == 'win32' else '')),
+          name=os.path.join('dist', app_version + ('.exe' if sys.platform == 'win32' else '')),
           debug=False,
           strip=None,
           upx=True,
@@ -48,5 +50,5 @@ exe = EXE(pyz,
 # Build a .app if on OS X
 if sys.platform == 'darwin':
    app = BUNDLE(exe,
-                name='vintel-1.1.3.app',
+                name=app_version + '.app',
                 icon="icon.ico")
