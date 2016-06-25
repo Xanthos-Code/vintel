@@ -59,14 +59,15 @@ def parseStatus(rtext):
     texts = [t for t in rtext.contents if isinstance(t, NavigableString)]
     for text in texts:
         upperText = text.strip().upper()
+        originalText = upperText
         for char in CHARS_TO_IGNORE:
             upperText = upperText.replace(char, "")
         upperWords = upperText.split()
-        if (("CLEAR" in upperWords or "CLR" in upperWords) and not upperText.endswith("?")):
+        if (("CLEAR" in upperWords or "CLR" in upperWords) and not originalText.endswith("?")):
             return states.CLEAR
         elif ("STAT" in upperWords or "STATUS" in upperWords):
             return states.REQUEST
-        elif ("?" in upperText):
+        elif ("?" in originalText):
             return states.REQUEST
         elif (text.strip().upper() in ("BLUE", "BLUES ONLY", "ONLY BLUE" "STILL BLUE", "ALL BLUES")):
             return states.CLEAR
