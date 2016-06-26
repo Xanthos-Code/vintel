@@ -77,6 +77,8 @@ class MainWindow(QtGui.QMainWindow):
         self.chatEntries = []
         self.frameButton.setVisible(False)
         self.scanIntelForKosRequestsEnabled = True
+        self.initialMapPosition = None
+        self.mapPositionsDict = {}
 
         # Load user's toon names
         self.knownPlayerNames = self.cache.getFromCache("known_player_names")
@@ -126,7 +128,6 @@ class MainWindow(QtGui.QMainWindow):
             pass
 
         self.wireUpUIConnections()
-
         self.recallCachedSettings()
         self.setupThreads()
         self.setupMap(True)
@@ -185,6 +186,7 @@ class MainWindow(QtGui.QMainWindow):
         self.connect(self.quitAction, Qt.SIGNAL("triggered()"), self.close)
         self.connect(self.trayIcon, Qt.SIGNAL("quit"), self.close)
         self.connect(self.jumpbridgeDataAction, Qt.SIGNAL("triggered()"), self.showJumbridgeChooser)
+        self.mapView.page().scrollRequested.connect(self.mapPositionChanged)
 
 
     def setupThreads(self):
@@ -214,7 +216,6 @@ class MainWindow(QtGui.QMainWindow):
     def setupMap(self, initialize=False):
         self.mapTimer.stop()
         self.filewatcherThread.paused = True
-        self.initMapPosition = None
 
         logging.info("Finding map file")
         regionName = self.cache.getFromCache("region_name")
@@ -241,10 +242,10 @@ class MainWindow(QtGui.QMainWindow):
             logging.warn(diagText)
             QtGui.QMessageBox.warning(None, "Using map from cache", diagText, "Ok")
 
+
         # Load the jumpbridges
         logging.critical("Load jump bridges")
         self.setJumpbridges(self.cache.getFromCache("jumpbridge_url"))
-        self.initMapPosition = None  # We read this after first rendering
         self.systems = self.dotlan.systems
         logging.critical("Creating chat parser")
         self.chatparser = chatparser.ChatParser(self.pathToLogs, self.roomnames, self.systems)
@@ -261,7 +262,6 @@ class MainWindow(QtGui.QMainWindow):
             self.mapView.connect(self.mapView, Qt.SIGNAL("linkClicked(const QUrl&)"), self.mapLinkClicked)
 
             # Also set up our app menus
-            regionName = self.cache.getFromCache("region_name")
             if not regionName:
                 self.providenceCatchRegionAction.setChecked(True)
             elif regionName.startswith("Providencecatch"):
@@ -280,6 +280,7 @@ class MainWindow(QtGui.QMainWindow):
         # Update the new map view, then clear old statistics from the map and request new
         logging.critical("Updating the map")
         self.updateMapView()
+        self.setInitialMapPositionForRegion(regionName)
         self.mapTimer.start(MAP_UPDATE_INTERVAL_MSECS)
         # Allow the file watcher to run now that all else is set up
         self.filewatcherThread.paused = False
@@ -309,7 +310,7 @@ class MainWindow(QtGui.QMainWindow):
         # Known playernames
         if self.knownPlayerNames:
             value = ",".join(self.knownPlayerNames)
-            self.cache.putIntoCache("known_player_names", value, 60 * 60 * 24 * 365)
+            self.cache.putIntoCache("known_player_names", value, 60 * 60 * 24 * 30)
 
         # Program state to cache (to read it on next startup)
         settings = ((None, "restoreGeometry", str(self.saveGeometry())), (None, "restoreState", str(self.saveState())),
@@ -323,13 +324,13 @@ class MainWindow(QtGui.QMainWindow):
                     (None, "changeAlarmDistance", self.alarmDistance),
                     (None, "changeSound", self.activateSoundAction.isChecked()),
                     (None, "changeChatVisibility", self.showChatAction.isChecked()),
-                    (None, "setInitMapPosition", (self.mapView.page().mainFrame().scrollPosition().x(), self.mapView.page().mainFrame().scrollPosition().y())),
+                    (None, "loadInitialMapPositions", self.mapPositionsDict),
                     (None, "setSoundVolume", SoundManager().soundVolume),
                     (None, "changeFrameless", self.framelessWindowAction.isChecked()),
                     (None, "changeUseSpokenNotifications", self.useSpokenNotificationsAction.isChecked()),
                     (None, "changeKosCheckClipboard", self.kosClipboardActiveAction.isChecked()),
                     (None, "changeAutoScanIntel", self.scanIntelForKosRequestsEnabled))
-        self.cache.putIntoCache("settings", str(settings), 60 * 60 * 24 * 365)
+        self.cache.putIntoCache("settings", str(settings), 60 * 60 * 24 * 30)
 
         # Stop the threads
         try:
@@ -444,13 +445,16 @@ class MainWindow(QtGui.QMainWindow):
                 entry.changeFontSize(newSize)
             ChatEntryWidget.TEXT_SIZE = newSize
 
+
     def chatSmaller(self):
         newSize = ChatEntryWidget.TEXT_SIZE - 1
         self.changeChatFontSize(newSize)
 
+
     def chatLarger(self):
         newSize = ChatEntryWidget.TEXT_SIZE + 1
         self.changeChatFontSize(newSize)
+
 
     def changeAlarmDistance(self, distance):
         self.alarmDistance = distance
@@ -460,10 +464,12 @@ class MainWindow(QtGui.QMainWindow):
                     action.setChecked(True)
         self.trayIcon.alarmDistance = distance
 
+
     def changeJumpbridgesVisibility(self):
         newValue = self.dotlan.changeJumpbridgesVisibility()
         self.jumpbridgesButton.setChecked(newValue)
         self.updateMapView()
+
 
     def changeStatisticsVisibility(self):
         newValue = self.dotlan.changeStatisticsVisibility()
@@ -471,6 +477,7 @@ class MainWindow(QtGui.QMainWindow):
         self.updateMapView()
         if newValue:
             self.statisticsThread.requestStatistics()
+
 
     def clipboardChanged(self, mode=0):
         if not (mode == 0 and self.kosClipboardActiveAction.isChecked() and self.clipboard.mimeData().hasText()):
@@ -490,6 +497,7 @@ class MainWindow(QtGui.QMainWindow):
                     break
             self.oldClipboardContent = contentTuple
 
+
     def mapLinkClicked(self, url):
         systemName = six.text_type(url.path().split("/")[-1]).upper()
         system = self.systems[str(systemName)]
@@ -499,9 +507,11 @@ class MainWindow(QtGui.QMainWindow):
         sc.connect(sc, Qt.SIGNAL("location_set"), self.setLocation)
         sc.show()
 
+
     def markSystemOnMap(self, systemname):
         self.systems[six.text_type(systemname)].mark()
         self.updateMapView()
+
 
     def setLocation(self, char, newSystem):
         for system in self.systems.values():
@@ -510,23 +520,50 @@ class MainWindow(QtGui.QMainWindow):
             self.systems[newSystem].addLocatedCharacter(char)
             self.setMapContent(self.dotlan.svg)
 
+
     def setMapContent(self, content):
-        if self.initMapPosition is None:
-            scrollposition = self.mapView.page().mainFrame().scrollPosition()
+        if self.initialMapPosition is None:
+            scrollPosition = self.mapView.page().mainFrame().scrollPosition()
         else:
-            scrollposition = self.initMapPosition
-            self.initMapPosition = None
+            scrollPosition = self.initialMapPosition
         self.mapView.setContent(content)
-        self.mapView.page().mainFrame().setScrollPosition(scrollposition)
+        self.mapView.page().mainFrame().setScrollPosition(scrollPosition)
         self.mapView.page().setLinkDelegationPolicy(QWebPage.DelegateAllLinks)
 
-    def setInitMapPosition(self, xy):
-        self.initMapPosition = QPoint(xy[0], xy[1])
+        # Make sure we have positioned the window before we nil the initial position;
+        # even though we set it, it may not take effect until the map is fully loaded
+        scrollPosition = self.mapView.page().mainFrame().scrollPosition()
+        if scrollPosition.x() or scrollPosition.y():
+            self.initialMapPosition = None
+
+
+    def loadInitialMapPositions(self, newDictionary):
+        self.mapPositionsDict = newDictionary
+
+
+    def setInitialMapPositionForRegion(self, regionName):
+        try:
+            if not regionName:
+                regionName = self.cache.getFromCache("region_name")
+            if regionName:
+                xy = self.mapPositionsDict[regionName]
+                self.initialMapPosition = QPoint(xy[0], xy[1])
+        except Exception:
+            pass
+
+
+    def mapPositionChanged(self, dx, dy, rectToScroll):
+        regionName = self.cache.getFromCache("region_name")
+        if regionName:
+            scrollPosition = self.mapView.page().mainFrame().scrollPosition()
+            self.mapPositionsDict[regionName] = (scrollPosition.x(), scrollPosition.y())
+
 
     def showChatroomChooser(self):
         chooser = ChatroomsChooser(self)
         chooser.connect(chooser, Qt.SIGNAL("rooms_changed"), self.changedRoomnames)
         chooser.show()
+
 
     def showJumbridgeChooser(self):
         url = self.cache.getFromCache("jumpbridge_url")
@@ -534,8 +571,10 @@ class MainWindow(QtGui.QMainWindow):
         chooser.connect(chooser, Qt.SIGNAL("set_jumpbridge_url"), self.setJumpbridges)
         chooser.show()
 
+
     def setSoundVolume(self, value):
         SoundManager().setSoundVolume(value)
+
 
     def setJumpbridges(self, url):
         if url is None:
@@ -555,6 +594,7 @@ class MainWindow(QtGui.QMainWindow):
         except Exception as e:
             QtGui.QMessageBox.warning(None, "Loading jumpbridges failed!", "Error: {0}".format(six.text_type(e)), "OK")
 
+
     def handleRegionMenuItemSelected(self, menuAction=None):
         self.catchRegionAction.setChecked(False)
         self.providenceRegionAction.setChecked(False)
@@ -569,6 +609,7 @@ class MainWindow(QtGui.QMainWindow):
             Cache().putIntoCache("region_name", regionName, 60 * 60 * 24 * 365)
             self.setupMap()
 
+
     def showRegionChooser(self):
         def handleRegionChosen():
             self.handleRegionMenuItemSelected(None)
@@ -579,6 +620,7 @@ class MainWindow(QtGui.QMainWindow):
         chooser = RegionChooser(self)
         self.connect(chooser, Qt.SIGNAL("new_region_chosen"), handleRegionChosen)
         chooser.show()
+
 
     def addMessageToIntelChat(self, message):
         scrollToBottom = False
@@ -597,6 +639,7 @@ class MainWindow(QtGui.QMainWindow):
         if scrollToBottom:
             self.chatListWidget.scrollToBottom()
 
+
     def pruneMessages(self):
         try:
             now = time.mktime(evegate.currentEveTime().timetuple())
@@ -614,6 +657,7 @@ class MainWindow(QtGui.QMainWindow):
                     break
         except Exception as e:
             logging.error(e)
+
 
     def showKosResult(self, state, text, requestType, hasKos):
         if not self.scanIntelForKosRequestsEnabled:
@@ -638,9 +682,11 @@ class MainWindow(QtGui.QMainWindow):
             pass
         self.trayIcon.setIcon(self.taskbarIconQuiescent)
 
+
     def changedRoomnames(self, newRoomnames):
         self.cache.putIntoCache("room_names", u",".join(newRoomnames), 60 * 60 * 24 * 365 * 5)
         self.chatparser.rooms = newRoomnames
+
 
     def showInfo(self):
         infoDialog = QtGui.QDialog(self)
@@ -650,6 +696,7 @@ class MainWindow(QtGui.QMainWindow):
         infoDialog.connect(infoDialog.closeButton, Qt.SIGNAL("clicked()"), infoDialog.accept)
         infoDialog.show()
 
+
     def showSoundSetup(self):
         dialog = QtGui.QDialog(self)
         uic.loadUi(resourcePath("vi/ui/SoundSetup.ui"), dialog)
@@ -658,6 +705,7 @@ class MainWindow(QtGui.QMainWindow):
         dialog.connect(dialog.testSoundButton, Qt.SIGNAL("clicked()"), SoundManager().playSound)
         dialog.connect(dialog.closeButton, Qt.SIGNAL("clicked()"), dialog.accept)
         dialog.show()
+
 
     def systemTrayActivated(self, reason):
         if reason == QtGui.QSystemTrayIcon.Trigger:
@@ -669,12 +717,14 @@ class MainWindow(QtGui.QMainWindow):
             else:
                 self.showMinimized()
 
+
     def updateAvatarOnChatEntry(self, chatEntry, avatarData):
         updated = chatEntry.updateAvatar(avatarData)
         if not updated:
             self.avatarFindThread.addChatEntry(chatEntry, clearCache=True)
         else:
             self.emit(Qt.SIGNAL("avatar_loaded"), chatEntry.message.user, avatarData)
+
 
     def updateStatisticsOnMap(self, data):
         if not self.statisticsButton.isChecked():
@@ -686,16 +736,20 @@ class MainWindow(QtGui.QMainWindow):
             self.trayIcon.showMessage("Loading statstics failed", text, 3)
             logging.error("updateStatisticsOnMap, error: %s" % text)
 
+
     def updateMapView(self):
         logging.debug("Updating map start")
         self.setMapContent(self.dotlan.svg)
         logging.debug("Updating map complete")
 
+
     def zoomMapIn(self):
         self.mapView.setZoomFactor(self.mapView.zoomFactor() + 0.1)
 
+
     def zoomMapOut(self):
         self.mapView.setZoomFactor(self.mapView.zoomFactor() - 0.1)
+
 
     def logFileChanged(self, path):
         messages = self.chatparser.fileModified(path)
@@ -745,11 +799,13 @@ class ChatroomsChooser(QtGui.QDialog):
             roomnames = u"TheCitadel,North Provi Intel,North Catch Intel,North Querious Intel"
         self.roomnamesField.setPlainText(roomnames)
 
+
     def saveClicked(self):
         text = six.text_type(self.roomnamesField.toPlainText())
         rooms = [six.text_type(name.strip()) for name in text.split(",")]
         self.accept()
         self.emit(Qt.SIGNAL("rooms_changed"), rooms)
+
 
     def setDefaults(self):
         self.roomnamesField.setPlainText(u"TheCitadel,North Provi Intel,North Catch Intel,North Querious Intel")
@@ -766,6 +822,7 @@ class RegionChooser(QtGui.QDialog):
         if not regionName:
             regionName = u"Providence"
         self.regionNameField.setPlainText(regionName)
+
 
     def saveClicked(self):
         text = six.text_type(self.regionNameField.toPlainText())
@@ -822,6 +879,7 @@ class SystemChat(QtGui.QDialog):
         self.connect(self.clearButton, Qt.SIGNAL("clicked()"), self.setSystemClear)
         self.connect(self.locationButton, Qt.SIGNAL("clicked()"), self.locationSet)
 
+
     def _addMessageToChat(self, message, avatarPixmap):
         scrollToBottom = False
         if (self.chat.verticalScrollBar().value() == self.chat.verticalScrollBar().maximum()):
@@ -837,6 +895,7 @@ class SystemChat(QtGui.QDialog):
         if scrollToBottom:
             self.chat.scrollToBottom()
 
+
     def addChatEntry(self, entry):
         if self.chatType == SystemChat.SYSTEM:
             message = entry.message
@@ -844,22 +903,27 @@ class SystemChat(QtGui.QDialog):
             if self.selector in message.systems:
                 self._addMessageToChat(message, avatarPixmap)
 
+
     def locationSet(self):
         char = six.text_type(self.playerNamesBox.currentText())
         self.emit(Qt.SIGNAL("location_set"), char, self.system.name)
+
 
     def newAvatarAvailable(self, charname, avatarData):
         for entry in self.chatEntries:
             if entry.message.user == charname:
                 entry.updateAvatar(avatarData)
 
+
     def setSystemAlarm(self):
         self.system.setStatus(states.ALARM)
         self.parent.updateMapView()
 
+
     def setSystemClear(self):
         self.system.setStatus(states.CLEAR)
         self.parent.updateMapView()
+
 
     def closeDialog(self):
         self.accept()
@@ -885,6 +949,7 @@ class ChatEntryWidget(QtGui.QWidget):
         if not ChatEntryWidget.SHOW_AVATAR:
             self.avatarLabel.setVisible(False)
 
+
     def linkClicked(self, link):
         link = six.text_type(link)
         function, parameter = link.split("/", 1)
@@ -892,6 +957,7 @@ class ChatEntryWidget(QtGui.QWidget):
             self.emit(QtCore.SIGNAL("mark_system"), parameter)
         elif function == "link":
             webbrowser.open(parameter)
+
 
     def updateText(self):
         time = datetime.datetime.strftime(self.message.timestamp, "%H:%M:%S")
@@ -901,6 +967,7 @@ class ChatEntryWidget(QtGui.QWidget):
                                                                                          text=self.message.message)
         self.textLabel.setText(text)
 
+
     def updateAvatar(self, avatarData):
         image = QImage.fromData(avatarData)
         pixmap = QPixmap.fromImage(image)
@@ -909,6 +976,7 @@ class ChatEntryWidget(QtGui.QWidget):
         scaledAvatar = pixmap.scaled(32, 32)
         self.avatarLabel.setPixmap(scaledAvatar)
         return True
+
 
     def changeFontSize(self, newSize):
         font = self.textLabel.font()
@@ -926,6 +994,7 @@ class JumpbridgeChooser(QtGui.QDialog):
         # loading format explanation from textfile
         with open(resourcePath("docs/jumpbridgeformat.txt")) as f:
             self.formatInfoField.setPlainText(f.read())
+
 
     def savePath(self):
         try:
