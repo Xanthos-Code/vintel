@@ -93,10 +93,6 @@ The most likely cause of this is that pyglet is not installed.
 
 The .exe ships with the complete environment and needed libs. You could save some space using the the source code instead.
 
-**Will you bring the GUI to the EVE in-game browser?**
-
-There are no plans to bring the GUI to HTML/JS. But you can set the Vintel window always on top with a menu option.
-
 **What platforms are supported?**
 
 Vintel runs on Mac (OS X), Windows and Linux. Mac and Windows standalone packages are provided with each release. Linux users are advised to install all the requirements listed above then download and run from source.
@@ -142,8 +138,8 @@ Vintel writes its own set of logs to the \Documents\EVE\vintel\vintel directory.
 
 **I love Vintel - how can I help?**
 
-If you are technically inclined and have a solid grasp of Python, [contact the project maintainer via email](mailto:xanthos.eve@gmail.com) to see how you can best help out.
+If you are technically inclined and have a solid grasp of Python, [contact the project maintainer via email](mailto:xanthos.eve@gmail.com) to see how you can best help out. Alternatively you can find something you want to change and create a pull request to have your changes reviewed and potentially added to the codebase. There have been several great contributions made this way!
 
 **I'm not a coder, how can I help?**
 
-Your feedback is needed! Use the program for a while, then come back [here and create issues](https://github.com/Xanthos-Eve/vintel/issues). Record anything you think about Vintel - bugs, frustrations, and ideas to make Vintel better.
+Your feedback is needed! Use the program for a while, then come back [here and create issues](https://github.com/Xanthos-Eve/vintel/issues). Record anything you think about Vintel - bugs, frustrations, and ideas to make it better.
