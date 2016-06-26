@@ -93,10 +93,6 @@ The most likely cause of this is that pyglet is not installed.
 
 The .exe ships with the complete environment and needed libs. You could save some space using the the source code instead.
 
-**Will you bring the GUI to the EVE in-game browser?**
-
-There are no plans to bring the GUI to HTML/JS. But you can set the Vintel window always on top with a menu option.
-
 **What platforms are supported?**
 
 Vintel runs on Mac (OS X), Windows and Linux. Mac and Windows standalone packages are provided with each release. Linux users are advised to install all the requirements listed above then download and run from source.
