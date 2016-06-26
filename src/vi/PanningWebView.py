@@ -15,6 +15,7 @@ class PanningWebView(QWebView):
         self.ignored = []
         self.position = None
         self.offset = 0
+        self.handIsClosed = False
 
 
     def mousePressEvent(self, mouseEvent):
@@ -27,12 +28,14 @@ class PanningWebView(QWebView):
             if mouseEvent.buttons() == QtCore.Qt.LeftButton:
                 self.pressed = True
                 self.scrolling = False
+                self.handIsClosed = False
+                QApplication.setOverrideCursor(QtCore.Qt.OpenHandCursor)
+
                 self.position = mouseEvent.pos()
                 frame = self.page().mainFrame()
                 xTuple = frame.evaluateJavaScript("window.scrollX").toInt()
                 yTuple = frame.evaluateJavaScript("window.scrollY").toInt()
                 self.offset = QPoint(xTuple[0], yTuple[0])
-                QApplication.setOverrideCursor(QtCore.Qt.OpenHandCursor)
                 return
 
         return QWebView.mousePressEvent(mouseEvent)
@@ -47,12 +50,15 @@ class PanningWebView(QWebView):
         if self.scrolling:
             self.pressed = False
             self.scrolling = False
+            self.handIsClosed = False
             QApplication.restoreOverrideCursor()
             return
 
         if self.pressed:
             self.pressed = False
             self.scrolling = False
+            self.handIsClosed = False
+            QApplication.restoreOverrideCursor()
 
             event1 = QMouseEvent(QEvent.MouseButtonPress, self.position, QtCore.Qt.LeftButton, QtCore.Qt.LeftButton, QtCore.Qt.NoModifier)
             event2 = QMouseEvent(mouseEvent)
@@ -62,7 +68,6 @@ class PanningWebView(QWebView):
 
             QApplication.postEvent(self, event1)
             QApplication.postEvent(self, event2)
-            QApplication.restoreOverrideCursor()
             return
 
         return QWebView.mouseReleaseEvent(self, mouseEvent)
@@ -71,6 +76,10 @@ class PanningWebView(QWebView):
     def mouseMoveEvent(self, mouseEvent):
 
         if self.scrolling:
+            if not self.handIsClosed:
+                QApplication.restoreOverrideCursor()
+                QApplication.setOverrideCursor(QtCore.Qt.ClosedHandCursor)
+                self.handIsClosed = True
             delta = mouseEvent.pos() - self.position
             p = self.offset - delta
             frame = self.page().mainFrame()
