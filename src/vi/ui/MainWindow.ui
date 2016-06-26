@@ -203,7 +203,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QWebView" name="mapView">
+           <widget class="PanningWebView" name="mapView">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
               <horstretch>0</horstretch>
@@ -645,6 +645,11 @@
    <class>QWebView</class>
    <extends>QWidget</extends>
    <header>QtWebKitWidgets/QWebView</header>
+  </customwidget>
+  <customwidget>
+   <class>PanningWebView</class>
+   <extends>QWebView</extends>
+   <header>vi/PanningWebView</header>
   </customwidget>
  </customwidgets>
  <resources/>

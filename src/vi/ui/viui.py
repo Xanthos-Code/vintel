@@ -164,16 +164,11 @@ class MainWindow(QtGui.QMainWindow):
         self.connect(self.showChatAvatarsAction, Qt.SIGNAL("triggered()"), self.changeShowAvatars)
         self.connect(self.alwaysOnTopAction, Qt.SIGNAL("triggered()"), self.changeAlwaysOnTop)
         self.connect(self.chooseChatRoomsAction, Qt.SIGNAL("triggered()"), self.showChatroomChooser)
-        self.connect(self.catchRegionAction, Qt.SIGNAL("triggered()"),
-                     lambda item=self.catchRegionAction: self.handleRegionMenuItemSelected(item))
-        self.connect(self.providenceRegionAction, Qt.SIGNAL("triggered()"),
-                     lambda item=self.providenceRegionAction: self.handleRegionMenuItemSelected(item))
-        self.connect(self.queriousRegionAction, Qt.SIGNAL("triggered()"),
-                     lambda item=self.queriousRegionAction: self.handleRegionMenuItemSelected(item))
-        self.connect(self.providenceCatchRegionAction, Qt.SIGNAL("triggered()"),
-                     lambda item=self.providenceCatchRegionAction: self.handleRegionMenuItemSelected(item))
-        self.connect(self.providenceCatchCompactRegionAction, Qt.SIGNAL("triggered()"),
-                     lambda item=self.providenceCatchCompactRegionAction: self.handleRegionMenuItemSelected(item))
+        self.connect(self.catchRegionAction, Qt.SIGNAL("triggered()"), lambda : self.handleRegionMenuItemSelected(self.catchRegionAction))
+        self.connect(self.providenceRegionAction, Qt.SIGNAL("triggered()"), lambda : self.handleRegionMenuItemSelected(self.providenceRegionAction))
+        self.connect(self.queriousRegionAction, Qt.SIGNAL("triggered()"), lambda : self.handleRegionMenuItemSelected(self.queriousRegionAction))
+        self.connect(self.providenceCatchRegionAction, Qt.SIGNAL("triggered()"), lambda : self.handleRegionMenuItemSelected(self.providenceCatchRegionAction))
+        self.connect(self.providenceCatchCompactRegionAction, Qt.SIGNAL("triggered()"), lambda : self.handleRegionMenuItemSelected(self.providenceCatchCompactRegionAction))
         self.connect(self.chooseRegionAction, Qt.SIGNAL("triggered()"), self.showRegionChooser)
         self.connect(self.showChatAction, Qt.SIGNAL("triggered()"), self.changeChatVisibility)
         self.connect(self.soundSetupAction, Qt.SIGNAL("triggered()"), self.showSoundSetup)
