@@ -32,6 +32,7 @@ from vi.ui import viui, systemtray
 from vi.cache import cache
 from vi.resources import resourcePath
 from vi.cache.cache import Cache
+from vi import PanningWebView
 
 
 def exceptHook(exceptionType, exceptionValue, tracebackObject):
