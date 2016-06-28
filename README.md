@@ -11,7 +11,7 @@ Vintel is written with Python 2.7, using PyQt4 for the application presentation 
 ### News
 _The current release version of Vintel is **1.2.2** and [can be found here](https://github.com/Xanthos-Eve/vintel/releases/tag/1.2.2). Both Mac and Windows distributions are now available for download with this release._
 
-New release development is beginning, and the focus is on simplfying some UI in the app. Mostly around system information display and settings management. Keep up on progress, add ideas, bugs or suggestions [here](https://github.com/Xanthos-Eve/vintel/issues).
+New work is beginning in the develop branch, and the focus is on cutting over to Python 3 and QT 5. This will allow us to take advantage of the latest features and move us off of deprecated APIs. We have done some work in preparation, with the recent changes to use Requests and Six, and now its time to fully embrace the forward looking SDKs. Keep up on progress, add ideas, bugs or suggestions [here](https://github.com/Xanthos-Eve/vintel/issues).
 
 ## Screenshot
 
