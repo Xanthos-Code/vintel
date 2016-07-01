@@ -187,11 +187,12 @@ class ChatParser(object):
                 status = states.LOCATION
             else:
                 # We could not determine if the message was system-change related
+                system = "?"
                 status = states.IGNORE
             if timestamp > self.locations[charname]["timestamp"]:
                 self.locations[charname]["system"] = system
                 self.locations[charname]["timestamp"] = timestamp
-                message = Message("", "", timestamp, charname, [system, ], "", status)
+                message = Message("", "", timestamp, charname, [system, ], "", "", status)
         return message
 
     def fileModified(self, path):
