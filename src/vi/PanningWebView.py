@@ -38,7 +38,7 @@ class PanningWebView(QWebView):
                 self.offset = QPoint(xTuple[0], yTuple[0])
                 return
 
-        return QWebView.mousePressEvent(mouseEvent)
+        return QWebView.mousePressEvent(self, mouseEvent)
 
 
     def mouseReleaseEvent(self, mouseEvent):
