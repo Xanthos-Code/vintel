@@ -252,7 +252,7 @@ class MainWindow(QtGui.QMainWindow):
             def mapContextMenuEvent(event):
                 self.mapView.contextMenu.exec_(self.mapToGlobal(QPoint(event.x(), event.y())))
 
-            self.mapView.contextMenu = TrayContextMenu(self.trayIcon)
+            self.mapView.contextMenu = self.trayIcon.contextMenu()
             self.mapView.contextMenuEvent = mapContextMenuEvent
             self.mapView.connect(self.mapView, Qt.SIGNAL("linkClicked(const QUrl&)"), self.mapLinkClicked)
 

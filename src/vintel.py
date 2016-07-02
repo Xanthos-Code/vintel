@@ -122,7 +122,6 @@ if __name__ == "__main__":
     logging.debug("Writing logs to: %s", vintelLogDirectory)
 
     trayIcon = systemtray.TrayIcon(app)
-    trayIcon.setContextMenu(systemtray.TrayContextMenu(trayIcon))
     trayIcon.show()
 
     mainWindow = viui.MainWindow(chatLogDirectory, trayIcon, backGroundColor)
