@@ -184,12 +184,15 @@ class ChatParser(object):
         if username in ("EVE-System", "EVE System"):
             if ":" in text:
                 system = text.split(":")[1].strip().replace("*", "").upper()
+                status = states.LOCATION
             else:
+                # We could not determine if the message was system-change related
                 system = "?"
+                status = states.IGNORE
             if timestamp > self.locations[charname]["timestamp"]:
                 self.locations[charname]["system"] = system
                 self.locations[charname]["timestamp"] = timestamp
-                message = Message("", "", timestamp, charname, [system, ], "", status=states.LOCATION)
+                message = Message("", "", timestamp, charname, [system, ], "", "", status)
         return message
 
     def fileModified(self, path):
