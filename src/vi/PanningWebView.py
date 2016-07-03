@@ -1,10 +1,9 @@
 
-from PyQt4.QtWebKit import QWebView
-from PyQt4.QtGui import *
-from PyQt4 import QtCore
-from PyQt4.QtCore import QPoint
-from PyQt4.QtCore import QString
-from PyQt4.QtCore import QEvent
+from PyQt5.QtWebKitWidgets import QWebView
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
+from PyQt5 import QtCore
+from PyQt5.QtCore import QPoint, QEvent
 
 class PanningWebView(QWebView):
 
@@ -33,9 +32,9 @@ class PanningWebView(QWebView):
 
                 self.position = mouseEvent.pos()
                 frame = self.page().mainFrame()
-                xTuple = frame.evaluateJavaScript("window.scrollX").toInt()
-                yTuple = frame.evaluateJavaScript("window.scrollY").toInt()
-                self.offset = QPoint(xTuple[0], yTuple[0])
+                scrollx = frame.evaluateJavaScript("window.scrollX")
+                scrolly = frame.evaluateJavaScript("window.scrollY")
+                self.offset = QPoint(scrollx, scrolly)
                 return
 
         return QWebView.mousePressEvent(self, mouseEvent)
@@ -83,7 +82,7 @@ class PanningWebView(QWebView):
             delta = mouseEvent.pos() - self.position
             p = self.offset - delta
             frame = self.page().mainFrame()
-            frame.evaluateJavaScript(QString("window.scrollTo(%1, %2);").arg(p.x()).arg(p.y()));
+            frame.evaluateJavaScript('window.scrollTo({}, {});'.format(p.x(), p.y()))
             return
 
         if self.pressed:

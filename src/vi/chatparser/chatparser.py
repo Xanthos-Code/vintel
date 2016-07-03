@@ -24,7 +24,7 @@ import six
 if six.PY2:
     from io import open
 
-from PyQt4 import QtGui
+from PyQt5 import QtGui
 from bs4 import BeautifulSoup
 from vi import states
 

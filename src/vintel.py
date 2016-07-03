@@ -26,7 +26,7 @@ import traceback
 from logging.handlers import RotatingFileHandler
 from logging import StreamHandler
 
-from PyQt4 import QtGui
+from PyQt5 import QtGui, QtWidgets
 from vi import version
 from vi.ui import viui, systemtray
 from vi.cache import cache
@@ -51,7 +51,7 @@ sys.excepthook = exceptHook
 backGroundColor = "#c6d9ec"
 
 
-class Application(QtGui.QApplication):
+class Application(QtWidgets.QApplication):
 
     def __init__(self, args):
         super(Application, self).__init__(args)
@@ -67,6 +67,9 @@ class Application(QtGui.QApplication):
                                           "p_drive", "User", "My Documents", "EVE", "logs", "Chatlogs")
             elif sys.platform.startswith("linux"):
                 chatLogDirectory = os.path.join(os.path.expanduser("~"), "EVE", "logs", "Chatlogs")
+                if not os.path.exists(chatLogDirectory):
+                    # Default path created by EveLauncher:  https://forums.eveonline.com/default.aspx?g=posts&t=482663
+                    chatLogDirectory = os.path.join(os.path.expanduser("~"), "Documents","EVE", "logs", "Chatlogs")
             elif sys.platform.startswith("win32") or sys.platform.startswith("cygwin"):
                 import ctypes.wintypes
                 buf = ctypes.create_unicode_buffer(ctypes.wintypes.MAX_PATH)
@@ -88,7 +91,7 @@ class Application(QtGui.QApplication):
         if not os.path.exists(vintelLogDirectory):
             os.mkdir(vintelLogDirectory)
 
-        splash = QtGui.QSplashScreen(QtGui.QPixmap(resourcePath("vi/ui/res/logo.png")))
+        splash = QtWidgets.QSplashScreen(QtGui.QPixmap(resourcePath("vi/ui/res/logo.png")))
 
         vintelCache = Cache()
         logLevel = vintelCache.getFromCache("logging_level")

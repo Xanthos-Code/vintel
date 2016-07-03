@@ -26,7 +26,7 @@ import time
 import six
 
 from collections import namedtuple
-from PyQt4.QtCore import QThread
+from PyQt5.QtCore import QThread
 from .resources import resourcePath
 from six.moves import queue
 

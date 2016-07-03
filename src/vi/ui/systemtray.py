@@ -20,51 +20,52 @@
 import time
 
 from six.moves import range
-from PyQt4 import QtGui, QtCore, Qt
+from PyQt5 import QtGui, QtCore, Qt,  QtWidgets
+from PyQt5.QtCore import pyqtSignal
 
 from vi.resources import resourcePath
 from vi import states
 from vi.soundmanager import SoundManager
 
 
-class TrayContextMenu(QtGui.QMenu):
+class TrayContextMenu(QtWidgets.QMenu):
     instances = set()
 
     def __init__(self, trayIcon):
         """ trayIcon = the object with the methods to call
         """
-        QtGui.QMenu.__init__(self)
+        QtWidgets.QMenu.__init__(self)
         TrayContextMenu.instances.add(self)
         self.trayIcon = trayIcon
         self._buildMenu()
 
     def _buildMenu(self):
-        self.framelessCheck = QtGui.QAction("Frameless Window", self, checkable=True)
-        self.connect(self.framelessCheck, QtCore.SIGNAL("triggered()"), self.trayIcon.changeFrameless)
+        self.framelessCheck = QtWidgets.QAction("Frameless Window", self, checkable=True)
+        self.framelessCheck.triggered.connect(self.trayIcon.changeFrameless)
         self.addAction(self.framelessCheck)
         self.addSeparator()
-        self.requestCheck = QtGui.QAction("Show status request notifications", self, checkable=True)
+        self.requestCheck = QtWidgets.QAction("Show status request notifications", self, checkable=True)
         self.requestCheck.setChecked(True)
         self.addAction(self.requestCheck)
-        self.connect(self.requestCheck, QtCore.SIGNAL("triggered()"), self.trayIcon.switchRequest)
-        self.alarmCheck = QtGui.QAction("Show alarm notifications", self, checkable=True)
+        self.requestCheck.triggered.connect(self.trayIcon.switchRequest)
+        self.alarmCheck = QtWidgets.QAction("Show alarm notifications", self, checkable=True)
         self.alarmCheck.setChecked(True)
-        self.connect(self.alarmCheck, QtCore.SIGNAL("triggered()"), self.trayIcon.switchAlarm)
+        self.alarmCheck.triggered.connect(self.trayIcon.switchAlarm)
         self.addAction(self.alarmCheck)
         distanceMenu = self.addMenu("Alarm Distance")
-        self.distanceGroup = QtGui.QActionGroup(self)
+        self.distanceGroup = QtWidgets.QActionGroup(self)
         for i in range(0, 6):
-            action = QtGui.QAction("{0} Jumps".format(i), None, checkable=True)
+            action = QtWidgets.QAction("{0} Jumps".format(i), None, checkable=True)
             if i == 0:
                 action.setChecked(True)
             action.alarmDistance = i
-            self.connect(action, QtCore.SIGNAL("triggered()"), self.changeAlarmDistance)
+            self.distanceGroup.triggered.connect(self.changeAlarmDistance)
             self.distanceGroup.addAction(action)
             distanceMenu.addAction(action)
         self.addMenu(distanceMenu)
         self.addSeparator()
-        self.quitAction = QtGui.QAction("Quit", self)
-        self.connect(self.quitAction, Qt.SIGNAL("triggered()"), self.trayIcon.quit)
+        self.quitAction = QtWidgets.QAction("Quit", self)
+        self.quitAction.triggered.connect(self.trayIcon.quit)
         self.addAction(self.quitAction)
 
     def changeAlarmDistance(self):
@@ -74,13 +75,18 @@ class TrayContextMenu(QtGui.QMenu):
                 self.trayIcon.changeAlarmDistance()
 
 
-class TrayIcon(QtGui.QSystemTrayIcon):
+class TrayIcon(QtWidgets.QSystemTrayIcon):
+    
+    alarmDistanceChange = pyqtSignal(int)
+    changeFramelessSignal = pyqtSignal()
+    quitSignal = pyqtSignal()
+
     # Min seconds between two notifications
     MIN_WAIT_NOTIFICATION = 15
 
     def __init__(self, app):
         self.icon = QtGui.QIcon(resourcePath("vi/ui/res/logo_small.png"))
-        QtGui.QSystemTrayIcon.__init__(self, self.icon, app)
+        QtWidgets.QSystemTrayIcon.__init__(self, self.icon, app)
         self.setToolTip("Your Vintel-Information-Service! :)")
         self.lastNotifications = {}
         self.setContextMenu(TrayContextMenu(self))
@@ -90,17 +96,17 @@ class TrayIcon(QtGui.QSystemTrayIcon):
 
     def changeAlarmDistance(self):
         distance = self.alarmDistance
-        self.emit(Qt.SIGNAL("alarm_distance"), distance)
+        self.alarmDistanceChange.emit(distance)
 
     def changeFrameless(self):
-        self.emit(Qt.SIGNAL("change_frameless"))
+        self.changeFramelessSignal.emit()
 
     @property
     def distanceGroup(self):
         return self.contextMenu().distanceGroup
 
     def quit(self):
-        self.emit(Qt.SIGNAL("quit"))
+        self.quitSignal.emit()
 
     def switchAlarm(self):
         newValue = not self.showAlarm
