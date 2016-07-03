@@ -85,7 +85,7 @@ class SoundManager(six.with_metaclass(Singleton)):
     def playSound(self, name="alarm", message="", abbreviatedMessage=""):
         """ Schedules the work, which is picked up by SoundThread.run()
         """
-        if self.soundActive and self.soundAvailable:
+        if self.soundAvailable and self.soundActive:
             if self.useSpokenNotifications:
                 audioFile = None
             else:
@@ -94,7 +94,6 @@ class SoundManager(six.with_metaclass(Singleton)):
 
     def quit(self):
         if self.soundAvailable:
-            self._soundThread.queue.task_done()
             self._soundThread.quit()
 
     #
@@ -110,17 +109,26 @@ class SoundManager(six.with_metaclass(Singleton)):
         isDarwin = sys.platform.startswith("darwin")
         volume = 25
 
+
         def __init__(self):
             QThread.__init__(self)
             self.queue = queue.Queue()
+            if gPygletAvailable:
+                self.player = media.Player()
+            else:
+                self.player = None
+            self.active = True
+
 
         def setVolume(self, volume):
             self.volume = volume
 
+
         def run(self):
             while True:
                 audioFile, message, abbreviatedMessage = self.queue.get()
-
+                if not self.active:
+                    return
                 if SoundManager().useSpokenNotifications and (message != "" or abbreviatedMessage != ""):
                     if abbreviatedMessage != "":
                         message = abbreviatedMessage
@@ -129,6 +137,15 @@ class SoundManager(six.with_metaclass(Singleton)):
                         logging.error("SoundThread: sorry, speech not yet implemented on this platform")
                 elif audioFile is not None:
                     self.playAudioFile(audioFile, False)
+
+        def quit(self):
+            self.active = False
+            self.queue.put((None, None, None))
+            if self.player:
+                self.player.pause()
+                self.player.delete()
+            QThread.quit(self)
+
 
         def speak(self, message):
             if self.useGoogleTTS:
@@ -141,20 +158,21 @@ class SoundManager(six.with_metaclass(Singleton)):
                 return False
             return True
 
+
         def handleIdleTasks(self):
             self.speakRandomChuckNorrisJoke()
+
 
         # Audio subsytem access
 
         def playAudioFile(self, filename, stream=False):
             try:
                 volume = float(self.volume) / 100.0
-                if gPygletAvailable:
+                if self.player:
                     src = media.load(filename, streaming=stream)
-                    player = media.Player()
-                    player.queue(src)
-                    player.volume = volume
-                    player.play()
+                    self.player.queue(src)
+                    self.player.volume = volume
+                    self.player.play()
                 elif self.isDarwin:
                     subprocess.call(["afplay -v {0} {1}".format(volume, filename)], shell=True)
             except Exception as e:

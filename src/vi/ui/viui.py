@@ -62,6 +62,7 @@ class MainWindow(QtGui.QMainWindow):
         self.taskbarIconQuiescent = QtGui.QIcon(resourcePath("vi/ui/res/logo_small.png"))
         self.taskbarIconWorking = QtGui.QIcon(resourcePath("vi/ui/res/logo_small_green.png"))
         self.setWindowIcon(self.taskbarIconQuiescent)
+        self.setFocusPolicy(QtCore.Qt.StrongFocus)
 
         self.pathToLogs = pathToLogs
         self.mapTimer = QtCore.QTimer(self)
@@ -248,12 +249,15 @@ class MainWindow(QtGui.QMainWindow):
         # Menus - only once
         if initialize:
             logging.critical("Initializing contextual menus")
+
             # Add a contextual menu to the mapView
             def mapContextMenuEvent(event):
+                #if QApplication.activeWindow() or QApplication.focusWidget():
                 self.mapView.contextMenu.exec_(self.mapToGlobal(QPoint(event.x(), event.y())))
-
-            self.mapView.contextMenu = self.trayIcon.contextMenu()
             self.mapView.contextMenuEvent = mapContextMenuEvent
+            self.mapView.contextMenu = self.trayIcon.contextMenu()
+
+            # Clicking links
             self.mapView.connect(self.mapView, Qt.SIGNAL("linkClicked(const QUrl&)"), self.mapLinkClicked)
 
             # Also set up our app menus
@@ -280,6 +284,16 @@ class MainWindow(QtGui.QMainWindow):
         # Allow the file watcher to run now that all else is set up
         self.filewatcherThread.paused = False
         logging.critical("Map setup complete")
+
+
+    # def eventFilter(self, obj, event):
+    #     if event.type() == QtCore.QEvent.WindowDeactivate:
+    #         self.enableContextMenu(False)
+    #         return True
+    #     elif event.type() == QtCore.QEvent.WindowActivate:
+    #         self.enableContextMenu(True)
+    #         return True
+    #     return False
 
 
     def startClipboardTimer(self):
@@ -329,12 +343,17 @@ class MainWindow(QtGui.QMainWindow):
 
         # Stop the threads
         try:
-            self.avatarFindThread.quit()
-            self.filewatcherThread.quit()
-            self.kosRequestThread.quit()
-            self.self.statisticsThread.quit()
-            self.versionCheckThread.quit()
             SoundManager().quit()
+            self.avatarFindThread.quit()
+            self.avatarFindThread.wait()
+            self.filewatcherThread.quit()
+            self.filewatcherThread.wait()
+            self.kosRequestThread.quit()
+            self.kosRequestThread.wait()
+            self.versionCheckThread.quit()
+            self.versionCheckThread.wait()
+            self.statisticsThread.quit()
+            self.statisticsThread.wait()
         except Exception:
             pass
         self.trayIcon.hide()

@@ -47,85 +47,92 @@ def exceptHook(exceptionType, exceptionValue, tracebackObject):
     except Exception:
         pass
 
-
 sys.excepthook = exceptHook
 backGroundColor = "#c6d9ec"
 
+
+class Application(QtGui.QApplication):
+
+    def __init__(self, args):
+        super(Application, self).__init__(args)
+
+        # Set up paths
+        chatLogDirectory = ""
+        if len(sys.argv) > 1:
+            chatLogDirectory = sys.argv[1]
+
+        if not os.path.exists(chatLogDirectory):
+            if sys.platform.startswith("darwin"):
+                chatLogDirectory = os.path.join(os.path.expanduser("~"), "Library", "Application Support", "Eve Online",
+                                          "p_drive", "User", "My Documents", "EVE", "logs", "Chatlogs")
+            elif sys.platform.startswith("linux"):
+                chatLogDirectory = os.path.join(os.path.expanduser("~"), "EVE", "logs", "Chatlogs")
+            elif sys.platform.startswith("win32") or sys.platform.startswith("cygwin"):
+                import ctypes.wintypes
+                buf = ctypes.create_unicode_buffer(ctypes.wintypes.MAX_PATH)
+                ctypes.windll.shell32.SHGetFolderPathW(0, 5, 0, 0, buf)
+                documentsPath = buf.value
+                chatLogDirectory = os.path.join(documentsPath, "EVE", "logs", "Chatlogs")
+        if not os.path.exists(chatLogDirectory):
+            # None of the paths for logs exist, bailing out
+            QtGui.QMessageBox.critical(None, "No path to Logs", "No logs found at: " + chatLogDirectory, "Quit")
+            sys.exit(1)
+
+        # Setting local directory for cache and logging
+        vintelDirectory = os.path.join(os.path.dirname(os.path.dirname(chatLogDirectory)), "vintel")
+        if not os.path.exists(vintelDirectory):
+            os.mkdir(vintelDirectory)
+        cache.Cache.PATH_TO_CACHE = os.path.join(vintelDirectory, "cache-2.sqlite3")
+
+        vintelLogDirectory = os.path.join(vintelDirectory, "logs")
+        if not os.path.exists(vintelLogDirectory):
+            os.mkdir(vintelLogDirectory)
+
+        splash = QtGui.QSplashScreen(QtGui.QPixmap(resourcePath("vi/ui/res/logo.png")))
+
+        vintelCache = Cache()
+        logLevel = vintelCache.getFromCache("logging_level")
+        if not logLevel:
+            logLevel = logging.WARN
+        backGroundColor = vintelCache.getFromCache("background_color")
+        if backGroundColor:
+            self.setStyleSheet("QWidget { background-color: %s; }" % backGroundColor)
+
+        splash.show()
+        self.processEvents()
+
+        # Setup logging for console and rotated log files
+        formatter = logging.Formatter('%(asctime)s| %(message)s', datefmt='%m/%d %I:%M:%S')
+        rootLogger = logging.getLogger()
+        rootLogger.setLevel(level=logLevel)
+
+        logFilename = vintelLogDirectory + "/output.log"
+        fileHandler = RotatingFileHandler(maxBytes=(1048576*5), backupCount=7, filename=logFilename, mode='a')
+        fileHandler.setFormatter(formatter)
+        rootLogger.addHandler(fileHandler)
+
+        consoleHandler = StreamHandler()
+        consoleHandler.setFormatter(formatter)
+        rootLogger.addHandler(consoleHandler)
+
+        logging.critical("")
+        logging.critical("------------------- Vintel %s starting up -------------------", version.VERSION)
+        logging.critical("")
+        logging.debug("Looking for chat logs at: %s", chatLogDirectory)
+        logging.debug("Cache maintained here: %s", cache.Cache.PATH_TO_CACHE)
+        logging.debug("Writing logs to: %s", vintelLogDirectory)
+
+        trayIcon = systemtray.TrayIcon(self)
+        trayIcon.show()
+        self.mainWindow = viui.MainWindow(chatLogDirectory, trayIcon, backGroundColor)
+        self.mainWindow.show()
+        self.mainWindow.raise_()
+        splash.finish(self.mainWindow)
+
+
+# The main application
 if __name__ == "__main__":
 
-    # Set up paths
-    chatLogDirectory = ""
-    if len(sys.argv) > 1:
-        chatLogDirectory = sys.argv[1]
-
-    if not os.path.exists(chatLogDirectory):
-        if sys.platform.startswith("darwin"):
-            chatLogDirectory = os.path.join(os.path.expanduser("~"), "Library", "Application Support", "Eve Online",
-                                      "p_drive", "User", "My Documents", "EVE", "logs", "Chatlogs")
-        elif sys.platform.startswith("linux"):
-            chatLogDirectory = os.path.join(os.path.expanduser("~"), "EVE", "logs", "Chatlogs")
-        elif sys.platform.startswith("win32") or sys.platform.startswith("cygwin"):
-            import ctypes.wintypes
-            buf = ctypes.create_unicode_buffer(ctypes.wintypes.MAX_PATH)
-            ctypes.windll.shell32.SHGetFolderPathW(0, 5, 0, 0, buf)
-            documentsPath = buf.value
-            chatLogDirectory = os.path.join(documentsPath, "EVE", "logs", "Chatlogs")
-    if not os.path.exists(chatLogDirectory):
-        # None of the paths for logs exist, bailing out
-        QtGui.QMessageBox.critical(None, "No path to Logs", "No logs found at: " + chatLogDirectory, "Quit")
-        sys.exit(1)
-
-    # Setting local directory for cache and logging
-    vintelDirectory = os.path.join(os.path.dirname(os.path.dirname(chatLogDirectory)), "vintel")
-    if not os.path.exists(vintelDirectory):
-        os.mkdir(vintelDirectory)
-    cache.Cache.PATH_TO_CACHE = os.path.join(vintelDirectory, "cache-2.sqlite3")
-
-    vintelLogDirectory = os.path.join(vintelDirectory, "logs")
-    if not os.path.exists(vintelLogDirectory):
-        os.mkdir(vintelLogDirectory)
-
-    # Setup the application object, display splash screen
-    app = QtGui.QApplication(sys.argv)
-    splash = QtGui.QSplashScreen(QtGui.QPixmap(resourcePath("vi/ui/res/logo.png")))
-
-    vintelCache = Cache()
-    logLevel = vintelCache.getFromCache("logging_level")
-    if not logLevel:
-        logLevel = logging.WARN
-    backGroundColor = vintelCache.getFromCache("background_color")
-    if backGroundColor:
-        app.setStyleSheet("QWidget { background-color: %s; }" % backGroundColor)
-
-    splash.show()
-    app.processEvents()
-
-    # Setup logging for console and rotated log files
-    formatter = logging.Formatter('%(asctime)s| %(message)s', datefmt='%m/%d %I:%M:%S')
-    rootLogger = logging.getLogger()
-    rootLogger.setLevel(level=logLevel)
-
-    logFilename = vintelLogDirectory + "/output.log"
-    fileHandler = RotatingFileHandler(maxBytes=(1048576*5), backupCount=7, filename=logFilename, mode='a')
-    fileHandler.setFormatter(formatter)
-    rootLogger.addHandler(fileHandler)
-
-    consoleHandler = StreamHandler()
-    consoleHandler.setFormatter(formatter)
-    rootLogger.addHandler(consoleHandler)
-
-    logging.critical("")
-    logging.critical("------------------- Vintel %s starting up -------------------", version.VERSION)
-    logging.critical("")
-    logging.debug("Looking for chat logs at: %s", chatLogDirectory)
-    logging.debug("Cache maintained here: %s", cache.Cache.PATH_TO_CACHE)
-    logging.debug("Writing logs to: %s", vintelLogDirectory)
-
-    trayIcon = systemtray.TrayIcon(app)
-    trayIcon.show()
-
-    mainWindow = viui.MainWindow(chatLogDirectory, trayIcon, backGroundColor)
-    mainWindow.show()
-    splash.finish(mainWindow)
-
+    app = Application(sys.argv)
     sys.exit(app.exec_())
+

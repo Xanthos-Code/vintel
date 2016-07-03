@@ -50,13 +50,18 @@ class FileWatcher(QtCore.QThread):
         self.qtfw.directoryChanged.connect(self.directoryChanged)
         self.qtfw.addPath(path)
         self.paused = True
+        self.active = True
+
 
     def directoryChanged(self):
         self.updateWatchedFiles()
 
+
     def run(self):
         while True:
             time.sleep(0.5)
+            if not self.active:
+                return
             if self.paused:
                 continue
             for path, modified in self.files.items():
@@ -66,6 +71,12 @@ class FileWatcher(QtCore.QThread):
                 if modified < pathStat.st_size:
                     self.emit(SIGNAL("file_change"), path)
                 self.files[path] = pathStat.st_size
+
+
+    def quit(self):
+        self.active = False
+        QtCore.QThread.quit(self)
+
 
     def updateWatchedFiles(self):
         # Reading all files from the directory
@@ -81,5 +92,4 @@ class FileWatcher(QtCore.QThread):
             if self.maxAge and ((now - pathStat.st_mtime) > self.maxAge):
                 continue
             filesInDir[fullPath] = self.files.get(fullPath, 0)
-        
         self.files = filesInDir

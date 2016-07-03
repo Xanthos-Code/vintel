@@ -36,6 +36,7 @@ class AvatarFindThread(QThread):
     def __init__(self):
         QThread.__init__(self)
         self.queue = queue.Queue()
+        self.active = True
 
 
     def addChatEntry(self, chatEntry, clearCache=False):
@@ -58,6 +59,8 @@ class AvatarFindThread(QThread):
             try:
                 # Block waiting for addChatEntry() to enqueue something
                 chatEntry = self.queue.get()
+                if not self.active:
+                    return
                 charname = chatEntry.message.user
                 logging.debug("AvatarFindThread getting avatar for %s" % charname)
                 avatar = None
@@ -83,12 +86,19 @@ class AvatarFindThread(QThread):
                 logging.error("Error in AvatarFindThread : %s", e)
 
 
+    def quit(self):
+        self.active = False
+        self.queue.put(None)
+        QThread.quit(self)
+
+
 class KOSCheckerThread(QThread):
 
     def __init__(self):
         QThread.__init__(self)
         self.queue = queue.Queue()
         self.recentRequestNamesAndTimes = {}
+        self.active = True
 
 
     def addRequest(self, names, requestType, onlyKos=False):
@@ -111,6 +121,8 @@ class KOSCheckerThread(QThread):
         while True:
             # Block waiting for addRequest() to enqueue something
             names, requestType, onlyKos = self.queue.get()
+            if not self.active:
+                return
             try:
                 #logging.info("KOSCheckerThread kos checking %s" %  str(names))
                 hasKos = False
@@ -132,6 +144,11 @@ class KOSCheckerThread(QThread):
                     "ok", text, requestType, hasKos))
             self.emit(SIGNAL("kos_result"), "ok", text, requestType, hasKos)
 
+    def quit(self):
+        self.active = False
+        self.queue.put((None, None, None))
+        QThread.quit(self)
+
 
 class MapStatisticsThread(QThread):
 
@@ -141,9 +158,12 @@ class MapStatisticsThread(QThread):
         self.lastStatisticsUpdate = time.time()
         self.pollRate = STATISTICS_UPDATE_INTERVAL_MSECS
         self.refreshTimer = None
+        self.active = True
+
 
     def requestStatistics(self):
         self.queue.put(1)
+
 
     def run(self):
         self.refreshTimer = QtCore.QTimer()
@@ -151,6 +171,8 @@ class MapStatisticsThread(QThread):
         while True:
             # Block waiting for requestStatistics() to enqueue a token
             self.queue.get()
+            if not self.active:
+                return
             self.refreshTimer.stop()
             logging.debug("MapStatisticsThread requesting statistics")
             try:
@@ -164,3 +186,9 @@ class MapStatisticsThread(QThread):
             self.refreshTimer.start(self.pollRate)
             self.emit(SIGNAL("statistic_data_update"), requestData)
             logging.debug("MapStatisticsThread emitted statistic_data_update")
+
+
+    def quit(self):
+        self.active = False
+        self.queue.put(None)
+        QThread.quit(self)
