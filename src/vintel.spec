@@ -1,7 +1,7 @@
 # -*- mode: python -*-
 import sys
 
-app_version = 'vintel-1.2.2'
+app_version = 'vintel-1.2.3'
 
 a = Analysis(['vintel.py'],
              pathex=['z:\\mark\\code\\vintel\\src' if sys.platform == 'win32' else '/Users/mark/code/vintel/src'],
