@@ -21,8 +21,8 @@ import json
 import requests
 import logging
 
-from PyQt4 import Qt
-from PyQt4.QtCore import QThread
+from PyQt5 import Qt
+from PyQt5.QtCore import pyqtSignal, QThread
 from vi import version
 from vi.cache.cache import Cache
 from distutils.version import LooseVersion, StrictVersion
@@ -62,6 +62,9 @@ def getNewestVersion():
 
 
 class NotifyNewVersionThread(QThread):
+    
+    newVersion = pyqtSignal(str)
+    
     def __init__(self):
         QThread.__init__(self)
         self.alerted = False
@@ -72,7 +75,7 @@ class NotifyNewVersionThread(QThread):
                 # Is there a newer version available?
                 newestVersion = getNewestVersion()
                 if newestVersion and StrictVersion(newestVersion) > StrictVersion(version.VERSION):
-                    self.emit(Qt.SIGNAL("newer_version"), newestVersion)
+                    self.newVersion.emit(newestVersion)
                     self.alerted = True
             except Exception as e:
                 logging.error("Failed NotifyNewVersionThread: %s", e)
