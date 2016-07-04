@@ -969,7 +969,7 @@ class ChatEntryWidget(QtWidgets.QWidget):
     def __init__(self, message):
         QtWidgets.QWidget.__init__(self)
         if not self.questionMarkPixmap:
-            self.questionMarkPixmap = QtGui.QPixmap(resourcePath("vi/ui/res/qmark.png"))
+            self.questionMarkPixmap = QtGui.QPixmap(resourcePath("vi/ui/res/qmark.png")).scaledToHeight(32)
         uic.loadUi(resourcePath("vi/ui/ChatEntry.ui"), self)
         self.avatarLabel.setPixmap(self.questionMarkPixmap)
         self.message = message
