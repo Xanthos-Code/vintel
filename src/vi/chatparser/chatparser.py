@@ -131,8 +131,6 @@ class ChatParser(object):
             message.status = states.IGNORE
             return message
 
-        for char in ("*", "?", ",", "!"):
-            text = text.replace(char, "")
         while parseShips(rtext):
             continue
         while parseUrls(rtext):
