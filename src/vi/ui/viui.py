@@ -725,6 +725,7 @@ class MainWindow(QtWidgets.QMainWindow):
         dialog.volumeSlider.setValue(SoundManager().soundVolume)
         dialog.volumeSlider.valueChanged.connect(SoundManager().setSoundVolume)
         dialog.testSoundButton.clicked.connect(lambda: SoundManager().playSound())
+        dialog.testVoiceButton.clicked.connect(lambda: SoundManager().say('Test... 1, 2, 3.'))
         dialog.closeButton.clicked.connect(dialog.accept)
         dialog.show()
 

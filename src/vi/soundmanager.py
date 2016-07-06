@@ -33,15 +33,20 @@ from six.moves import queue
 import logging
 from vi.singleton import Singleton
 
-global gPygletAvailable
+global gPygletAvailable, festivalAvailable
 
 try:
     import pyglet
     from pyglet import media
-
     gPygletAvailable = True
 except ImportError:
     gPygletAvailable = False
+
+try:
+    import festival
+    festivalAvailable = True
+except:
+    festivalAvailable = False
 
 
 class SoundManager(six.with_metaclass(Singleton)):
@@ -68,7 +73,7 @@ class SoundManager(six.with_metaclass(Singleton)):
         return self.platformSupportsSpeech() or gPygletAvailable
 
     def platformSupportsSpeech(self):
-        if self._soundThread.isDarwin:
+        if self._soundThread.isDarwin or festivalAvailable:
             return True
         return False
 
@@ -91,6 +96,9 @@ class SoundManager(six.with_metaclass(Singleton)):
             else:
                 audioFile = resourcePath("vi/ui/res/{0}".format(self.SOUNDS[name]))
             self._soundThread.queue.put((audioFile, message, abbreviatedMessage))
+
+    def say(self,  message='This is a test!'):
+        self._soundThread.speak(message)
 
     def quit(self):
         if self.soundAvailable:
@@ -154,6 +162,8 @@ class SoundManager(six.with_metaclass(Singleton)):
                 self.playTTS(message)  # experimental
             elif self.isDarwin:
                 self.darwinSpeak(message)
+            elif festivalAvailable:
+                festival.sayText(message)
             else:
                 return False
             return True
@@ -192,6 +202,7 @@ class SoundManager(six.with_metaclass(Singleton)):
 
         def playTTS(self, inputText=''):
             try:
+                # google_tts 
                 mp3url = 'http://api.voicerss.org/?c=WAV&key={self.VOICE_RSS_API_KEY}&src={inputText}&hl=en-us'.format(
                     **locals())
                 self.playAudioFile(requests.get(mp3url, stream=True).raw)
@@ -199,7 +210,7 @@ class SoundManager(six.with_metaclass(Singleton)):
             except requests.exceptions.RequestException as e:
                 logging.error('playTTS error: %s', str(e))
 
-        # google_tts
+
 
         def audioExtractToMp3(self, inputText='', args=None):
             # This accepts :
