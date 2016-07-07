@@ -23,17 +23,15 @@ import time
 import six
 import requests
 import webbrowser
-
 import vi.version
-
 import logging
+
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5 import Qt, QtGui, uic, QtCore, QtWidgets
 from PyQt5.QtCore import pyqtSignal, QPoint
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtWidgets import QMessageBox
-from PyQt5.QtWebKitWidgets import QWebPage
 from vi import amazon_s3, evegate
 from vi import chatparser, dotlan, filewatcher
 from vi import states
@@ -42,6 +40,12 @@ from vi.resources import resourcePath
 from vi.soundmanager import SoundManager
 from vi.threads import AvatarFindThread, KOSCheckerThread, MapStatisticsThread
 from vi.ui.systemtray import TrayContextMenu
+from PyQt5.QtCore import QSettings
+
+OLD_STYLE_WEBKIT = False
+
+if OLD_STYLE_WEBKIT:
+    from PyQt5.QtWebKitWidgets import QWebPage
 
 # Timer intervals
 MESSAGE_EXPIRY_SECS = 20 * 60
@@ -53,6 +57,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     chatMessageAdded = pyqtSignal(object)
     avatarLoaded = pyqtSignal(str, object)
+    oldStyleWebKit = OLD_STYLE_WEBKIT
 
     def __init__(self, pathToLogs, trayIcon, backGroundColor):
 
@@ -133,7 +138,7 @@ class MainWindow(QtWidgets.QMainWindow):
             pass
 
         self.wireUpUIConnections()
-        self.recallCachedSettings()
+        self.readAndApplySettings()
         self.setupThreads()
         self.setupMap(True)
 
@@ -143,15 +148,6 @@ class MainWindow(QtWidgets.QMainWindow):
         opt.initFrom(self)
         painter = QPainter(self)
         self.style().drawPrimitive(QStyle.PE_Widget, opt,  painter, self)
-
-
-    def recallCachedSettings(self):
-        try:
-            self.cache.recallAndApplySettings(self, "settings")
-        except Exception as e:
-            logging.error(e)
-            # todo: add a button to delete the cache / DB
-            self.trayIcon.showMessage("Settings error", "Something went wrong loading saved state:\n {0}".format(str(e)), 1)
 
 
     def wireUpUIConnections(self):
@@ -186,14 +182,26 @@ class MainWindow(QtWidgets.QMainWindow):
         self.quitAction.triggered.connect(self.close)
         self.trayIcon.quitSignal.connect(self.close)
         self.jumpbridgeDataAction.triggered.connect(self.showJumbridgeChooser)
-        self.mapView.page().scrollRequested.connect(self.mapPositionChanged)
+        if OLD_STYLE_WEBKIT:
+            self.mapView.page().scrollRequested.connect(self.mapPositionChanged)
+        else:
+            self.mapView.mapLinkClicked.connect(self.mapLinkClicked)
 
 
     def setupThreads(self):
         # Set up threads and their connections
+        self.versionCheckThread = amazon_s3.NotifyNewVersionThread()
+        self.versionCheckThread.newVersion.connect(self.notifyNewerVersion)
+        self.versionCheckThread.start()
+
         self.avatarFindThread = AvatarFindThread()
         self.avatarFindThread.avatarUpdate.connect(self.updateAvatarOnChatEntry)
         self.avatarFindThread.start()
+
+        # statisticsThread is blocked until first call of requestStatistics
+        self.statisticsThread = MapStatisticsThread()
+        self.statisticsThread.updateMap.connect(self.updateStatisticsOnMap)
+        self.statisticsThread.start()
 
         self.kosRequestThread = KOSCheckerThread()
         self.kosRequestThread.showKos.connect(self.showKosResult)
@@ -202,15 +210,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.filewatcherThread = filewatcher.FileWatcher(self.pathToLogs)
         self.filewatcherThread.fileChanged.connect(self.logFileChanged)
         self.filewatcherThread.start()
-
-        self.versionCheckThread = amazon_s3.NotifyNewVersionThread()
-        self.versionCheckThread.newVersion.connect(self.notifyNewerVersion)
-        self.versionCheckThread.start()
-
-        self.statisticsThread = MapStatisticsThread()
-        self.statisticsThread.updateMap.connect(self.updateStatisticsOnMap)
-        self.statisticsThread.start()
-        # statisticsThread is blocked until first call of requestStatistics
 
 
     def setupMap(self, initialize=False):
@@ -262,8 +261,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.mapView.contextMenu = self.trayIcon.contextMenu()
             self.mapView.contextMenuEvent = mapContextMenuEvent
 
-            # Clicking links
-            self.mapView.linkClicked.connect(self.mapLinkClicked)
+            if OLD_STYLE_WEBKIT:
+                self.mapView.page().setLinkDelegationPolicy(QWebPage.DelegateAllLinks)
 
             # Also set up our app menus
             if not regionName:
@@ -291,14 +290,96 @@ class MainWindow(QtWidgets.QMainWindow):
         logging.critical("Map setup complete")
 
 
-    # def eventFilter(self, obj, event):
-    #     if event.type() == QtCore.QEvent.WindowDeactivate:
-    #         self.enableContextMenu(False)
-    #         return True
-    #     elif event.type() == QtCore.QEvent.WindowActivate:
-    #         self.enableContextMenu(True)
-    #         return True
-    #     return False
+    def readAndApplySettings(self):
+        # Widget settings
+        qsettings = QSettings()
+
+        qsettings.beginGroup("mainWindow")
+        self.restoreGeometry(qsettings.value("geometry", self.saveGeometry()))
+        self.restoreState(qsettings.value("saveState", self.saveState()))
+        self.move(qsettings.value("pos", self.pos()))
+        self.resize(qsettings.value("size", self.size()))
+        if qsettings.value("maximized", self.isMaximized()):
+            self.showMaximized()
+        qsettings.endGroup()
+
+        qsettings.beginGroup("splitter")
+        self.splitter.restoreGeometry(qsettings.value("geometry", self.splitter.saveGeometry()))
+        self.splitter.restoreState(qsettings.value("saveState", self.splitter.saveState()))
+        self.splitter.move(qsettings.value("pos", self.splitter.pos()))
+        self.splitter.resize(qsettings.value("size", self.splitter.size()))
+        qsettings.endGroup()
+
+        qsettings.beginGroup("mapView")
+        self.mapView.setZoomFactor(qsettings.value("zoomFactor", self.mapView.zoomFactor()))
+        qsettings.endGroup()
+
+        # Cached settings
+        try:
+            settings = self.cache.getFromCache("settings-2")
+            if settings:
+                try:
+                    settings = eval(settings)
+                    for setting in settings:
+                        obj = self if not setting[0] else getattr(self, setting[0])
+                        logging.debug("{0} | {1} | {2}".format(str(obj), setting[1], setting[2]))
+                        try:
+                            getattr(obj, setting[1])(setting[2])
+                        except Exception as e:
+                            logging.error(e)
+                except Exception as e:
+                    logging.error(e)
+
+        except Exception as e:
+            logging.error(e)
+            # todo: add a button to delete the cache / DB
+            self.trayIcon.showMessage("Settings error", "Something went wrong loading saved state:\n {0}".format(str(e)), 1)
+
+
+    def writeSettings(self):
+        # Widget settings
+        qsettings = QSettings()
+
+        qsettings.beginGroup("mainWindow")
+        qsettings.setValue("geometry", self.saveGeometry())
+        qsettings.setValue("saveState", self.saveState())
+        qsettings.setValue("maximized", self.isMaximized())
+        if not self.isMaximized() == True:
+            qsettings.setValue("pos", self.pos())
+            qsettings.setValue("size", self.size())
+        qsettings.endGroup()
+
+        qsettings.beginGroup("splitter")
+        qsettings.setValue("geometry", self.splitter.saveGeometry())
+        qsettings.setValue("saveState", self.splitter.saveState())
+        qsettings.endGroup()
+
+        qsettings.beginGroup("mapView")
+        qsettings.setValue("zoomFactor", self.mapView.zoomFactor())
+        qsettings.endGroup()
+
+        # Cached non Widget program state
+        thirtyDaysInSeconds = 60 * 60 * 24 * 30
+
+        # Known playernames
+        if self.knownPlayerNames:
+            value = ",".join(self.knownPlayerNames)
+            self.cache.putIntoCache("known_player_names", value, thirtyDaysInSeconds)
+
+        settings = ((None, "changeChatFontSize", ChatEntryWidget.TEXT_SIZE),
+                    (None, "changeOpacity", self.opacityGroup.checkedAction().opacity),
+                    (None, "changeAlwaysOnTop", self.alwaysOnTopAction.isChecked()),
+                    (None, "changeShowAvatars", self.showChatAvatarsAction.isChecked()),
+                    (None, "changeAlarmDistance", self.alarmDistance),
+                    (None, "changeSound", self.activateSoundAction.isChecked()),
+                    (None, "changeChatVisibility", self.showChatAction.isChecked()),
+                    (None, "loadInitialMapPositions", self.mapPositionsDict),
+                    (None, "setSoundVolume", SoundManager().soundVolume),
+                    (None, "changeFrameless", self.framelessWindowAction.isChecked()),
+                    (None, "changeUseSpokenNotifications", self.useSpokenNotificationsAction.isChecked()),
+                    (None, "changeKosCheckClipboard", self.kosClipboardActiveAction.isChecked()),
+                    (None, "changeAutoScanIntel", self.scanIntelForKosRequestsEnabled))
+        self.cache.putIntoCache("settings-2", str(settings), thirtyDaysInSeconds)
 
 
     def startClipboardTimer(self):
@@ -320,42 +401,18 @@ class MainWindow(QtWidgets.QMainWindow):
                 pass
             self.clipboardTimer.stop()
 
-    def closeEvent(self, event):
-        """
-            Persisting things to the cache before closing the window
-        """
-        # Known playernames
-        if self.knownPlayerNames:
-            value = ",".join(self.knownPlayerNames)
-            self.cache.putIntoCache("known_player_names", value, 60 * 60 * 24 * 30)
 
-        # Program state to cache (to read it on next startup)
-        settings = ((None, "restoreGeometry", str(self.saveGeometry())), (None, "restoreState", str(self.saveState())),
-                    ("splitter", "restoreGeometry", str(self.splitter.saveGeometry())),
-                    ("splitter", "restoreState", str(self.splitter.saveState())),
-                    ("mapView", "setZoomFactor", self.mapView.zoomFactor()),
-                    (None, "changeChatFontSize", ChatEntryWidget.TEXT_SIZE),
-                    (None, "changeOpacity", self.opacityGroup.checkedAction().opacity),
-                    (None, "changeAlwaysOnTop", self.alwaysOnTopAction.isChecked()),
-                    (None, "changeShowAvatars", self.showChatAvatarsAction.isChecked()),
-                    (None, "changeAlarmDistance", self.alarmDistance),
-                    (None, "changeSound", self.activateSoundAction.isChecked()),
-                    (None, "changeChatVisibility", self.showChatAction.isChecked()),
-                    (None, "loadInitialMapPositions", self.mapPositionsDict),
-                    (None, "setSoundVolume", SoundManager().soundVolume),
-                    (None, "changeFrameless", self.framelessWindowAction.isChecked()),
-                    (None, "changeUseSpokenNotifications", self.useSpokenNotificationsAction.isChecked()),
-                    (None, "changeKosCheckClipboard", self.kosClipboardActiveAction.isChecked()),
-                    (None, "changeAutoScanIntel", self.scanIntelForKosRequestsEnabled))
-        self.cache.putIntoCache("settings", str(settings), 60 * 60 * 24 * 30)
+    def closeEvent(self, event):
+        self.writeSettings()
 
         # Stop the threads
         try:
+            # Shutdown file watcher first since it uses the others
+            self.filewatcherThread.quit()
+            self.filewatcherThread.wait()
             SoundManager().quit()
             self.avatarFindThread.quit()
             self.avatarFindThread.wait()
-            self.filewatcherThread.quit()
-            self.filewatcherThread.wait()
             self.kosRequestThread.quit()
             self.kosRequestThread.wait()
             self.versionCheckThread.quit()
@@ -542,20 +599,34 @@ class MainWindow(QtWidgets.QMainWindow):
             self.systems[newSystem].addLocatedCharacter(char)
             self.setMapContent(self.dotlan.svg)
 
+    def getMapScrollPosition(self):
+        if OLD_STYLE_WEBKIT:
+            scrollPosition = self.mapView.page().mainFrame().scrollPosition()
+        else:
+            pass #scrollPosition = self.mapView.page().scrollPosition()
+
+
+    def setMapScrollPosition(self, position):
+        if OLD_STYLE_WEBKIT:
+            self.mapView.page().mainFrame().setScrollPosition(position)
+        else:
+            pass # self.mapView.page().setScrollPosition(position)
+
 
     def setMapContent(self, content):
         if self.initialMapPosition is None:
-            scrollPosition = self.mapView.page().mainFrame().scrollPosition()
+            scrollPosition = self.getMapScrollPosition()
         else:
             scrollPosition = self.initialMapPosition
-        self.mapView.setContent(content)
-        self.mapView.page().mainFrame().setScrollPosition(scrollPosition)
-        self.mapView.page().setLinkDelegationPolicy(QWebPage.DelegateAllLinks)
+
+        self.mapView.page().setHtml(content)
+
+        self.setMapScrollPosition(scrollPosition)
 
         # Make sure we have positioned the window before we nil the initial position;
         # even though we set it, it may not take effect until the map is fully loaded
-        scrollPosition = self.mapView.page().mainFrame().scrollPosition()
-        if scrollPosition.x() or scrollPosition.y():
+        scrollPosition = self.getMapScrollPosition()
+        if scrollPosition and (scrollPosition.x() or scrollPosition.y()):
             self.initialMapPosition = None
 
 
@@ -577,7 +648,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def mapPositionChanged(self, dx, dy, rectToScroll):
         regionName = self.cache.getFromCache("region_name")
         if regionName:
-            scrollPosition = self.mapView.page().mainFrame().scrollPosition()
+            scrollPosition = self.getMapScrollPosition()
             self.mapPositionsDict[regionName] = (scrollPosition.x(), scrollPosition.y())
 
 
@@ -838,9 +909,9 @@ class ChatroomsChooser(QtWidgets.QDialog):
 
 
 class RegionChooser(QtWidgets.QDialog):
-    
+
     newRegionChosen = pyqtSignal()
-    
+
     def __init__(self, parent):
         QtWidgets.QDialog.__init__(self, parent)
         uic.loadUi(resourcePath("vi/ui/RegionChooser.ui"), self)
@@ -885,7 +956,7 @@ class RegionChooser(QtWidgets.QDialog):
 
 
 class SystemChat(QtWidgets.QDialog):
-    
+
     setLocationSignal = pyqtSignal(str, str)
     SYSTEM = 0
 
@@ -961,7 +1032,7 @@ class SystemChat(QtWidgets.QDialog):
 
 
 class ChatEntryWidget(QtWidgets.QWidget):
-    
+
     markSystem = pyqtSignal(object)
     TEXT_SIZE = 11
     SHOW_AVATAR = True

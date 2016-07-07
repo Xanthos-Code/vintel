@@ -1,11 +1,23 @@
 
-from PyQt5.QtWebKitWidgets import QWebView
+import six
+
+from vi.ui.viui import MainWindow
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5 import QtCore
-from PyQt5.QtCore import QPoint, QEvent
+from PyQt5.QtCore import QPoint, QEvent, pyqtSignal, QUrl
 
-class PanningWebView(QWebView):
+if MainWindow.oldStyleWebKit:
+    from PyQt5.QtWebWidgets import QWebPage
+    from PyQt5.QtWebWidgets import QWebView
+else:
+    from PyQt5.QtWebEngineWidgets import QWebEnginePage
+    from PyQt5.QtWebEngineWidgets import QWebEngineView
+
+
+class PanningWebView(QWebView if six.PY2 else QWebEngineView):
+
+    mapLinkClicked = pyqtSignal(QUrl)
 
     def __init__(self, parent=None):
         super(PanningWebView, self).__init__()
@@ -15,13 +27,14 @@ class PanningWebView(QWebView):
         self.position = None
         self.offset = 0
         self.handIsClosed = False
+        if MainWindow.oldStyleWebKit:
+            self.setPage(VintelSvgPage(parent=self))
 
 
     def mousePressEvent(self, mouseEvent):
-
         if self.ignored.count(mouseEvent):
             self.ignored.remove(mouseEvent)
-            return QWebView.mousePressEvent(self, mouseEvent)
+            return super(PanningWebView, self).mousePressEvent(self, mouseEvent)
 
         if not self.pressed and not self.scrolling and mouseEvent.modifiers() == QtCore.Qt.NoModifier:
             if mouseEvent.buttons() == QtCore.Qt.LeftButton:
@@ -31,20 +44,18 @@ class PanningWebView(QWebView):
                 QApplication.setOverrideCursor(QtCore.Qt.OpenHandCursor)
 
                 self.position = mouseEvent.pos()
-                frame = self.page().mainFrame()
+                frame = self.page()
                 scrollx = frame.evaluateJavaScript("window.scrollX")
                 scrolly = frame.evaluateJavaScript("window.scrollY")
                 self.offset = QPoint(scrollx, scrolly)
                 return
-
-        return QWebView.mousePressEvent(self, mouseEvent)
+        return super(PanningWebView, self).mousePressEvent(self, mouseEvent)
 
 
     def mouseReleaseEvent(self, mouseEvent):
-
         if self.ignored.count(mouseEvent):
             self.ignored.remove(mouseEvent)
-            return QWebView.mousePressEvent(self, mouseEvent)
+            return super(PanningWebView, self).mousePressEvent(self, mouseEvent)
 
         if self.scrolling:
             self.pressed = False
@@ -68,12 +79,10 @@ class PanningWebView(QWebView):
             QApplication.postEvent(self, event1)
             QApplication.postEvent(self, event2)
             return
-
-        return QWebView.mouseReleaseEvent(self, mouseEvent)
+        return super(PanningWebView, self).mouseReleaseEvent(self, mouseEvent)
 
 
     def mouseMoveEvent(self, mouseEvent):
-
         if self.scrolling:
             if not self.handIsClosed:
                 QApplication.restoreOverrideCursor()
@@ -81,7 +90,7 @@ class PanningWebView(QWebView):
                 self.handIsClosed = True
             delta = mouseEvent.pos() - self.position
             p = self.offset - delta
-            frame = self.page().mainFrame()
+            frame = self.page()
             frame.evaluateJavaScript('window.scrollTo({}, {});'.format(p.x(), p.y()))
             return
 
@@ -89,5 +98,17 @@ class PanningWebView(QWebView):
             self.pressed = False
             self.scrolling = True
             return
+        return super(PanningWebView, self).mouseMoveEvent(self, mouseEvent)
 
-        return QWebView.mouseMoveEvent(self, mouseEvent)
+
+class VintelSvgPage(QWebPage if MainWindow.oldStyleWebKit else QWebEnginePage):
+
+    def __init__(self, parent=None):
+        QWebEnginePage.__init__(self, parent)
+
+
+    def acceptNavigationRequest(self, url, type, isMainFrame):
+        if type == QWebEnginePage.NavigationTypeLinkClicked:
+            self.view().mapLinkClicked.emit(url)
+            return False
+        return True

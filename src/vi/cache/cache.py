@@ -150,16 +150,5 @@ class Cache(object):
             self.con.execute(query, (name,))
             self.con.commit()
 
-    def recallAndApplySettings(self, responder, settingsIdentifier):
-        settings = self.getFromCache(settingsIdentifier)
-        if settings:
-            settings = eval(settings)
-            for setting in settings:
-                obj = responder if not setting[0] else getattr(responder, setting[0])
-                # logging.debug("{0} | {1} | {2}".format(str(obj), setting[1], setting[2]))
-                try:
-                    getattr(obj, setting[1])(setting[2])
-                except Exception as e:
-                    logging.error(e)
 
 

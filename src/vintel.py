@@ -32,7 +32,6 @@ from vi.ui import viui, systemtray
 from vi.cache import cache
 from vi.resources import resourcePath
 from vi.cache.cache import Cache
-from vi import PanningWebView
 
 
 def exceptHook(exceptionType, exceptionValue, tracebackObject):
@@ -124,6 +123,10 @@ class Application(QtWidgets.QApplication):
         logging.debug("Looking for chat logs at: %s", chatLogDirectory)
         logging.debug("Cache maintained here: %s", cache.Cache.PATH_TO_CACHE)
         logging.debug("Writing logs to: %s", vintelLogDirectory)
+
+        self.setOrganizationName("Vintel Development Team")
+        self.setOrganizationDomain("https://github.com/Xanthos-Eve/vintel")
+        self.setApplicationName("Vintel")
 
         trayIcon = systemtray.TrayIcon(self)
         trayIcon.show()
