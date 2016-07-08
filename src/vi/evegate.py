@@ -24,9 +24,11 @@ import six
 import requests
 import logging
 
-from six.moves import urllib
+from requests import utils
 from bs4 import BeautifulSoup
 from vi.cache.cache import Cache
+from six.moves.urllib.error import HTTPError
+from six.moves.urllib.request import urlopen
 
 ERROR = -1
 NOT_EXISTS = 0
@@ -162,9 +164,9 @@ def checkPlayername(charname):
     result = -1
 
     try:
-        urllib.request.urlopen(url)
+        urlopen(url)
         result = 1
-    except urllib.error.HTTPError as e:
+    except HTTPError as e:
         if ("404") in str(e):
             result = 0
     except Exception as e:

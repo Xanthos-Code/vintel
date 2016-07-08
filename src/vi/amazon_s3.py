@@ -21,11 +21,10 @@ import json
 import requests
 import logging
 
-from PyQt5 import Qt
 from PyQt5.QtCore import pyqtSignal, QThread
 from vi import version
 from vi.cache.cache import Cache
-from distutils.version import LooseVersion, StrictVersion
+from distutils.version import StrictVersion
 
 
 def getJumpbridgeData(region):
@@ -62,9 +61,9 @@ def getNewestVersion():
 
 
 class NotifyNewVersionThread(QThread):
-    
+
     newVersion = pyqtSignal(str)
-    
+
     def __init__(self):
         QThread.__init__(self)
         self.alerted = False

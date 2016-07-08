@@ -32,6 +32,7 @@ from vi.ui import viui, systemtray
 from vi.cache import cache
 from vi.resources import resourcePath
 from vi.cache.cache import Cache
+from PyQt5.QtWidgets import QApplication, QMessageBox
 
 
 def exceptHook(exceptionType, exceptionValue, tracebackObject):
@@ -50,7 +51,7 @@ sys.excepthook = exceptHook
 backGroundColor = "#c6d9ec"
 
 
-class Application(QtWidgets.QApplication):
+class Application(QApplication):
 
     def __init__(self, args):
         super(Application, self).__init__(args)
@@ -77,7 +78,7 @@ class Application(QtWidgets.QApplication):
                 chatLogDirectory = os.path.join(documentsPath, "EVE", "logs", "Chatlogs")
         if not os.path.exists(chatLogDirectory):
             # None of the paths for logs exist, bailing out
-            QtGui.QMessageBox.critical(None, "No path to Logs", "No logs found at: " + chatLogDirectory, "Quit")
+            QMessageBox.critical(None, "No path to Logs", "No logs found at: " + chatLogDirectory, "Quit")
             sys.exit(1)
 
         # Setting local directory for cache and logging

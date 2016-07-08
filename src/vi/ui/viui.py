@@ -26,20 +26,22 @@ import webbrowser
 import vi.version
 import logging
 
+from PyQt5 import QtWidgets
+from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtWidgets import QMessageBox, QAction, QActionGroup, QStyleOption, QStyle
 from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
-from PyQt5 import Qt, QtGui, uic, QtCore, QtWidgets
-from PyQt5.QtCore import pyqtSignal, QPoint
+from PyQt5 import QtGui, uic, QtCore
+from PyQt5.QtCore import QPoint
 from PyQt5.QtGui import QImage, QPixmap
-from PyQt5.QtWidgets import QMessageBox
 from vi import amazon_s3, evegate
-from vi import chatparser, dotlan, filewatcher
+from vi import dotlan, filewatcher
 from vi import states
 from vi.cache.cache import Cache
 from vi.resources import resourcePath
 from vi.soundmanager import SoundManager
 from vi.threads import AvatarFindThread, KOSCheckerThread, MapStatisticsThread
 from vi.ui.systemtray import TrayContextMenu
+from vi.chatparser import ChatParser
 from PyQt5.QtCore import QSettings
 
 OLD_STYLE_WEBKIT = False
@@ -97,7 +99,7 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             self.knownPlayerNames = set()
             diagText = "Vintel scans EVE system logs and remembers your characters as they change systems.\n\nSome features (clipboard KOS checking, alarms, etc.) may not work until your character(s) have been registered. Change systems, with each character you want to monitor, while Vintel is running to remedy this."
-            QtWidgets.QMessageBox.warning(None, "Known Characters not Found", diagText, QMessageBox.Ok)
+            QMessageBox.warning(None, "Known Characters not Found", diagText, QMessageBox.Ok)
 
         # Set up user's intel rooms
         roomnames = self.cache.getFromCache("room_names")
@@ -115,9 +117,9 @@ class MainWindow(QtWidgets.QMainWindow):
             self.changeSound()
 
         # Set up Transparency menu - fill in opacity values and make connections
-        self.opacityGroup = QtWidgets.QActionGroup(self.menu)
+        self.opacityGroup = QActionGroup(self.menu)
         for i in (100, 80, 60, 40, 20):
-            action = QtWidgets.QAction("Opacity {0}%".format(i), None, checkable=True)
+            action = QAction("Opacity {0}%".format(i), None, checkable=True)
             if i == 100:
                 action.setChecked(True)
             action.opacity = i / 100.0
@@ -231,23 +233,22 @@ class MainWindow(QtWidgets.QMainWindow):
             self.dotlan = dotlan.Map(regionName, svg)
         except dotlan.DotlanException as e:
             logging.error(e)
-            QtWidgets.QMessageBox.critical(None, "Error getting map", six.text_type(e), Close)
+            QMessageBox.critical(None, "Error getting map", six.text_type(e), QMessageBox.Close)
             sys.exit(1)
 
         if self.dotlan.outdatedCacheError:
             e = self.dotlan.outdatedCacheError
             diagText = "Something went wrong getting map data. Proceeding with older cached data. " \
                        "Check for a newer version and inform the maintainer.\n\nError: {0} {1}".format(type(e), six.text_type(e))
-            logging.warn(diagText)
-            QtWidgets.QMessageBox.warning(None, "Using map from cache", diagText, Ok)
-
+            logging.warning(diagText)
+            QMessageBox.warning(None, "Using map from cache", diagText, QMessageBox.Ok)
 
         # Load the jumpbridges
         logging.critical("Load jump bridges")
         self.setJumpbridges(self.cache.getFromCache("jumpbridge_url"))
         self.systems = self.dotlan.systems
         logging.critical("Creating chat parser")
-        self.chatparser = chatparser.ChatParser(self.pathToLogs, self.roomnames, self.systems)
+        self.chatparser = ChatParser(self.pathToLogs, self.roomnames, self.systems)
 
         # Menus - only once
         if initialize:
@@ -329,7 +330,6 @@ class MainWindow(QtWidgets.QMainWindow):
                             logging.error(e)
                 except Exception as e:
                     logging.error(e)
-
         except Exception as e:
             logging.error(e)
             # todo: add a button to delete the cache / DB
@@ -473,7 +473,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.activateSoundAction.setEnabled(False)
             self.soundSetupAction.setEnabled(False)
             #self.soundButton.setEnabled(False)
-            QtWidgets.QMessageBox.warning(None, "Sound disabled", "Please chekc the log files. This warning will not be shown again.", Ok)
+            QMessageBox.warning(None, "Sound disabled", "Please chekc the log files. This warning will not be shown again.", QMessageBox.Ok)
         else:
             if newValue is None:
                 newValue = self.activateSoundAction.isChecked()
@@ -683,7 +683,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.dotlan.setJumpbridges(data)
             self.cache.putIntoCache("jumpbridge_url", url, 60 * 60 * 24 * 365 * 8)
         except Exception as e:
-            QtWidgets.QMessageBox.warning(None, "Loading jumpbridges failed!", "Error: {0}".format(six.text_type(e)), Ok)
+            QMessageBox.warning(None, "Loading jumpbridges failed!", "Error: {0}".format(six.text_type(e)), QMessageBox.Ok)
 
 
     def handleRegionMenuItemSelected(self, menuAction=None):
@@ -851,7 +851,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.knownPlayerNames.add(message.user)
                 self.setLocation(message.user, message.systems[0])
             elif message.status == states.KOS_STATUS_REQUEST:
-                # Do not accept KOS requests from monitored intel channels
+                # Do not accept KOS requests from any but monitored intel channels
                 # as we don't want to encourage the use of xxx in those channels.
                 if not message.room in self.roomnames:
                     text = message.message[4:]
@@ -864,10 +864,11 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.addMessageToIntelChat(message)
                 # For each system that was mentioned in the message, check for alarm distance to the current system
                 # and alarm if within alarm distance.
+                systemList = self.dotlan.systems
                 if message.systems:
                     for system in message.systems:
                         systemname = system.name
-                        self.dotlan.systems[systemname].setStatus(message.status)
+                        systemList[systemname].setStatus(message.status)
                         if message.status in (states.REQUEST, states.ALARM) and message.user not in self.knownPlayerNames:
                             alarmDistance = self.alarmDistance if message.status == states.ALARM else 0
                             for nSystem, data in system.getNeighbours(alarmDistance).items():
@@ -1109,4 +1110,4 @@ class JumpbridgeChooser(QtWidgets.QDialog):
             self.setJumpBridgeUrl.emit(url)
             self.accept()
         except Exception as e:
-            QtWidgets.QMessageBox.critical(None, "Finding Jumpbridgedata failed", "Error: {0}".format(six.text_type(e)), Ok)
+            QMessageBox.critical(None, "Finding Jumpbridgedata failed", "Error: {0}".format(six.text_type(e)), QMessageBox.Ok)

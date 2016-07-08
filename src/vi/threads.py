@@ -19,10 +19,11 @@
 
 import time
 import logging
+import six
 
 from six.moves import queue
 from PyQt5 import QtCore
-from PyQt5.QtCore import pyqtSignal, QThread
+from PyQt5.QtCore import pyqtSignal, QThread, QTimer
 from vi import evegate
 from vi import koschecker
 from vi.cache.cache import Cache
@@ -31,9 +32,9 @@ from vi.resources import resourcePath
 STATISTICS_UPDATE_INTERVAL_MSECS = 1 * 60 * 1000
 
 class AvatarFindThread(QThread):
-    
+
     avatarUpdate = pyqtSignal(object, object)
-    
+
     def __init__(self):
         QThread.__init__(self)
         self.queue = queue.Queue()
@@ -96,7 +97,7 @@ class AvatarFindThread(QThread):
 class KOSCheckerThread(QThread):
 
     showKos = pyqtSignal(str, str, str, bool)
-     
+
     def __init__(self):
         QThread.__init__(self)
         self.queue = queue.Queue()
@@ -156,7 +157,7 @@ class KOSCheckerThread(QThread):
 class MapStatisticsThread(QThread):
 
     updateMap = pyqtSignal(dict)
-    
+
     def __init__(self):
         QThread.__init__(self)
         self.queue = queue.Queue(maxsize=1)
@@ -171,7 +172,7 @@ class MapStatisticsThread(QThread):
 
 
     def run(self):
-        self.refreshTimer = QtCore.QTimer()
+        self.refreshTimer = QTimer()
         self.refreshTimer.timeout.connect(self.requestStatistics)
         while True:
             # Block waiting for requestStatistics() to enqueue a token
@@ -186,7 +187,7 @@ class MapStatisticsThread(QThread):
                 requestData = {"result": "ok", "statistics": statistics}
             except Exception as e:
                 logging.error("Error in MapStatisticsThread: %s", e)
-                requestData = {"result": "error", "text": unicode(e)}
+                requestData = {"result": "error", "text": six.text_type(e)}
             self.lastStatisticsUpdate = time.time()
             self.refreshTimer.start(self.pollRate)
             self.updateMap.emit(requestData)
