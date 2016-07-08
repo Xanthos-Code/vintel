@@ -28,18 +28,21 @@ import vi.version
 
 import logging
 from PyQt4.QtGui import *
-from PyQt4 import Qt, QtGui, uic, QtCore
-from PyQt4.QtCore import QPoint
+from PyQt4 import QtGui, uic, QtCore
+from PyQt4.QtCore import QPoint, SIGNAL
 from PyQt4.QtGui import QImage, QPixmap, QMessageBox
 from PyQt4.QtWebKit import QWebPage
 from vi import amazon_s3, evegate
-from vi import chatparser, dotlan, filewatcher
+from vi import dotlan, filewatcher
 from vi import states
 from vi.cache.cache import Cache
 from vi.resources import resourcePath
 from vi.soundmanager import SoundManager
 from vi.threads import AvatarFindThread, KOSCheckerThread, MapStatisticsThread
 from vi.ui.systemtray import TrayContextMenu
+from vi.chatparser import ChatParser
+from PyQt4.QtGui import QAction
+from PyQt4.QtGui import QMessageBox
 
 # Timer intervals
 MESSAGE_EXPIRY_SECS = 20 * 60
@@ -66,7 +69,7 @@ class MainWindow(QtGui.QMainWindow):
 
         self.pathToLogs = pathToLogs
         self.mapTimer = QtCore.QTimer(self)
-        self.connect(self.mapTimer, QtCore.SIGNAL("timeout()"), self.updateMapView)
+        self.connect(self.mapTimer, SIGNAL("timeout()"), self.updateMapView)
         self.clipboardTimer = QtCore.QTimer(self)
         self.oldClipboardContent = ""
         self.trayIcon = trayIcon
@@ -88,7 +91,7 @@ class MainWindow(QtGui.QMainWindow):
         else:
             self.knownPlayerNames = set()
             diagText = "Vintel scans EVE system logs and remembers your characters as they change systems.\n\nSome features (clipboard KOS checking, alarms, etc.) may not work until your character(s) have been registered. Change systems, with each character you want to monitor, while Vintel is running to remedy this."
-            QtGui.QMessageBox.warning(None, "Known Characters not Found", diagText, "Ok")
+            QMessageBox.warning(None, "Known Characters not Found", diagText, "Ok")
 
         # Set up user's intel rooms
         roomnames = self.cache.getFromCache("room_names")
@@ -106,13 +109,13 @@ class MainWindow(QtGui.QMainWindow):
             self.changeSound()
 
         # Set up Transparency menu - fill in opacity values and make connections
-        self.opacityGroup = QtGui.QActionGroup(self.menu)
+        self.opacityGroup = QActionGroup(self.menu)
         for i in (100, 80, 60, 40, 20):
-            action = QtGui.QAction("Opacity {0}%".format(i), None, checkable=True)
+            action = QAction("Opacity {0}%".format(i), None, checkable=True)
             if i == 100:
                 action.setChecked(True)
             action.opacity = i / 100.0
-            self.connect(action, QtCore.SIGNAL("triggered()"), self.changeOpacity)
+            self.connect(action, SIGNAL("triggered()"), self.changeOpacity)
             self.opacityGroup.addAction(action)
             self.menuTransparency.addAction(action)
 
@@ -152,59 +155,59 @@ class MainWindow(QtGui.QMainWindow):
 
     def wireUpUIConnections(self):
         # Wire up general UI connections
-        self.connect(self.clipboard, Qt.SIGNAL("changed(QClipboard::Mode)"), self.clipboardChanged)
-        self.connect(self.autoScanIntelAction, Qt.SIGNAL("triggered()"), self.changeAutoScanIntel)
-        self.connect(self.kosClipboardActiveAction, Qt.SIGNAL("triggered()"), self.changeKosCheckClipboard)
-        self.connect(self.zoomInButton, Qt.SIGNAL("clicked()"), self.zoomMapIn)
-        self.connect(self.zoomOutButton, Qt.SIGNAL("clicked()"), self.zoomMapOut)
-        self.connect(self.statisticsButton, Qt.SIGNAL("clicked()"), self.changeStatisticsVisibility)
-        self.connect(self.jumpbridgesButton, Qt.SIGNAL("clicked()"), self.changeJumpbridgesVisibility)
-        self.connect(self.chatLargeButton, Qt.SIGNAL("clicked()"), self.chatLarger)
-        self.connect(self.chatSmallButton, Qt.SIGNAL("clicked()"), self.chatSmaller)
-        self.connect(self.infoAction, Qt.SIGNAL("triggered()"), self.showInfo)
-        self.connect(self.showChatAvatarsAction, Qt.SIGNAL("triggered()"), self.changeShowAvatars)
-        self.connect(self.alwaysOnTopAction, Qt.SIGNAL("triggered()"), self.changeAlwaysOnTop)
-        self.connect(self.chooseChatRoomsAction, Qt.SIGNAL("triggered()"), self.showChatroomChooser)
-        self.connect(self.catchRegionAction, Qt.SIGNAL("triggered()"), lambda : self.handleRegionMenuItemSelected(self.catchRegionAction))
-        self.connect(self.providenceRegionAction, Qt.SIGNAL("triggered()"), lambda : self.handleRegionMenuItemSelected(self.providenceRegionAction))
-        self.connect(self.queriousRegionAction, Qt.SIGNAL("triggered()"), lambda : self.handleRegionMenuItemSelected(self.queriousRegionAction))
-        self.connect(self.providenceCatchRegionAction, Qt.SIGNAL("triggered()"), lambda : self.handleRegionMenuItemSelected(self.providenceCatchRegionAction))
-        self.connect(self.providenceCatchCompactRegionAction, Qt.SIGNAL("triggered()"), lambda : self.handleRegionMenuItemSelected(self.providenceCatchCompactRegionAction))
-        self.connect(self.chooseRegionAction, Qt.SIGNAL("triggered()"), self.showRegionChooser)
-        self.connect(self.showChatAction, Qt.SIGNAL("triggered()"), self.changeChatVisibility)
-        self.connect(self.soundSetupAction, Qt.SIGNAL("triggered()"), self.showSoundSetup)
-        self.connect(self.activateSoundAction, Qt.SIGNAL("triggered()"), self.changeSound)
-        self.connect(self.useSpokenNotificationsAction, Qt.SIGNAL("triggered()"), self.changeUseSpokenNotifications)
-        self.connect(self.trayIcon, Qt.SIGNAL("alarm_distance"), self.changeAlarmDistance)
-        self.connect(self.framelessWindowAction, Qt.SIGNAL("triggered()"), self.changeFrameless)
-        self.connect(self.trayIcon, Qt.SIGNAL("change_frameless"), self.changeFrameless)
-        self.connect(self.frameButton, Qt.SIGNAL("clicked()"), self.changeFrameless)
-        self.connect(self.quitAction, Qt.SIGNAL("triggered()"), self.close)
-        self.connect(self.trayIcon, Qt.SIGNAL("quit"), self.close)
-        self.connect(self.jumpbridgeDataAction, Qt.SIGNAL("triggered()"), self.showJumbridgeChooser)
+        self.connect(self.clipboard, SIGNAL("changed(QClipboard::Mode)"), self.clipboardChanged)
+        self.connect(self.autoScanIntelAction, SIGNAL("triggered()"), self.changeAutoScanIntel)
+        self.connect(self.kosClipboardActiveAction, SIGNAL("triggered()"), self.changeKosCheckClipboard)
+        self.connect(self.zoomInButton, SIGNAL("clicked()"), self.zoomMapIn)
+        self.connect(self.zoomOutButton, SIGNAL("clicked()"), self.zoomMapOut)
+        self.connect(self.statisticsButton, SIGNAL("clicked()"), self.changeStatisticsVisibility)
+        self.connect(self.jumpbridgesButton, SIGNAL("clicked()"), self.changeJumpbridgesVisibility)
+        self.connect(self.chatLargeButton, SIGNAL("clicked()"), self.chatLarger)
+        self.connect(self.chatSmallButton, SIGNAL("clicked()"), self.chatSmaller)
+        self.connect(self.infoAction, SIGNAL("triggered()"), self.showInfo)
+        self.connect(self.showChatAvatarsAction, SIGNAL("triggered()"), self.changeShowAvatars)
+        self.connect(self.alwaysOnTopAction, SIGNAL("triggered()"), self.changeAlwaysOnTop)
+        self.connect(self.chooseChatRoomsAction, SIGNAL("triggered()"), self.showChatroomChooser)
+        self.connect(self.catchRegionAction, SIGNAL("triggered()"), lambda : self.handleRegionMenuItemSelected(self.catchRegionAction))
+        self.connect(self.providenceRegionAction, SIGNAL("triggered()"), lambda : self.handleRegionMenuItemSelected(self.providenceRegionAction))
+        self.connect(self.queriousRegionAction, SIGNAL("triggered()"), lambda : self.handleRegionMenuItemSelected(self.queriousRegionAction))
+        self.connect(self.providenceCatchRegionAction, SIGNAL("triggered()"), lambda : self.handleRegionMenuItemSelected(self.providenceCatchRegionAction))
+        self.connect(self.providenceCatchCompactRegionAction, SIGNAL("triggered()"), lambda : self.handleRegionMenuItemSelected(self.providenceCatchCompactRegionAction))
+        self.connect(self.chooseRegionAction, SIGNAL("triggered()"), self.showRegionChooser)
+        self.connect(self.showChatAction, SIGNAL("triggered()"), self.changeChatVisibility)
+        self.connect(self.soundSetupAction, SIGNAL("triggered()"), self.showSoundSetup)
+        self.connect(self.activateSoundAction, SIGNAL("triggered()"), self.changeSound)
+        self.connect(self.useSpokenNotificationsAction, SIGNAL("triggered()"), self.changeUseSpokenNotifications)
+        self.connect(self.trayIcon, SIGNAL("alarm_distance"), self.changeAlarmDistance)
+        self.connect(self.framelessWindowAction, SIGNAL("triggered()"), self.changeFrameless)
+        self.connect(self.trayIcon, SIGNAL("change_frameless"), self.changeFrameless)
+        self.connect(self.frameButton, SIGNAL("clicked()"), self.changeFrameless)
+        self.connect(self.quitAction, SIGNAL("triggered()"), self.close)
+        self.connect(self.trayIcon, SIGNAL("quit"), self.close)
+        self.connect(self.jumpbridgeDataAction, SIGNAL("triggered()"), self.showJumbridgeChooser)
         self.mapView.page().scrollRequested.connect(self.mapPositionChanged)
 
 
     def setupThreads(self):
         # Set up threads and their connections
         self.avatarFindThread = AvatarFindThread()
-        self.connect(self.avatarFindThread, QtCore.SIGNAL("avatar_update"), self.updateAvatarOnChatEntry)
+        self.connect(self.avatarFindThread, SIGNAL("avatar_update"), self.updateAvatarOnChatEntry)
         self.avatarFindThread.start()
 
         self.kosRequestThread = KOSCheckerThread()
-        self.connect(self.kosRequestThread, Qt.SIGNAL("kos_result"), self.showKosResult)
+        self.connect(self.kosRequestThread, SIGNAL("kos_result"), self.showKosResult)
         self.kosRequestThread.start()
 
         self.filewatcherThread = filewatcher.FileWatcher(self.pathToLogs)
-        self.connect(self.filewatcherThread, QtCore.SIGNAL("file_change"), self.logFileChanged)
+        self.connect(self.filewatcherThread, SIGNAL("file_change"), self.logFileChanged)
         self.filewatcherThread.start()
 
         self.versionCheckThread = amazon_s3.NotifyNewVersionThread()
-        self.versionCheckThread.connect(self.versionCheckThread, Qt.SIGNAL("newer_version"), self.notifyNewerVersion)
+        self.versionCheckThread.connect(self.versionCheckThread, SIGNAL("newer_version"), self.notifyNewerVersion)
         self.versionCheckThread.start()
 
         self.statisticsThread = MapStatisticsThread()
-        self.connect(self.statisticsThread, Qt.SIGNAL("statistic_data_update"), self.updateStatisticsOnMap)
+        self.connect(self.statisticsThread, SIGNAL("statistic_data_update"), self.updateStatisticsOnMap)
         self.statisticsThread.start()
         # statisticsThread is blocked until first call of requestStatistics
 
@@ -228,7 +231,7 @@ class MainWindow(QtGui.QMainWindow):
             self.dotlan = dotlan.Map(regionName, svg)
         except dotlan.DotlanException as e:
             logging.error(e)
-            QtGui.QMessageBox.critical(None, "Error getting map", six.text_type(e), "Quit")
+            QMessageBox.critical(None, "Error getting map", six.text_type(e), "Quit")
             sys.exit(1)
 
         if self.dotlan.outdatedCacheError:
@@ -236,7 +239,7 @@ class MainWindow(QtGui.QMainWindow):
             diagText = "Something went wrong getting map data. Proceeding with older cached data. " \
                        "Check for a newer version and inform the maintainer.\n\nError: {0} {1}".format(type(e), six.text_type(e))
             logging.warn(diagText)
-            QtGui.QMessageBox.warning(None, "Using map from cache", diagText, "Ok")
+            QMessageBox.warning(None, "Using map from cache", diagText, "Ok")
 
 
         # Load the jumpbridges
@@ -244,7 +247,7 @@ class MainWindow(QtGui.QMainWindow):
         self.setJumpbridges(self.cache.getFromCache("jumpbridge_url"))
         self.systems = self.dotlan.systems
         logging.critical("Creating chat parser")
-        self.chatparser = chatparser.ChatParser(self.pathToLogs, self.roomnames, self.systems)
+        self.chatparser = ChatParser(self.pathToLogs, self.roomnames, self.systems)
 
         # Menus - only once
         if initialize:
@@ -258,7 +261,7 @@ class MainWindow(QtGui.QMainWindow):
             self.mapView.contextMenu = self.trayIcon.contextMenu()
 
             # Clicking links
-            self.mapView.connect(self.mapView, Qt.SIGNAL("linkClicked(const QUrl&)"), self.mapLinkClicked)
+            self.mapView.connect(self.mapView, SIGNAL("linkClicked(const QUrl&)"), self.mapLinkClicked)
 
             # Also set up our app menus
             if not regionName:
@@ -302,13 +305,13 @@ class MainWindow(QtGui.QMainWindow):
             first initializing the content so we dont kos check from random content
         """
         self.oldClipboardContent = tuple(six.text_type(self.clipboard.text()))
-        self.connect(self.clipboardTimer, QtCore.SIGNAL("timeout()"), self.clipboardChanged)
+        self.connect(self.clipboardTimer, SIGNAL("timeout()"), self.clipboardChanged)
         self.clipboardTimer.start(CLIPBOARD_CHECK_INTERVAL_MSECS)
 
 
     def stopClipboardTimer(self):
         if self.clipboardTimer:
-           self.disconnect(self.clipboardTimer, QtCore.SIGNAL("timeout()"), self.clipboardChanged)
+           self.disconnect(self.clipboardTimer, SIGNAL("timeout()"), self.clipboardChanged)
            self.clipboardTimer.stop()
 
 
@@ -408,7 +411,7 @@ class MainWindow(QtGui.QMainWindow):
             self.activateSoundAction.setEnabled(False)
             self.soundSetupAction.setEnabled(False)
             #self.soundButton.setEnabled(False)
-            QtGui.QMessageBox.warning(None, "Sound disabled",
+            QMessageBox.warning(None, "Sound disabled",
                                       "The lib 'pyglet' which is used to play sounds cannot be found, ""so the soundsystem is disabled.\nIf you want sound, please install the 'pyglet' library. This warning will not be shown again.",
                                       "OK")
         else:
@@ -516,9 +519,9 @@ class MainWindow(QtGui.QMainWindow):
         systemName = six.text_type(url.path().split("/")[-1]).upper()
         system = self.systems[str(systemName)]
         sc = SystemChat(self, SystemChat.SYSTEM, system, self.chatEntries, self.knownPlayerNames)
-        sc.connect(self, Qt.SIGNAL("chat_message_added"), sc.addChatEntry)
-        sc.connect(self, Qt.SIGNAL("avatar_loaded"), sc.newAvatarAvailable)
-        sc.connect(sc, Qt.SIGNAL("location_set"), self.setLocation)
+        sc.connect(self, SIGNAL("chat_message_added"), sc.addChatEntry)
+        sc.connect(self, SIGNAL("avatar_loaded"), sc.newAvatarAvailable)
+        sc.connect(sc, SIGNAL("location_set"), self.setLocation)
         sc.show()
 
 
@@ -575,14 +578,14 @@ class MainWindow(QtGui.QMainWindow):
 
     def showChatroomChooser(self):
         chooser = ChatroomsChooser(self)
-        chooser.connect(chooser, Qt.SIGNAL("rooms_changed"), self.changedRoomnames)
+        chooser.connect(chooser, SIGNAL("rooms_changed"), self.changedRoomnames)
         chooser.show()
 
 
     def showJumbridgeChooser(self):
         url = self.cache.getFromCache("jumpbridge_url")
         chooser = JumpbridgeChooser(self, url)
-        chooser.connect(chooser, Qt.SIGNAL("set_jumpbridge_url"), self.setJumpbridges)
+        chooser.connect(chooser, SIGNAL("set_jumpbridge_url"), self.setJumpbridges)
         chooser.show()
 
 
@@ -606,7 +609,7 @@ class MainWindow(QtGui.QMainWindow):
             self.dotlan.setJumpbridges(data)
             self.cache.putIntoCache("jumpbridge_url", url, 60 * 60 * 24 * 365 * 8)
         except Exception as e:
-            QtGui.QMessageBox.warning(None, "Loading jumpbridges failed!", "Error: {0}".format(six.text_type(e)), "OK")
+            QMessageBox.warning(None, "Loading jumpbridges failed!", "Error: {0}".format(six.text_type(e)), "OK")
 
 
     def handleRegionMenuItemSelected(self, menuAction=None):
@@ -632,7 +635,7 @@ class MainWindow(QtGui.QMainWindow):
 
         self.chooseRegionAction.setChecked(False)
         chooser = RegionChooser(self)
-        self.connect(chooser, Qt.SIGNAL("new_region_chosen"), handleRegionChosen)
+        self.connect(chooser, SIGNAL("new_region_chosen"), handleRegionChosen)
         chooser.show()
 
 
@@ -647,8 +650,8 @@ class MainWindow(QtGui.QMainWindow):
         self.chatListWidget.setItemWidget(listWidgetItem, chatEntryWidget)
         self.avatarFindThread.addChatEntry(chatEntryWidget)
         self.chatEntries.append(chatEntryWidget)
-        self.connect(chatEntryWidget, Qt.SIGNAL("mark_system"), self.markSystemOnMap)
-        self.emit(Qt.SIGNAL("chat_message_added"), chatEntryWidget)
+        self.connect(chatEntryWidget, SIGNAL("mark_system"), self.markSystemOnMap)
+        self.emit(SIGNAL("chat_message_added"), chatEntryWidget)
         self.pruneMessages()
         if scrollToBottom:
             self.chatListWidget.scrollToBottom()
@@ -707,7 +710,7 @@ class MainWindow(QtGui.QMainWindow):
         uic.loadUi(resourcePath("vi/ui/Info.ui"), infoDialog)
         infoDialog.versionLabel.setText(u"Version: {0}".format(vi.version.VERSION))
         infoDialog.logoLabel.setPixmap(QtGui.QPixmap(resourcePath("vi/ui/res/logo.png")))
-        infoDialog.connect(infoDialog.closeButton, Qt.SIGNAL("clicked()"), infoDialog.accept)
+        infoDialog.connect(infoDialog.closeButton, SIGNAL("clicked()"), infoDialog.accept)
         infoDialog.show()
 
 
@@ -715,9 +718,9 @@ class MainWindow(QtGui.QMainWindow):
         dialog = QtGui.QDialog(self)
         uic.loadUi(resourcePath("vi/ui/SoundSetup.ui"), dialog)
         dialog.volumeSlider.setValue(SoundManager().soundVolume)
-        dialog.connect(dialog.volumeSlider, Qt.SIGNAL("valueChanged(int)"), SoundManager().setSoundVolume)
-        dialog.connect(dialog.testSoundButton, Qt.SIGNAL("clicked()"), SoundManager().playSound)
-        dialog.connect(dialog.closeButton, Qt.SIGNAL("clicked()"), dialog.accept)
+        dialog.connect(dialog.volumeSlider, SIGNAL("valueChanged(int)"), SoundManager().setSoundVolume)
+        dialog.connect(dialog.testSoundButton, SIGNAL("clicked()"), SoundManager().playSound)
+        dialog.connect(dialog.closeButton, SIGNAL("clicked()"), dialog.accept)
         dialog.show()
 
 
@@ -737,7 +740,7 @@ class MainWindow(QtGui.QMainWindow):
         if not updated:
             self.avatarFindThread.addChatEntry(chatEntry, clearCache=True)
         else:
-            self.emit(Qt.SIGNAL("avatar_loaded"), chatEntry.message.user, avatarData)
+            self.emit(SIGNAL("avatar_loaded"), chatEntry.message.user, avatarData)
 
 
     def updateStatisticsOnMap(self, data):
@@ -773,7 +776,7 @@ class MainWindow(QtGui.QMainWindow):
                 self.knownPlayerNames.add(message.user)
                 self.setLocation(message.user, message.systems[0])
             elif message.status == states.KOS_STATUS_REQUEST:
-                # Do not accept KOS requests from monitored intel channels
+                # Do not accept KOS requests from any but monitored intel channels
                 # as we don't want to encourage the use of xxx in those channels.
                 if not message.room in self.roomnames:
                     text = message.message[4:]
@@ -786,10 +789,11 @@ class MainWindow(QtGui.QMainWindow):
                 self.addMessageToIntelChat(message)
                 # For each system that was mentioned in the message, check for alarm distance to the current system
                 # and alarm if within alarm distance.
+                systemList = self.dotlan.systems
                 if message.systems:
                     for system in message.systems:
                         systemname = system.name
-                        self.dotlan.systems[systemname].setStatus(message.status)
+                        systemList[systemname].setStatus(message.status)
                         if message.status in (states.REQUEST, states.ALARM) and message.user not in self.knownPlayerNames:
                             alarmDistance = self.alarmDistance if message.status == states.ALARM else 0
                             for nSystem, data in system.getNeighbours(alarmDistance).items():
@@ -804,9 +808,9 @@ class ChatroomsChooser(QtGui.QDialog):
     def __init__(self, parent):
         QtGui.QDialog.__init__(self, parent)
         uic.loadUi(resourcePath("vi/ui/ChatroomsChooser.ui"), self)
-        self.connect(self.defaultButton, Qt.SIGNAL("clicked()"), self.setDefaults)
-        self.connect(self.cancelButton, Qt.SIGNAL("clicked()"), self.accept)
-        self.connect(self.saveButton, Qt.SIGNAL("clicked()"), self.saveClicked)
+        self.connect(self.defaultButton, SIGNAL("clicked()"), self.setDefaults)
+        self.connect(self.cancelButton, SIGNAL("clicked()"), self.accept)
+        self.connect(self.saveButton, SIGNAL("clicked()"), self.saveClicked)
         cache = Cache()
         roomnames = cache.getFromCache("room_names")
         if not roomnames:
@@ -818,7 +822,7 @@ class ChatroomsChooser(QtGui.QDialog):
         text = six.text_type(self.roomnamesField.toPlainText())
         rooms = [six.text_type(name.strip()) for name in text.split(",")]
         self.accept()
-        self.emit(Qt.SIGNAL("rooms_changed"), rooms)
+        self.emit(SIGNAL("rooms_changed"), rooms)
 
 
     def setDefaults(self):
@@ -829,8 +833,8 @@ class RegionChooser(QtGui.QDialog):
     def __init__(self, parent):
         QtGui.QDialog.__init__(self, parent)
         uic.loadUi(resourcePath("vi/ui/RegionChooser.ui"), self)
-        self.connect(self.cancelButton, Qt.SIGNAL("clicked()"), self.accept)
-        self.connect(self.saveButton, Qt.SIGNAL("clicked()"), self.saveClicked)
+        self.connect(self.cancelButton, SIGNAL("clicked()"), self.accept)
+        self.connect(self.saveButton, SIGNAL("clicked()"), self.saveClicked)
         cache = Cache()
         regionName = cache.getFromCache("region_name")
         if not regionName:
@@ -866,7 +870,7 @@ class RegionChooser(QtGui.QDialog):
         if correct:
             Cache().putIntoCache("region_name", text, 60 * 60 * 24 * 365)
             self.accept()
-            self.emit(Qt.SIGNAL("new_region_chosen"))
+            self.emit(SIGNAL("new_region_chosen"))
 
 
 class SystemChat(QtGui.QDialog):
@@ -888,10 +892,10 @@ class SystemChat(QtGui.QDialog):
         for name in knownPlayerNames:
             self.playerNamesBox.addItem(name)
         self.setWindowTitle("Chat for {0}".format(titleName))
-        self.connect(self.closeButton, Qt.SIGNAL("clicked()"), self.closeDialog)
-        self.connect(self.alarmButton, Qt.SIGNAL("clicked()"), self.setSystemAlarm)
-        self.connect(self.clearButton, Qt.SIGNAL("clicked()"), self.setSystemClear)
-        self.connect(self.locationButton, Qt.SIGNAL("clicked()"), self.locationSet)
+        self.connect(self.closeButton, SIGNAL("clicked()"), self.closeDialog)
+        self.connect(self.alarmButton, SIGNAL("clicked()"), self.setSystemAlarm)
+        self.connect(self.clearButton, SIGNAL("clicked()"), self.setSystemClear)
+        self.connect(self.locationButton, SIGNAL("clicked()"), self.locationSet)
 
 
     def _addMessageToChat(self, message, avatarPixmap):
@@ -905,7 +909,7 @@ class SystemChat(QtGui.QDialog):
         self.chat.addItem(listWidgetItem)
         self.chat.setItemWidget(listWidgetItem, entry)
         self.chatEntries.append(entry)
-        self.connect(entry, Qt.SIGNAL("mark_system"), self.parent.markSystemOnMap)
+        self.connect(entry, SIGNAL("mark_system"), self.parent.markSystemOnMap)
         if scrollToBottom:
             self.chat.scrollToBottom()
 
@@ -920,7 +924,7 @@ class SystemChat(QtGui.QDialog):
 
     def locationSet(self):
         char = six.text_type(self.playerNamesBox.currentText())
-        self.emit(Qt.SIGNAL("location_set"), char, self.system.name)
+        self.emit(SIGNAL("location_set"), char, self.system.name)
 
 
     def newAvatarAvailable(self, charname, avatarData):
@@ -956,7 +960,7 @@ class ChatEntryWidget(QtGui.QWidget):
         self.avatarLabel.setPixmap(self.questionMarkPixmap)
         self.message = message
         self.updateText()
-        self.connect(self.textLabel, QtCore.SIGNAL("linkActivated(QString)"), self.linkClicked)
+        self.connect(self.textLabel, SIGNAL("linkActivated(QString)"), self.linkClicked)
         if sys.platform.startswith("win32") or sys.platform.startswith("cygwin"):
             ChatEntryWidget.TEXT_SIZE = 8
         self.changeFontSize(self.TEXT_SIZE)
@@ -968,7 +972,7 @@ class ChatEntryWidget(QtGui.QWidget):
         link = six.text_type(link)
         function, parameter = link.split("/", 1)
         if function == "mark_system":
-            self.emit(QtCore.SIGNAL("mark_system"), parameter)
+            self.emit(SIGNAL("mark_system"), parameter)
         elif function == "link":
             webbrowser.open(parameter)
 
@@ -1002,8 +1006,8 @@ class JumpbridgeChooser(QtGui.QDialog):
     def __init__(self, parent, url):
         QtGui.QDialog.__init__(self, parent)
         uic.loadUi(resourcePath("vi/ui/JumpbridgeChooser.ui"), self)
-        self.connect(self.saveButton, Qt.SIGNAL("clicked()"), self.savePath)
-        self.connect(self.cancelButton, Qt.SIGNAL("clicked()"), self.accept)
+        self.connect(self.saveButton, SIGNAL("clicked()"), self.savePath)
+        self.connect(self.cancelButton, SIGNAL("clicked()"), self.accept)
         self.urlField.setText(url)
         # loading format explanation from textfile
         with open(resourcePath("docs/jumpbridgeformat.txt")) as f:
@@ -1015,7 +1019,7 @@ class JumpbridgeChooser(QtGui.QDialog):
             url = six.text_type(self.urlField.text())
             if url != "":
                 requests.get(url).text
-            self.emit(QtCore.SIGNAL("set_jumpbridge_url"), url)
+            self.emit(SIGNAL("set_jumpbridge_url"), url)
             self.accept()
         except Exception as e:
-            QtGui.QMessageBox.critical(None, "Finding Jumpbridgedata failed", "Error: {0}".format(six.text_type(e)), "OK")
+            QMessageBox.critical(None, "Finding Jumpbridgedata failed", "Error: {0}".format(six.text_type(e)), "OK")

@@ -22,7 +22,7 @@ import requests
 import logging
 
 from PyQt4 import Qt
-from PyQt4.QtCore import QThread
+from PyQt4.QtCore import QThread, SIGNAL
 from vi import version
 from vi.cache.cache import Cache
 from distutils.version import LooseVersion, StrictVersion
@@ -72,7 +72,7 @@ class NotifyNewVersionThread(QThread):
                 # Is there a newer version available?
                 newestVersion = getNewestVersion()
                 if newestVersion and StrictVersion(newestVersion) > StrictVersion(version.VERSION):
-                    self.emit(Qt.SIGNAL("newer_version"), newestVersion)
+                    self.emit(SIGNAL("newer_version"), newestVersion)
                     self.alerted = True
             except Exception as e:
                 logging.error("Failed NotifyNewVersionThread: %s", e)

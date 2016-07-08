@@ -19,11 +19,10 @@
 
 import time
 import logging
+import six
 
 from six.moves import queue
-from PyQt4 import QtCore
-from PyQt4.QtCore import QThread
-from PyQt4.QtCore import SIGNAL
+from PyQt4.QtCore import QThread, SIGNAL, QTimer
 from vi import evegate
 from vi import koschecker
 from vi.cache.cache import Cache
@@ -166,8 +165,8 @@ class MapStatisticsThread(QThread):
 
 
     def run(self):
-        self.refreshTimer = QtCore.QTimer()
-        self.connect(self.refreshTimer, QtCore.SIGNAL("timeout()"), self.requestStatistics)
+        self.refreshTimer = QTimer()
+        self.connect(self.refreshTimer, SIGNAL("timeout()"), self.requestStatistics)
         while True:
             # Block waiting for requestStatistics() to enqueue a token
             self.queue.get()
@@ -181,7 +180,7 @@ class MapStatisticsThread(QThread):
                 requestData = {"result": "ok", "statistics": statistics}
             except Exception as e:
                 logging.error("Error in MapStatisticsThread: %s", e)
-                requestData = {"result": "error", "text": unicode(e)}
+                requestData = {"result": "error", "text": six.text_type(e)}
             self.lastStatisticsUpdate = time.time()
             self.refreshTimer.start(self.pollRate)
             self.emit(SIGNAL("statistic_data_update"), requestData)

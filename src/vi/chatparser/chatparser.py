@@ -24,9 +24,10 @@ import six
 if six.PY2:
     from io import open
 
-from PyQt4 import QtGui
 from bs4 import BeautifulSoup
 from vi import states
+from PyQt4.QtGui import QMessageBox
+
 
 from .parser_functions import parseStatus
 from .parser_functions import parseUrls, parseShips, parseSystems
@@ -70,11 +71,11 @@ class ChatParser(object):
                 content = f.read()
         except Exception as e:
             self.ignoredPaths.append(path)
-            QtGui.QMessageBox.warning(None, "Read a log file failed!", "File: {0} - problem: {1}".format(path, six.text_type(e)), "OK")
+            QMessageBox.warning(None, "Read a log file failed!", "File: {0} - problem: {1}".format(path, six.text_type(e)), "OK")
             return None
 
         lines = content.split("\n")
-        if (path not in self.fileData or (roomname in LOCAL_NAMES and "charname" not in self.fileData.get(path, []))):
+        if path not in self.fileData or (roomname in LOCAL_NAMES and "charname" not in self.fileData.get(path, [])):
             self.fileData[path] = {}
             if roomname in LOCAL_NAMES:
                 charname = None
@@ -143,8 +144,7 @@ class ChatParser(object):
         # If message says clear and no system? Maybe an answer to a request?
         if status == states.CLEAR and not systems:
             maxSearch = 2  # we search only max_search messages in the room
-            for count, oldMessage in enumerate(
-                    oldMessage for oldMessage in self.knownMessages[-1::-1] if oldMessage.room == roomname):
+            for count, oldMessage in enumerate(oldMessage for oldMessage in self.knownMessages[-1::-1] if oldMessage.room == roomname):
                 if oldMessage.systems and oldMessage.status == states.REQUEST:
                     for system in oldMessage.systems:
                         systems.add(system)

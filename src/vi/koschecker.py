@@ -17,11 +17,11 @@
 #  along with this program.	 If not, see <http://www.gnu.org/licenses/>.  #
 ###########################################################################
 
-import json
 import logging
 import requests
 
 from vi import evegate
+from requests.exceptions import RequestException
 
 UNKNOWN = "No Result"
 NOT_KOS = 'Not Kos'
@@ -38,7 +38,7 @@ def check(parts):
 
     try:
         kosData = requests.get(CVA_KOS_URL, params = {'c': 'json', 'type': 'multi', 'q': ','.join(names)}).json()
-    except requests.exceptions.RequestException as e:
+    except RequestException as e:
         kosData = None
         logging.error("Error on pilot KOS check request %s", str(e))
 
@@ -96,7 +96,7 @@ def check(parts):
         for corp in corpsToCheck:
             try:
                 kosData = requests.get(CVA_KOS_URL, params = { 'c': 'json', 'type': 'unit', 'q': corp }).json()
-            except requests.exceptions.RequestException as e:
+            except RequestException as e:
                 logging.error("Error on corp KOS check request: %s", str(e))
 
             kosResult = False
