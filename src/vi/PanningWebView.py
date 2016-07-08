@@ -15,7 +15,7 @@ else:
     from PyQt5.QtWebEngineWidgets import QWebEngineView
 
 
-class PanningWebView(QWebView if six.PY2 else QWebEngineView):
+class PanningWebView(QWebView if MainWindow.oldStyleWebKit else QWebEngineView):
 
     mapLinkClicked = pyqtSignal(QUrl)
 
@@ -27,7 +27,7 @@ class PanningWebView(QWebView if six.PY2 else QWebEngineView):
         self.position = None
         self.offset = 0
         self.handIsClosed = False
-        if MainWindow.oldStyleWebKit:
+        if not MainWindow.oldStyleWebKit:
             self.setPage(VintelSvgPage(parent=self))
 
 
