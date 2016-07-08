@@ -473,9 +473,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.activateSoundAction.setEnabled(False)
             self.soundSetupAction.setEnabled(False)
             #self.soundButton.setEnabled(False)
-            QtWidgets.QMessageBox.warning(None, "Sound disabled",
-                                        "The lib 'pyglet' which is used to play sounds cannot be found, ""so the soundsystem is disabled.\nIf you want sound, please install the 'pyglet' library. This warning will not be shown again.",
-                                        Ok)
+            QtWidgets.QMessageBox.warning(None, "Sound disabled", "Please chekc the log files. This warning will not be shown again.", Ok)
         else:
             if newValue is None:
                 newValue = self.activateSoundAction.isChecked()
