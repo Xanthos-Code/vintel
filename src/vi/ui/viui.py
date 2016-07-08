@@ -18,6 +18,7 @@
 ###########################################################################
 
 import datetime
+import os
 import sys
 import time
 import six
@@ -44,7 +45,7 @@ from vi.ui.systemtray import TrayContextMenu
 from vi.chatparser import ChatParser
 from PyQt5.QtCore import QSettings
 
-OLD_STYLE_WEBKIT = False
+OLD_STYLE_WEBKIT = "OLD_STYLE_WEBKIT" in os.environ
 
 if OLD_STYLE_WEBKIT:
     from PyQt5.QtWebKitWidgets import QWebPage
@@ -262,7 +263,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.mapView.contextMenu = self.trayIcon.contextMenu()
             self.mapView.contextMenuEvent = mapContextMenuEvent
 
-            if OLD_STYLE_WEBKIT:
+            if MainWindow.oldStyleWebKit:
+                self.mapView.linkClicked.connect(self.mapLinkClicked)
                 self.mapView.page().setLinkDelegationPolicy(QWebPage.DelegateAllLinks)
 
             # Also set up our app menus
@@ -300,7 +302,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.restoreState(qsettings.value("saveState", self.saveState()))
         self.move(qsettings.value("pos", self.pos()))
         self.resize(qsettings.value("size", self.size()))
-        if qsettings.value("maximized", self.isMaximized()):
+        if qsettings.value("maximized", self.isMaximized()) == "true":
             self.showMaximized()
         qsettings.endGroup()
 
@@ -312,7 +314,7 @@ class MainWindow(QtWidgets.QMainWindow):
         qsettings.endGroup()
 
         qsettings.beginGroup("mapView")
-        self.mapView.setZoomFactor(qsettings.value("zoomFactor", self.mapView.zoomFactor()))
+        self.mapView.setZoomFactor(float(qsettings.value("zoomFactor", self.mapView.zoomFactor())))
         qsettings.endGroup()
 
         # Cached settings
@@ -599,7 +601,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def getMapScrollPosition(self):
         if OLD_STYLE_WEBKIT:
-            scrollPosition = self.mapView.page().mainFrame().scrollPosition()
+            return self.mapView.page().mainFrame().scrollPosition()
         else:
             pass #scrollPosition = self.mapView.page().scrollPosition()
 
@@ -616,8 +618,11 @@ class MainWindow(QtWidgets.QMainWindow):
             scrollPosition = self.getMapScrollPosition()
         else:
             scrollPosition = self.initialMapPosition
-
-        self.mapView.page().setHtml(content)
+        
+        if MainWindow.oldStyleWebKit:
+            self.mapView.setHtml(content)
+        else:
+            self.mapView.page().setHtml(content)
 
         self.setMapScrollPosition(scrollPosition)
 
