@@ -642,13 +642,13 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>QWebView</class>
+   <class>QWebEngineView</class>
    <extends>QWidget</extends>
-   <header>QtWebKitWidgets/QWebView</header>
+   <header>QtWebEngineWidgets/QWebEngineView</header>
   </customwidget>
   <customwidget>
    <class>PanningWebView</class>
-   <extends>QWebView</extends>
+   <extends>QWebEngineView</extends>
    <header>vi/PanningWebView</header>
   </customwidget>
  </customwidgets>
