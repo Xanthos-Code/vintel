@@ -20,8 +20,8 @@
 import logging
 import requests
 
-from vi import evegate
 from requests.exceptions import RequestException
+from vi import evegate
 
 UNKNOWN = "No Result"
 NOT_KOS = 'Not Kos'

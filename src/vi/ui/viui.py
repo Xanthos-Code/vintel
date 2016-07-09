@@ -24,26 +24,20 @@ import time
 import six
 import requests
 import webbrowser
-import vi.version
 import logging
+import vi
 
-from PyQt5 import QtWidgets
-from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtWidgets import QMessageBox, QAction, QActionGroup, QStyleOption, QStyle
-from PyQt5.QtGui import *
-from PyQt5 import QtGui, uic, QtCore
-from PyQt5.QtCore import QPoint
-from PyQt5.QtGui import QImage, QPixmap
-from vi import amazon_s3, evegate
-from vi import dotlan, filewatcher
-from vi import states
+from PyQt5 import QtWidgets, QtGui, uic, QtCore
+from PyQt5.QtCore import pyqtSignal, QSettings, QPoint
+from PyQt5.QtWidgets import QMessageBox, QAction, QActionGroup, QStyleOption, QStyle, QSystemTrayIcon, QDialog, QWidget
+from PyQt5.QtGui import QImage, QPixmap, QPainter
+from vi import amazon_s3, evegate,dotlan, filewatcher, states, version
 from vi.cache.cache import Cache
 from vi.resources import resourcePath
 from vi.soundmanager import SoundManager
 from vi.threads import AvatarFindThread, KOSCheckerThread, MapStatisticsThread
 from vi.ui.systemtray import TrayContextMenu
-from vi.chatparser import ChatParser
-from PyQt5.QtCore import QSettings
+from vi.chatparser.chatparser import ChatParser, Message
 
 OLD_STYLE_WEBKIT = "OLD_STYLE_WEBKIT" in os.environ
 
@@ -618,7 +612,7 @@ class MainWindow(QtWidgets.QMainWindow):
             scrollPosition = self.getMapScrollPosition()
         else:
             scrollPosition = self.initialMapPosition
-        
+
         if MainWindow.oldStyleWebKit:
             self.mapView.setHtml(content)
         else:
@@ -714,7 +708,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.chooseRegionAction.setChecked(False)
         chooser = RegionChooser(self)
-        self.chooser.newRegionChosen.connect(handleRegionChosen)
+        chooser.newRegionChosen.connect(handleRegionChosen)
         chooser.show()
 
 
@@ -769,8 +763,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         text = "None KOS"
                     self.trayIcon.showMessage("Your KOS-Check", text, 1)
                 text = text.replace("\n\n", "<br>")
-                message = chatparser.chatparser.Message("Vintel KOS-Check", text, evegate.currentEveTime(), "VINTEL",
-                                                        [], states.NOT_CHANGE, text.upper(), text)
+                message = Message("Vintel KOS-Check", text, evegate.currentEveTime(), "VINTEL", [], states.NOT_CHANGE, text.upper(), text)
                 self.addMessageToIntelChat(message)
             elif state == "error":
                 self.trayIcon.showMessage("KOS Failure", text, 3)
@@ -785,7 +778,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
     def showInfo(self):
-        infoDialog = QtWidgets.QDialog(self)
+        infoDialog = QDialog(self)
         uic.loadUi(resourcePath("vi/ui/Info.ui"), infoDialog)
         infoDialog.versionLabel.setText(u"Version: {0}".format(vi.version.VERSION))
         infoDialog.logoLabel.setPixmap(QtGui.QPixmap(resourcePath("vi/ui/res/logo.png")))
@@ -794,7 +787,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
     def showSoundSetup(self):
-        dialog = QtWidgets.QDialog(self)
+        dialog = QDialog(self)
         uic.loadUi(resourcePath("vi/ui/SoundSetup.ui"), dialog)
         dialog.volumeSlider.setValue(SoundManager().soundVolume)
         dialog.volumeSlider.valueChanged.connect(SoundManager().setSoundVolume)
@@ -805,7 +798,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
     def systemTrayActivated(self, reason):
-        if reason == QtGui.QSystemTrayIcon.Trigger:
+        if reason == QSystemTrayIcon.Trigger:
             if self.isMinimized():
                 self.showNormal()
                 self.activateWindow()
@@ -884,12 +877,12 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.setMapContent(self.dotlan.svg)
 
 
-class ChatroomsChooser(QtWidgets.QDialog):
+class ChatroomsChooser(QDialog):
 
     roomsChanged = pyqtSignal(list);
 
     def __init__(self, parent):
-        QtWidgets.QDialog.__init__(self, parent)
+        QDialog.__init__(self, parent)
         uic.loadUi(resourcePath("vi/ui/ChatroomsChooser.ui"), self)
         self.defaultButton.clicked.connect(self.setDefaults)
         self.cancelButton.clicked.connect(self.accept)
@@ -912,12 +905,12 @@ class ChatroomsChooser(QtWidgets.QDialog):
         self.roomnamesField.setPlainText(u"TheCitadel,North Provi Intel,North Catch Intel,North Querious Intel")
 
 
-class RegionChooser(QtWidgets.QDialog):
+class RegionChooser(QDialog):
 
     newRegionChosen = pyqtSignal()
 
     def __init__(self, parent):
-        QtWidgets.QDialog.__init__(self, parent)
+        QDialog.__init__(self, parent)
         uic.loadUi(resourcePath("vi/ui/RegionChooser.ui"), self)
         self.cancelButton.clicked.connect(self.accept)
         self.saveButton.clicked.connect(self.saveClicked)
@@ -959,13 +952,13 @@ class RegionChooser(QtWidgets.QDialog):
             self.newRegionChosen.emit()
 
 
-class SystemChat(QtWidgets.QDialog):
+class SystemChat(QDialog):
 
     setLocationSignal = pyqtSignal(str, str)
     SYSTEM = 0
 
     def __init__(self, parent, chatType, selector, chatEntries, knownPlayerNames):
-        QtWidgets.QDialog.__init__(self, parent)
+        QDialog.__init__(self, parent)
         uic.loadUi(resourcePath("vi/ui/SystemChat.ui"), self)
         self.parent = parent
         self.chatType = 0
@@ -1035,7 +1028,7 @@ class SystemChat(QtWidgets.QDialog):
         self.accept()
 
 
-class ChatEntryWidget(QtWidgets.QWidget):
+class ChatEntryWidget(QWidget):
 
     markSystem = pyqtSignal(object)
     TEXT_SIZE = 11
@@ -1043,7 +1036,7 @@ class ChatEntryWidget(QtWidgets.QWidget):
     questionMarkPixmap = None
 
     def __init__(self, message):
-        QtWidgets.QWidget.__init__(self)
+        QWidget.__init__(self)
         if not self.questionMarkPixmap:
             self.questionMarkPixmap = QtGui.QPixmap(resourcePath("vi/ui/res/qmark.png")).scaledToHeight(32)
         uic.loadUi(resourcePath("vi/ui/ChatEntry.ui"), self)
@@ -1092,12 +1085,12 @@ class ChatEntryWidget(QtWidgets.QWidget):
         self.textLabel.setFont(font)
 
 
-class JumpbridgeChooser(QtWidgets.QDialog):
+class JumpbridgeChooser(QDialog):
 
     setJumpBridgeUrl = pyqtSignal(str)
 
     def __init__(self, parent, url):
-        QtWidgets.QDialog.__init__(self, parent)
+        QDialog.__init__(self, parent)
         uic.loadUi(resourcePath("vi/ui/JumpbridgeChooser.ui"), self)
         self.saveButton.clicked.connect(self.savePath)
         self.cancelButton.clicked.connect(self.accept)

@@ -26,9 +26,9 @@ import logging
 
 from requests import utils
 from bs4 import BeautifulSoup
-from vi.cache.cache import Cache
 from six.moves.urllib.error import HTTPError
 from six.moves.urllib.request import urlopen
+from vi.cache.cache import Cache
 
 ERROR = -1
 NOT_EXISTS = 0

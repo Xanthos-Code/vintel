@@ -20,7 +20,6 @@
 import os
 import stat
 import time
-import logging
 
 from PyQt5 import QtCore
 from PyQt5.QtCore import pyqtSignal
@@ -40,9 +39,9 @@ if a new file was created. We watch only the newest (last 24h), not all!
 DEFAULT_MAX_AGE = 60 * 60 * 24
 
 class FileWatcher(QtCore.QThread):
-    
+
     fileChanged = pyqtSignal(str)
-    
+
     def __init__(self, path, maxAge=DEFAULT_MAX_AGE):
         QtCore.QThread.__init__(self)
         self.path = path

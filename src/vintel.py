@@ -27,12 +27,12 @@ from logging.handlers import RotatingFileHandler
 from logging import StreamHandler
 
 from PyQt5 import QtGui, QtWidgets
+from PyQt5.QtWidgets import QApplication, QMessageBox
 from vi import version
 from vi.ui import viui, systemtray
 from vi.cache import cache
 from vi.resources import resourcePath
 from vi.cache.cache import Cache
-from PyQt5.QtWidgets import QApplication, QMessageBox
 
 
 def exceptHook(exceptionType, exceptionValue, tracebackObject):

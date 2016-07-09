@@ -22,11 +22,10 @@ import sys
 import six
 import logging
 
-from PyQt5.QtCore import QThread
+from PyQt5.QtCore import QThread, QUrl
 from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
-from PyQt5.QtCore import QUrl
-from six.moves import queue
-from .resources import resourcePath
+from six.moves.queue import Queue
+from vi.resources import resourcePath
 from vi.singleton import Singleton
 
 global festivalAvailable
@@ -104,7 +103,7 @@ class SoundManager(six.with_metaclass(Singleton)):
 
         def __init__(self):
             QThread.__init__(self)
-            self.queue = queue.Queue()
+            self.queue = Queue()
             self.player = QMediaPlayer()
             self.active = True
 

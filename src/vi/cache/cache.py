@@ -31,8 +31,6 @@ else:
         return x
     def from_blob(x):
         return x
-
-import logging
 from vi.cache.dbstructure import updateDatabase
 
 

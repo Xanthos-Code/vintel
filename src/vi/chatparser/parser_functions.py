@@ -37,10 +37,10 @@
 
 import six
 
-import vi.evegate as evegate
 from bs4 import BeautifulSoup
 from bs4.element import NavigableString
 from vi import states
+import vi.evegate as evegate
 
 CHARS_TO_IGNORE = ("*", "?", ",", "!")
 
@@ -98,9 +98,9 @@ def parseShips(rtext):
 
 
 def parseSystems(systems, rtext, foundSystems):
-    
+
     systemNames = systems.keys()
-    
+
     # words to ignore on the system parser. use UPPER CASE
     WORDS_TO_IGNORE = ("IN", "IS", "AS")
 
@@ -109,18 +109,18 @@ def parseSystems(systems, rtext, foundSystems):
         text = text.replace(word, newText.format(system, word))
         return text
 
-    texts = [t for t in rtext.contents if isinstance(t, NavigableString) and len(t)]    
+    texts = [t for t in rtext.contents if isinstance(t, NavigableString) and len(t)]
     for wtIdx, text in enumerate(texts):
         worktext = text
         for char in CHARS_TO_IGNORE:
             worktext = worktext.replace(char, "")
-            
+
         # Drop redundant whitespace so as to not throw off word index
         worktext = ' '.join(worktext.split())
         words = worktext.split(" ")
 
         for idx, word in enumerate(words):
-            
+
             # Is this about another a system's gate?
             if len(words) > idx + 1:
                 if words[idx+1].upper() == 'GATE':
@@ -133,7 +133,7 @@ def parseSystems(systems, rtext, foundSystems):
                         # '_____ GATE' mentioned in message, which is not what we're
                         # interested in, so go to checking next word.
                         continue
-            
+
             upperWord = word.upper()
             if upperWord != word and upperWord in WORDS_TO_IGNORE: continue
             if upperWord in systemNames:  # - direct hit on name
@@ -168,7 +168,7 @@ def parseSystems(systems, rtext, foundSystems):
                         formattedText = formatSystem(text, word, system)
                         textReplace(text, formattedText)
                         return True
-                        
+
     return False
 
 

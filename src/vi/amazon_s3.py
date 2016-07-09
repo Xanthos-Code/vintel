@@ -22,9 +22,9 @@ import requests
 import logging
 
 from PyQt5.QtCore import pyqtSignal, QThread
+from distutils.version import StrictVersion
 from vi import version
 from vi.cache.cache import Cache
-from distutils.version import StrictVersion
 
 
 def getJumpbridgeData(region):

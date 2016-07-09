@@ -1,11 +1,8 @@
 
-import six
-
+from PyQt5.QtCore import Qt, QPoint, QEvent, pyqtSignal, QUrl
+from PyQt5.QtGui import QMouseEvent
+from PyQt5.QtWidgets import QApplication
 from vi.ui.viui import MainWindow
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
-from PyQt5 import QtCore
-from PyQt5.QtCore import QPoint, QEvent, pyqtSignal, QUrl
 
 if MainWindow.oldStyleWebKit:
     from PyQt5.QtWebKitWidgets import QWebPage
@@ -36,12 +33,12 @@ class PanningWebView(QWebView if MainWindow.oldStyleWebKit else QWebEngineView):
             self.ignored.remove(mouseEvent)
             return super(PanningWebView, self).mousePressEvent(mouseEvent)
 
-        if not self.pressed and not self.scrolling and mouseEvent.modifiers() == QtCore.Qt.NoModifier:
-            if mouseEvent.buttons() == QtCore.Qt.LeftButton:
+        if not self.pressed and not self.scrolling and mouseEvent.modifiers() == Qt.NoModifier:
+            if mouseEvent.buttons() == Qt.LeftButton:
                 self.pressed = True
                 self.scrolling = False
                 self.handIsClosed = False
-                QApplication.setOverrideCursor(QtCore.Qt.OpenHandCursor)
+                QApplication.setOverrideCursor(Qt.OpenHandCursor)
 
                 self.position = mouseEvent.pos()
                 if MainWindow.oldStyleWebKit:
@@ -52,7 +49,7 @@ class PanningWebView(QWebView if MainWindow.oldStyleWebKit else QWebEngineView):
                 scrolly = frame.evaluateJavaScript("window.scrollY")
                 self.offset = QPoint(scrollx, scrolly)
                 return
-                
+
         return super(PanningWebView, self).mousePressEvent(mouseEvent)
 
 
@@ -74,7 +71,7 @@ class PanningWebView(QWebView if MainWindow.oldStyleWebKit else QWebEngineView):
             self.handIsClosed = False
             QApplication.restoreOverrideCursor()
 
-            event1 = QMouseEvent(QEvent.MouseButtonPress, self.position, QtCore.Qt.LeftButton, QtCore.Qt.LeftButton, QtCore.Qt.NoModifier)
+            event1 = QMouseEvent(QEvent.MouseButtonPress, self.position, Qt.LeftButton, Qt.LeftButton, Qt.NoModifier)
             event2 = QMouseEvent(mouseEvent)
 
             self.ignored.append(event1)
@@ -83,7 +80,7 @@ class PanningWebView(QWebView if MainWindow.oldStyleWebKit else QWebEngineView):
             QApplication.postEvent(self, event1)
             QApplication.postEvent(self, event2)
             return
-        
+
         return super(PanningWebView, self).mouseReleaseEvent(mouseEvent)
 
 
@@ -91,11 +88,11 @@ class PanningWebView(QWebView if MainWindow.oldStyleWebKit else QWebEngineView):
         if self.scrolling:
             if not self.handIsClosed:
                 QApplication.restoreOverrideCursor()
-                QApplication.setOverrideCursor(QtCore.Qt.ClosedHandCursor)
+                QApplication.setOverrideCursor(Qt.ClosedHandCursor)
                 self.handIsClosed = True
             delta = mouseEvent.pos() - self.position
             p = self.offset - delta
-            
+
             if MainWindow.oldStyleWebKit:
                 frame = self.page().mainFrame()
             else:
@@ -107,7 +104,7 @@ class PanningWebView(QWebView if MainWindow.oldStyleWebKit else QWebEngineView):
             self.pressed = False
             self.scrolling = True
             return
-            
+
         return super(PanningWebView, self).mouseMoveEvent(mouseEvent)
 
 

@@ -21,8 +21,8 @@ import time
 import logging
 import six
 
-from six.moves import queue
-from PyQt5 import QtCore
+#from six.moves import queue
+from six.moves.queue import Queue
 from PyQt5.QtCore import pyqtSignal, QThread, QTimer
 from vi import evegate
 from vi import koschecker
@@ -37,7 +37,7 @@ class AvatarFindThread(QThread):
 
     def __init__(self):
         QThread.__init__(self)
-        self.queue = queue.Queue()
+        self.queue = Queue()
         self.active = True
 
 
@@ -100,7 +100,7 @@ class KOSCheckerThread(QThread):
 
     def __init__(self):
         QThread.__init__(self)
-        self.queue = queue.Queue()
+        self.queue = Queue()
         self.recentRequestNamesAndTimes = {}
         self.active = True
 
@@ -160,7 +160,7 @@ class MapStatisticsThread(QThread):
 
     def __init__(self):
         QThread.__init__(self)
-        self.queue = queue.Queue(maxsize=1)
+        self.queue = Queue(maxsize=1)
         self.lastStatisticsUpdate = time.time()
         self.pollRate = STATISTICS_UPDATE_INTERVAL_MSECS
         self.refreshTimer = None
