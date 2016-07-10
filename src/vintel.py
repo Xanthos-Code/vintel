@@ -27,6 +27,7 @@ from logging.handlers import RotatingFileHandler
 from logging import StreamHandler
 
 from PyQt5 import QtGui, QtWidgets
+from PyQt5.QtCore import QT_VERSION_STR
 from PyQt5.QtWidgets import QApplication, QMessageBox
 from vi import version
 from vi.ui import viui, systemtray
@@ -121,6 +122,7 @@ class Application(QApplication):
         logging.critical("")
         logging.critical("------------------- Vintel %s starting up -------------------", version.VERSION)
         logging.critical("")
+        logging.critical("QT version %s", QT_VERSION_STR)
         logging.debug("Looking for chat logs at: %s", chatLogDirectory)
         logging.debug("Cache maintained here: %s", cache.Cache.PATH_TO_CACHE)
         logging.debug("Writing logs to: %s", vintelLogDirectory)
