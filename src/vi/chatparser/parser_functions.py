@@ -42,7 +42,7 @@ from bs4 import BeautifulSoup
 from bs4.element import NavigableString
 from vi import states
 
-CHARS_TO_IGNORE = ("*", "?", ",", "!")
+CHARS_TO_IGNORE = ("*", "?", ",", "!", ".")
 
 
 def textReplace(element, newText):
