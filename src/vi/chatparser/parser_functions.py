@@ -42,7 +42,7 @@ from bs4.element import NavigableString
 from vi import states
 import vi.evegate as evegate
 
-CHARS_TO_IGNORE = ("*", "?", ",", "!")
+CHARS_TO_IGNORE = ("*", "?", ",", "!", ".")
 
 
 def textReplace(element, newText):
