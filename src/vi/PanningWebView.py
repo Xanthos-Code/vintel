@@ -55,9 +55,7 @@ class PanningWebView(QWebView if MainWindow.oldStyleWebKit else QWebEngineView):
                     QApplication.setOverrideCursor(Qt.OpenHandCursor)
 
                     self.position = mouseEvent.pos()
-                    scrollx = self.widget.evaluateJavaScript("window.scrollX")
-                    scrolly = self.widget.evaluateJavaScript("window.scrollY")
-                    self.offset = QPoint(scrollx, scrolly)
+                    self.offset = self.widget.scrollPosition()
                     return
 
         return super(PanningWebView, self).mousePressEvent(mouseEvent)
@@ -106,7 +104,10 @@ class PanningWebView(QWebView if MainWindow.oldStyleWebKit else QWebEngineView):
                     self.handIsClosed = True
                 delta = mouseEvent.pos() - self.position
                 p = self.offset - delta
-                self.widget.evaluateJavaScript('window.scrollTo({}, {});'.format(p.x(), p.y()))
+                if MainWindow.oldStyleWebKit:
+                    self.widget.setScrollPosition(p)
+                else:
+                    self.widget.runJavaScript('window.scrollTo({}, {});'.format(p.x(), p.y()))
                 return
 
             if self.pressed:

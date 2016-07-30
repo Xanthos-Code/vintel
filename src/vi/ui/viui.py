@@ -597,14 +597,15 @@ class MainWindow(QtWidgets.QMainWindow):
         if OLD_STYLE_WEBKIT:
             return self.mapView.page().mainFrame().scrollPosition()
         else:
-            pass #scrollPosition = self.mapView.page().scrollPosition()
+            position = self.mapView.page().scrollPosition()
+            return position
 
 
     def setMapScrollPosition(self, position):
         if OLD_STYLE_WEBKIT:
             self.mapView.page().mainFrame().setScrollPosition(position)
         else:
-            pass # self.mapView.page().setScrollPosition(position)
+            self.mapView.page().runJavaScript('window.scrollTo({}, {});'.format(position.x(), position.y()))
 
 
     def setMapContent(self, content):
