@@ -28,7 +28,7 @@ import logging
 import vi
 
 from PyQt5 import QtWidgets, QtGui, uic, QtCore
-from PyQt5.QtCore import pyqtSignal, QSettings, QPoint
+from PyQt5.QtCore import pyqtSignal, QSettings, QPoint, QByteArray
 from PyQt5.QtWidgets import QMessageBox, QAction, QActionGroup, QStyleOption, QStyle, QSystemTrayIcon, QDialog, QWidget
 from PyQt5.QtGui import QImage, QPixmap, QPainter
 from vi import amazon_s3, evegate,dotlan, filewatcher, states, version
@@ -182,7 +182,9 @@ class MainWindow(QtWidgets.QMainWindow):
         if OLD_STYLE_WEBKIT:
             self.mapView.page().scrollRequested.connect(self.mapPositionChanged)
         else:
+            self.mapView.page().scrollPositionChanged.connect(self.mapPositionChangedToPoint)
             self.mapView.mapLinkClicked.connect(self.mapLinkClicked)
+            self.mapView.page().loadFinished.connect(self.handleLoadFinished)
 
 
     def setupThreads(self):
@@ -597,28 +599,38 @@ class MainWindow(QtWidgets.QMainWindow):
         if OLD_STYLE_WEBKIT:
             return self.mapView.page().mainFrame().scrollPosition()
         else:
-            position = self.mapView.page().scrollPosition()
-            return position
+            return self.mapView.page().scrollPosition()
 
 
     def setMapScrollPosition(self, position):
         if OLD_STYLE_WEBKIT:
             self.mapView.page().mainFrame().setScrollPosition(position)
         else:
-            self.mapView.page().runJavaScript('window.scrollTo({}, {});'.format(position.x(), position.y()))
+            if self.loaded:
+                self.mapView.page().runJavaScript('window.scrollTo({}, {});'.format(position.x(), position.y()))
+            else:
+                self.deferedScrollPosition = position
 
 
     def setMapContent(self, content):
+        self.loaded = False
         if self.initialMapPosition is None:
             scrollPosition = self.getMapScrollPosition()
         else:
             scrollPosition = self.initialMapPosition
 
         if MainWindow.oldStyleWebKit:
-            self.mapView.setHtml(content)
+            self.mapView.setContent(content)
         else:
-            self.mapView.page().setHtml(content)
-
+            #
+            # According to the docs we must call setContent with SVG data.
+            # However this does not actually render the SVG so we use setHtml for now.
+            #
+            if True:
+                self.mapView.page().setHtml(content)
+            else:
+                array = QByteArray().append(content)
+                self.mapView.page().setContent(array, mimeType=str('text/svg+xml'))
         self.setMapScrollPosition(scrollPosition)
 
         # Make sure we have positioned the window before we nil the initial position;
@@ -648,6 +660,19 @@ class MainWindow(QtWidgets.QMainWindow):
         if regionName:
             scrollPosition = self.getMapScrollPosition()
             self.mapPositionsDict[regionName] = (scrollPosition.x(), scrollPosition.y())
+
+
+    def mapPositionChangedToPoint(self, point):
+        regionName = self.cache.getFromCache("region_name")
+        if regionName:
+            self.mapPositionsDict[regionName] = (point.x(), point.y())
+
+
+    def handleLoadFinished(self):
+        self.loaded = True
+        if self.deferedScrollPosition:
+            self.mapView.page().runJavaScript('window.scrollTo({}, {});'.format(self.deferedScrollPosition.x(), self.deferedScrollPosition.y()))
+            self.deferedScrollPosition = None
 
 
     def showChatroomChooser(self):

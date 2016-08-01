@@ -135,7 +135,6 @@ class Application(QApplication):
         trayIcon.show()
         self.mainWindow = viui.MainWindow(chatLogDirectory, trayIcon, backGroundColor)
         self.mainWindow.show()
-        self.mainWindow.raise_()
         splash.finish(self.mainWindow)
 
 

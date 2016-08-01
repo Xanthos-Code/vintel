@@ -136,7 +136,10 @@ class VintelSvgPage(QWebPage if MainWindow.oldStyleWebKit else QWebEnginePage):
 
 
     def acceptNavigationRequest(self, url, type, isMainFrame):
-        if type == QWebEnginePage.NavigationTypeLinkClicked:
-            self.view().mapLinkClicked.emit(url)
-            return False
-        return True
+        if MainWindow.oldStyleWebKit:
+            return super(PanningWebView, self).acceptNavigationRequest(url, type, isMainFrame)
+        else:
+            if type == QWebEnginePage.NavigationTypeLinkClicked:
+                self.view().mapLinkClicked.emit(url)
+                return False
+            return True
