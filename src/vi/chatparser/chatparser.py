@@ -33,7 +33,7 @@ from .parser_functions import parseStatus
 from .parser_functions import parseUrls, parseShips, parseSystems
 
 # Names the local chatlogs could start with (depends on l10n of the client)
-LOCAL_NAMES = ("Lokal", "Local")
+LOCAL_NAMES = ("Локальный", "Lokal", "Local")
 
 
 class ChatParser(object):
