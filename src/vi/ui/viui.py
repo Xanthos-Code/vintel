@@ -630,7 +630,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.mapView.page().setHtml(content)
             else:
                 array = QByteArray().append(content)
-                self.mapView.page().setContent(array, mimeType=str('text/svg+xml'))
+                self.mapView.page().setContent(array, mimeType=str('image/svg+xml'))
         self.setMapScrollPosition(scrollPosition)
 
         # Make sure we have positioned the window before we nil the initial position;
